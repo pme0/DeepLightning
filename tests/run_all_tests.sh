@@ -2,7 +2,7 @@
 
 conda activate deeplightning
 
-pytest -q test_ckpt.py -r s
+pytest -q test_checkpoint.py -r s
 
 #python3 test_simple_trainer.py
 #python3 test_ckpt_ds_consolidated.py
