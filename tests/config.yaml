@@ -1,0 +1,54 @@
+data:
+  root: /Users/pme12/data/
+  dataset: MNIST
+  num_workers: 4
+  batch_size: 256
+  module:
+    type: modules.data.mnist.LightningData_MNIST
+
+model:
+  module:
+    type: modules.task.classification.LightningTask_CLASSIF
+  network:
+    type: models.cnn.simple_cnn
+    params: 
+      num_classes: 10
+      num_channels: 1
+  optimizer:
+    type: torch.optim.SGD
+    params:
+      lr: 0.01
+      weight_decay: 0.01
+      momentum: 0.9
+  scheduler:
+    type: torch.optim.lr_scheduler.ExponentialLR
+    params:
+      gamma: 0.99
+    call:
+      interval: "epoch"
+      frequency: 1
+  loss:
+    type: torch.nn.CrossEntropyLoss
+    params:
+
+engine:
+  backend: deepspeed_stage_3
+  gpus: null
+  num_nodes: 1
+  precision: 32
+
+train:
+  num_epochs: 2
+  val_every_n_epoch: 1
+  grad_accum_from_epoch: 0
+  grad_accum_every_n_batches: 1
+  ckpt_resume_path: null
+  ckpt_every_n_epochs: 1
+
+logger:
+  type: pytorch_lightning.loggers.MLFlowLogger
+  params:
+    experiment_name: Default
+    tracking_uri: mlruns
+  log_every_n_steps: 10
+  flush_logs_every_n_steps: 50
