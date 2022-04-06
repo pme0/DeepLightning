@@ -1,0 +1,12 @@
+name: deeplightning_project
+
+conda_env: conda_env.yaml
+# Can have a docker_env instead of a conda_env, e.g. 
+# docker_env:
+#    image:  mlflow-docker-example
+
+entry_points:
+  main:
+    parameters:
+      config: {type: path, default: 'configs/base.yaml'}
+    command: "python3 main.py --config {config}"
