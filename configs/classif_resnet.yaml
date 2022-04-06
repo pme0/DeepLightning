@@ -1,0 +1,50 @@
+data:
+  root: /Users/pme12/data/
+  dataset: MNIST
+  num_workers: 4
+  batch_size: 256
+  module: 
+    type: deeplightning.data.mnist.MNIST
+
+model:
+  module: 
+    type: deeplightning.task.img_classif.ImageClassification
+  network:
+    type: deeplightning.models.resnet.resnet18
+    params: 
+      num_classes: 10
+      num_channels: 1
+  optimizer:
+    type: torch.optim.Adadelta
+    params:
+  scheduler:
+    type: torch.optim.lr_scheduler.ExponentialLR
+    params:
+      gamma: 0.99
+    call:
+      interval: "epoch"
+      frequency: 1
+  loss:
+    type: torch.nn.CrossEntropyLoss
+    params:
+
+engine:
+  backend: deepspeed_stage_3
+  gpus: null
+  num_nodes: 1
+  precision: 32
+
+train:
+  num_epochs: 2
+  val_every_n_epoch: 1
+  grad_accum_from_epoch: 0
+  grad_accum_every_n_batches: 1
+  ckpt_resume_path: null
+  ckpt_every_n_epochs: 1
+
+logger:
+  type: pytorch_lightning.loggers.MLFlowLogger
+  params:
+    experiment_name: Default
+    tracking_uri: mlruns
+  log_every_n_steps: 10
