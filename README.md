@@ -9,7 +9,7 @@
     <a href= "https://mlflow.org"><img src="https://img.shields.io/badge/MLflow-1.24-brightgreen" /></a>
 </p>
 
-**Deep Lightning** is a configuration-based wrapper of training Deep Learning models with focus is on parallel training, cross-platform compatibility and reproducibility. The philosophy is simple: from configuration to trackable and reproducible deep learning.
+**Deep Lightning** is a configuration-based wrapper for training Deep Learning models with focus on parallel training, cross-platform compatibility and reproducibility. The philosophy is simple: from configuration to trackable and reproducible deep learning.
 
 After defining modules and configuration, training deep learning models is simple:
 <p align="left">
