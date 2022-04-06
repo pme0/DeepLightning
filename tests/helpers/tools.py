@@ -1,77 +1,27 @@
 import torch
-from torch.utils.data import DataLoader, Dataset
-import pytorch_lightning as pl
 
 
-class DummyDataset(Dataset):
-    def __init__(self, size, length):
-        self.len = length
-        self.data = torch.randn(length, size)
+def compare_model_params(modelA, modelB):
+    passed = True
+    for key in modelA.state_dict():
+        if (modelA.state_dict()[key] != modelB.state_dict()[key]).sum().item() > 0:
+            passed = False
+    return passed
 
-    def __getitem__(self, index):
-        return self.data[index]
+    
+def single_gpu_available(fn):
+    def wrapper():
+        if torch.cuda.device_count() > 0:
+            return fn
+        else:
+            return None
+    return wrapper
 
-    def __len__(self):
-        return self.len
 
-
-class DummyModel(pl.LightningModule):
-    def __init__(self):
-        super().__init__()
-        self.layer = torch.nn.Linear(32, 2)
-
-    def forward(self, x):
-        return self.layer(x)
-
-    def training_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-        return {"loss": loss}
-
-    def validation_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-
-    def test_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-
-    def configure_optimizers(self):
-        return torch.optim.SGD(self.layer.parameters(), lr=0.1)
-
-    def train_dataloader(self):
-        return DataLoader(DummyDataset(32, 64), batch_size=2, num_workers=4)
-
-    def val_dataloader(self):
-        return DataLoader(DummyDataset(32, 64), batch_size=2, num_workers=4)
-
-    def test_dataloader(self):
-        return DataLoader(DummyDataset(32, 64), batch_size=2, num_workers=4)
-
-        
-class LargeDummyModel(pl.LightningModule):
-    def __init__(self):
-        super().__init__()
-        self.layer = torch.nn.Linear(1000, 100)
-
-    def forward(self, x):
-        return self.layer(x)
-
-    def training_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-        return {"loss": loss}
-
-    def validation_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-
-    def test_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-
-    def configure_optimizers(self):
-        return torch.optim.SGD(self.layer.parameters(), lr=0.1)
-
-    def train_dataloader(self):
-        return DataLoader(DummyDataset(1000, 64), batch_size=2)
-
-    def val_dataloader(self):
-        return DataLoader(DummyDataset(1000, 64), batch_size=2)
-
-    def test_dataloader(self):
-        return DataLoader(DummyDataset(1000, 64), batch_size=2)
+def multi_gpu_available(fn):
+    def wrapper():
+        if torch.cuda.device_count() > 1:
+            return fn
+        else:
+            return None
+    return wrapper
