@@ -2,25 +2,11 @@
 
 cd api
 
-if [ "$#" == "1" ]; then
-    artifact="$HOME/data/checkpoints"
-else
-    artifact=$2
-fi
+artifact_path=$1
 
-echo "Loading artifacts from '$artifact'."
+echo "Loading artifacts from '$artifact_path'."
 
-case "$1" in
-  "classify") 
-    python3 classify_app.py --artifact_path $artifact
-    ;;
-  "reconstruct")
-    echo "ERROR: Not Implemented yet."
-    #python3 reconstruct_app.py --artifact_path $artifact
-    ;;
-  *)
-    echo "ERROR: Unknown task."
-    ;;
-esac
+taskline=$(grep 'task:' ${artifact_path}/config.yaml)
+task=${taskline#*: }
 
-
+python3 ${task}_app.py --artifact_path ${artifact_path}
