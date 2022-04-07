@@ -1,13 +1,11 @@
 #!/bin/bash
 
 conda activate deeplightning
+pip install pytest
 
+#pytest -q test_initialization.py -r s
+#pytest -q test_trainer.py -r s
 pytest -q test_checkpoint.py -r s
 
-#python3 test_simple_trainer.py
-#python3 test_ckpt_ds_consolidated.py
-#python3 test_ckpt_ds_sharded.py
-#python3 test_resume_ddp.py
 
-
-#for f in test_*.py; do python3 "$f"; done
+#for f in test_*.py; do pytest -q "$f" -r s; done
