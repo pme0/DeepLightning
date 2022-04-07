@@ -105,7 +105,7 @@ bash deploy.sh <artifact-storage-path>
 # Example:
 # bash deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
 ```
-- `artifact-storage-path` is the absolute path where artifacts were stored during training, which contains the train config (`config.yaml`) and model checkpoint (`last.ckpt`);
+- `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`config.yaml`) and model checkpoint (`last.ckpt`);
 
 **4. Predict using the API:**
 ```bash
