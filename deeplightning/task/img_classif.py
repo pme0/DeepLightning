@@ -5,7 +5,6 @@ import pytorch_lightning as pl
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
-from deeplightning.config.helpers import field_exists_and_is_not_null
 from deeplightning.trainer.metrics import metric_accuracy
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 
@@ -195,6 +194,6 @@ class ImageClassification(pl.LightningModule):
         # not from `self.logger.log()` thus this line. The key 
         # `m = self.config.train.early_stop_metric` must exist
         # in `validation_epoch_outputs`.
-        if field_exists_and_is_not_null(self.config.train, "early_stop_metric"):
+        if self.config.train.early_stop_metric is not None:
             m = self.config.train.early_stop_metric
             self.log(m, metrics[m])
