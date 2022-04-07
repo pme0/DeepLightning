@@ -44,19 +44,16 @@ def setup_trainer(strategy, precision, gpus):
     (
         pytest.param(
             dict(strategy = None,  precision = 32, gpus = None)),
-
         pytest.param(
             dict(strategy = "ddp", precision = 32, gpus = [0]), 
             marks = pytest.mark.skipif(
                 condition = not torch.cuda.is_available(), 
                 reason="single-gpu unavailable")),
-
         pytest.param(
             dict(strategy = "ddp", precision = 32, gpus = [0,1]), 
             marks = pytest.mark.skipif(
                 condition = torch.cuda.device_count() < 2, 
-                reason="multi-gpu unavailable")
-        ),
+                reason="multi-gpu unavailable")),
     )
 )
 def test_checkpointing(kwargs):
