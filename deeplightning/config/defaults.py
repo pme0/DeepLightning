@@ -1,4 +1,5 @@
-__config_groups__ = [
+__ConfigGroups__ = [
+    "task_defaults",
     "data_defaults", 
     "model_defaults", 
     "engine_defaults", 
@@ -6,11 +7,16 @@ __config_groups__ = [
     "logger_defaults"
     ]
 
+task_defaults = \
+    """
+    task: null
+    """
+
 data_defaults = \
     """
     data:
-        root: None
-        dataset: None
+        root: null
+        dataset: null
         num_workers: 4
         batch_size: 64
         module:
@@ -21,31 +27,31 @@ model_defaults = \
     """
     model:
         module:
-            type: None
+            type: null
         network:
-            type: None
+            type: null
             params: 
-                num_classes: None
-                num_channels: None
+                num_classes: null
+                num_channels: null
         optimizer:
-            type: None
+            type: null
             params:
-                lr: None
+                lr: null
         scheduler:
-            type: None
+            type: null
             params:
             call:
                 interval: epoch
                 frequency: 1
         loss:
-            type: None
+            type: null
             params:
     """
 
 engine_defaults = \
     """
     engine:
-        backend: None
+        backend: null
         gpus: null
         num_nodes: 1
         precision: 32
@@ -54,13 +60,13 @@ engine_defaults = \
 train_defaults = \
     """
     train:
-        num_epochs: None
+        num_epochs: null
         val_every_n_epoch: 1
         grad_accum_from_epoch: 0
         grad_accum_every_n_batches: 1
         ckpt_resume_path: null
         ckpt_every_n_epochs: 1
-        early_stop_metric: None
+        early_stop_metric: null
         early_stop_delta: 0.001
         early_stop_patience: 3
     """

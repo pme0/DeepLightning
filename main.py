@@ -33,4 +33,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt as e:
         print("Interrupted by user.")
     finally:
-        clean_phantom_folder()
+        pass
+    #clean_phantom_folder()

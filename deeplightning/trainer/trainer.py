@@ -4,9 +4,8 @@ import os
 from omegaconf import OmegaConf
 
 from pytorch_lightning import Trainer
-from deeplightning.config.defaults import __config_groups__
+from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.logger import logging
-from deeplightning.config.helpers import field_exists_and_is_not_null
 from deeplightning.init.imports import init_obj_from_config
 from pytorch_lightning.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
@@ -97,7 +96,7 @@ class DLTrainer(Trainer):
         callbacks += [checkpoint]
 
         # EARLY STOPPING: stop training when 'monitor' metric asymptotes
-        if field_exists_and_is_not_null(config.train, "early_stop_metric"):
+        if config.train.early_stop_metric is not None:
             earlystopping = EarlyStopping(
                 monitor = config.train.early_stop_metric,
                 min_delta = config.train.early_stop_delta,
