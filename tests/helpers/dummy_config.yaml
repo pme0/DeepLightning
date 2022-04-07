@@ -4,13 +4,16 @@ data:
   num_workers: 4
   batch_size: 256
   module:
-    type: modules.data.mnist.LightningData_MNIST
+    type: tests.helpers.dummies.DummyDataset
+    params:
+      length: 5
+      size: 8
 
 model:
   module:
-    type: modules.task.classification.LightningTask_CLASSIF
+    type: tests.helpers.dummies.DummyModel
   network:
-    type: models.cnn.simple_cnn
+    type: null
     params: 
       num_classes: 10
       num_channels: 1
