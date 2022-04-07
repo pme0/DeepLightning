@@ -81,7 +81,7 @@ conda activate deeplightning
 bash train.sh <config>
 
 # Example: 
-# bash train.sh configs/classif_cnn_mnist.yaml
+# bash train.sh configs/classif_cnn.yaml
 ```
 - `config` is the configuration file (default: `configs/base.yaml`).
 <!-- #mlflow run . -P config=configs/your-config.yaml -->
