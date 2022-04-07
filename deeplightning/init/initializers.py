@@ -3,7 +3,7 @@ ConfigElement = Union[str, int, float, None]
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningModule, LightningDataModule
 
-from deeplightning.config.defaults import __config_groups__
+from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.trainer.trainer import DLTrainer
 from deeplightning.init.imports import init_module
 

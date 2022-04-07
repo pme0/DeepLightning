@@ -3,11 +3,12 @@ ConfigElement = Union[str, int, float, None]
 from omegaconf import OmegaConf
 import torch
 
-from deeplightning.config.defaults import __config_groups__
+from deeplightning.utilities.registry import __TaskRegistry__
+from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.utilities.messages import (info_message, 
-                                              warning_message, 
+                                              warning_message,
+                                              error_message,
                                               config_print)
-
 
 
 def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
@@ -22,9 +23,33 @@ def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
     return config
 
 
+def configuration_defaults(user_config: OmegaConf) -> OmegaConf:
+    """ Merge provided config with default config.
+    The default parameters are overwritten if present
+    in the user config provided.
+    """
+
+    # build default config
+    default_config = OmegaConf.create()
+    for g in __ConfigGroups__:
+        config = OmegaConf.merge(default_config, OmegaConf.create(g))
+
+    # merge default config with user connfig
+    config = OmegaConf.merge(default_config, user_config)
+
+    return config
+    
+
 def configuration_checks(config: OmegaConf) -> OmegaConf:
     """ Perform parameter checks and modify where inconsistent.
     """
+    
+    if config.task is None or config.task not in __TaskRegistry__:
+        error_message(
+            f"Task (config.task={config.task}) not in the registry "
+            f"(__TaskRegistry__={__TaskRegistry__})."
+        )
+        raise ValueError
 
     if config.engine.gpus is not None:
         if not torch.cuda.is_available():
@@ -56,18 +81,3 @@ def configuration_checks(config: OmegaConf) -> OmegaConf:
     return config
    
 
-def configuration_defaults(user_config: OmegaConf) -> OmegaConf:
-    """ Merge provided config with default config.
-    The default parameters are overwritten if present
-    in the user config provided.
-    """
-
-    # build default config
-    default_config = OmegaConf.create()
-    for g in __config_groups__:
-        config = OmegaConf.merge(default_config, OmegaConf.create(g))
-
-    # merge default config with user connfig
-    config = OmegaConf.merge(default_config, user_config)
-
-    return config
