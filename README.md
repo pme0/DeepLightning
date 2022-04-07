@@ -100,14 +100,12 @@ This will allow you to track logged metrics in real-time and compare metrics acr
 
 **3. Deploy the model:**
 ```bash
-bash deploy.sh <task> <artifact-storage-path>
+bash deploy.sh <artifact-storage-path>
 
 # Example:
-# bash deploy.sh classify mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
+# bash deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
 ```
-- `task` is the type of prediction, e.g. `classif` or `recon`;
-- `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`config.yaml`) and model checkpoint (`last.ckpt`).
-Both artifacts are stored in the same directory by default;
+- `artifact-storage-path` is the absolute path where artifacts were stored during training, which contains the train config (`config.yaml`) and model checkpoint (`last.ckpt`);
 
 **4. Predict using the API:**
 ```bash
