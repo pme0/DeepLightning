@@ -1,3 +1,4 @@
+task: classification
 data:
   root: /Users/pme12/data/
   dataset: MNIST
@@ -47,6 +48,7 @@ train:
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
   ckpt_every_n_epochs: 1
+  early_stop_metric: null
 
 logger:
   type: pytorch_lightning.loggers.MLFlowLogger

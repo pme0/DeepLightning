@@ -1,3 +1,4 @@
+task: classification
 data:
   root: /Users/pme12/data/
   dataset: MNIST

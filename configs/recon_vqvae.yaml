@@ -1,3 +1,4 @@
+task: reconstruction
 data:
   root: /Users/pme12/data/
   dataset: MNIST
