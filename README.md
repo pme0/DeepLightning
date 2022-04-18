@@ -112,7 +112,7 @@ bash deploy.sh <artifact-storage-path>
 bash predict.sh <image>
 
 # Example:
-# bash predict.sh media/digits/digit4.jpg
+# bash predict.sh image.jpg
 ```
 - `image` is the path to the image to be predicted;
 
