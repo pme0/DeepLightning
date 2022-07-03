@@ -8,34 +8,34 @@ def exists(x: ConfigElement) -> bool:
     return x is not None
 
     
-def get_reference(config: OmegaConf) -> Any:
+def get_reference(cfg: OmegaConf) -> Any:
     """ Get a reference of the target class.
     """
-    lib, target = config.type.rsplit(".", 1)
+    lib, target = cfg.type.rsplit(".", 1)
     module = importlib.import_module(lib)
     return getattr(module, target)
 
 
-def get_instance(config: OmegaConf) -> Any:
+def get_instance(cfg: OmegaConf) -> Any:
     """ Get an instance of the target class.
     """
-    reference = get_reference(config)
-    return reference(**config.params) if exists(config.params) else reference()
+    reference = get_reference(cfg)
+    return reference(**cfg.params) if exists(cfg.params) else reference()
 
 
-def init_module(short_config: OmegaConf, config: OmegaConf) -> Any:
+def init_module(short_cfg: OmegaConf, cfg: OmegaConf) -> Any:
     """ Initialize module
     """
-    reference = get_reference(short_config)
-    instance = reference(config)
+    reference = get_reference(short_cfg)
+    instance = reference(cfg)
     return instance
 
 
-def init_obj_from_config(config: OmegaConf, main_param: Any = None) -> Any:
+def init_obj_from_config(cfg: OmegaConf, main_param: Any = None) -> Any:
     """ Initialize module from target (str) in config.
     """
-    p = config.params
-    reference = get_reference(config)
+    p = cfg.params
+    reference = get_reference(cfg)
     if main_param is None:
         instance = reference(**p) if exists(p) else reference()
     else:

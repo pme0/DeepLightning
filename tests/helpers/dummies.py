@@ -16,9 +16,9 @@ class DummyDataset(Dataset):
 
 
 class DummyModel(pl.LightningModule):
-    def __init__(self, config = None):
+    def __init__(self, cfg = None):
         super().__init__()
-        self.config = config
+        self.cfg = cfg
         self.layer = torch.nn.Linear(32, 2)
 
     def forward(self, x):

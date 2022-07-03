@@ -28,15 +28,15 @@ def check_image_format(name: str):
 
 # mains
 
-def log_config(config: OmegaConf, path: str) -> None:
+def log_config(cfg: OmegaConf, path: str) -> None:
     """ Save configuration (.yaml)
     """
-    if not OmegaConf.is_config(config):
+    if not OmegaConf.is_config(cfg):
         error_message(
             "Attempting to save a config artifact but the object "
             "provided is not of type omegaconf.dictconfig.DictConfig.")
     
-    OmegaConf.save(config, f = os.path.join(path, "config.yaml"))
+    OmegaConf.save(cfg, f = os.path.join(path, "cfg.yaml"))
 
 
 def log_image(tensor: Tensor, folder: str, name: str):

@@ -44,22 +44,22 @@ CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
 )
 def test_trainer(kwargs):
 
-    config = load_config(config_file = "helpers/dummy_config.yaml")
+    cfg = load_config(config_file = "helpers/dummy_cfg.yaml")
     
-    config.engine.backend = kwargs["strategy"]
-    config.engine.precision = kwargs["precision"]
-    config.engine.gpus = kwargs["gpus"]
+    cfg.engine.backend = kwargs["strategy"]
+    cfg.engine.precision = kwargs["precision"]
+    cfg.engine.gpus = kwargs["gpus"]
     # TODO extra params for quick testing
-    config.test_params.limit_train_batches = 2
-    config.test_params.limit_val_batches = 2
-    config.test_params.enable_model_summary = False,
-    config.test_params.enable_progress_bar = False,
-    config.test_params.logger = False
+    cfg.test_params.limit_train_batches = 2
+    cfg.test_params.limit_val_batches = 2
+    cfg.test_params.enable_model_summary = False,
+    cfg.test_params.enable_progress_bar = False,
+    cfg.test_params.logger = False
     
-    model = init_model(config)
-    trainer = init_trainer(config)
+    model = init_model(cfg)
+    trainer = init_trainer(cfg)
 
-    assert OmegaConf.is_config(config)
+    assert OmegaConf.is_config(cfg)
     assert isinstance(model, pl.LightningModule)
     assert isinstance(trainer, pl.Trainer)
     assert isinstance(trainer, DLTrainer)

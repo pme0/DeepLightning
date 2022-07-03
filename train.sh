@@ -3,5 +3,5 @@
 if [ "$#" -eq "0" ]; then
     mlflow run . 
 else
-    mlflow run . -P config=$1
+    mlflow run . -P cfg=$1
 fi
