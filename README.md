@@ -21,12 +21,12 @@ After defining modules and configuration, training deep learning models is simpl
 from deeplightning.configure import load_config, init_module, init_trainer
 
 # load configuration
-config = load_config("config.yaml")
+cfg = load_config("cfg.yaml")
 
 # load modules
-model = init_module(config, "model")
-data = init_module(config, "data")
-trainer = init_trainer(config)
+model = init_module(cfg, "model")
+data = init_module(cfg, "data")
+trainer = init_trainer(cfg)
 
 # train model
 trainer.fit(model, data)
@@ -78,13 +78,13 @@ conda activate deeplightning
 
 **1. Train the model:**
 ```bash
-bash train.sh <config>
+bash train.sh <cfg>
 
 # Example: 
 # bash train.sh configs/classif_cnn.yaml
 ```
-- `config` is the configuration file (default: `configs/base.yaml`).
-<!-- #mlflow run . -P config=configs/your-config.yaml -->
+- `cfg` is the configuration file (default: `configs/base.yaml`).
+<!-- #mlflow run . -P config=configs/your-cfg.yaml -->
 
 This will run the MLflow project file `MLproject` (setup conda env & run scripts).
 Create your own config following [Configuration](#configure) or see [Examples](#examples) for a list of provided configs.
@@ -105,7 +105,7 @@ bash deploy.sh <artifact-storage-path>
 # Example:
 # bash deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
 ```
-- `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`config.yaml`) and model checkpoint (`last.ckpt`);
+- `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`cfg.yaml`) and model checkpoint (`last.ckpt`);
 
 **4. Predict using the API:**
 ```bash
@@ -153,7 +153,7 @@ For reproducibility and transparancy, parameters that affect training are not gr
  
 ### Example
 ```python
-#@filename: config.yaml
+#@filename: cfg.yaml
 
 data:
   root: /data

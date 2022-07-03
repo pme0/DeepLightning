@@ -13,38 +13,38 @@ class CIFAR10(pl.LightningDataModule):
     - testing samples: 10,000
     """
 
-    def __init__(self, config: OmegaConf):
+    def __init__(self, cfg: OmegaConf):
         super().__init__()
-        self.config = config
+        self.cfg = cfg
         self.dataset = "CIFAR10"
         trfs = [transforms.RandomHorizontalFlip(),
                 transforms.ToTensor()]
-        if "normalize" in config.data:
-            if config.data.normalize:
+        if "normalize" in cfg.data:
+            if cfg.data.normalize:
                 trfs.append(transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)))
-        if "resize" in config.data:
-            trfs.append(transforms.Resize(config.data.resize))
+        if "resize" in cfg.data:
+            trfs.append(transforms.Resize(cfg.data.resize))
         self.transform = transforms.Compose(trfs)
 
     def prepare_data(self) -> None:
         datasets.CIFAR10(
-            root = self.config.data.root, 
+            root = self.cfg.data.root, 
             train = True, 
             download = True)
         datasets.CIFAR10(
-            root = self.config.data.root, 
+            root = self.cfg.data.root, 
             train = False, 
             download = True)
 
     def setup(self, stage) -> None:
         self.train_ds = datasets.CIFAR10(
-            root = self.config.data.root, 
+            root = self.cfg.data.root, 
             train = True, 
             download = False, 
             transform = self.transform
         )  
         self.val_ds = datasets.CIFAR10(
-            root = self.config.data.root, 
+            root = self.cfg.data.root, 
             train = False, 
             download = False, 
             transform = self.transform
@@ -55,8 +55,8 @@ class CIFAR10(pl.LightningDataModule):
         In case validation and testing dataloaders are required 
         (e.g. cross-validation), use the following:
         ```
-        self.test_ds = CIFAR10(root = self.config.data.root, train = False, download = False, transform = self.transform)
-        mnist_full = CIFAR10(root = self.config.data.root, train = True, download = False, transform = self.transform)
+        self.test_ds = CIFAR10(root = self.cfg.data.root, train = False, download = False, transform = self.transform)
+        mnist_full = CIFAR10(root = self.cfg.data.root, train = True, download = False, transform = self.transform)
         self.train_ds, self.val_ds = random_split(mnist_full, [55000, 5000])
         ```
         """
@@ -67,17 +67,17 @@ class CIFAR10(pl.LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
             dataset = self.train_ds, 
-            batch_size = self.config.data.batch_size,
+            batch_size = self.cfg.data.batch_size,
             shuffle = True,
-            num_workers = self.config.data.num_workers,
+            num_workers = self.cfg.data.num_workers,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             dataset = self.val_ds, 
-            batch_size = self.config.data.batch_size,
+            batch_size = self.cfg.data.batch_size,
             shuffle = False,
-            num_workers = self.config.data.num_workers,
+            num_workers = self.cfg.data.num_workers,
         )
 
     def test_dataloader(self) -> DataLoader:

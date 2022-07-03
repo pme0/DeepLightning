@@ -19,13 +19,13 @@ class ImageClassification(pl.LightningModule):
 
     """
 
-    def __init__(self, config: OmegaConf):
+    def __init__(self, cfg: OmegaConf):
         super().__init__()
-        self.config = config
-        self.loss = init_obj_from_config(config.model.loss)
-        self.model = init_obj_from_config(config.model.network)
-        self.optimizer = init_obj_from_config(config.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(config.model.scheduler, self.optimizer)
+        self.cfg = cfg
+        self.loss = init_obj_from_config(cfg.model.loss)
+        self.model = init_obj_from_config(cfg.model.network)
+        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
+        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
     
         # optional metrics to use during training
         self.accuracy = metric_accuracy
@@ -54,8 +54,8 @@ class ImageClassification(pl.LightningModule):
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": self.scheduler,
-                "interval": self.config.model.scheduler.call.interval,
-                "frequency": self.config.model.scheduler.call.frequency,
+                "interval": self.cfg.model.scheduler.call.interval,
+                "frequency": self.cfg.model.scheduler.call.frequency,
             },
         })
 
@@ -100,7 +100,7 @@ class ImageClassification(pl.LightningModule):
                 element per device).
                 The output from `training_step()`.
         """
-        if self.global_step % self.config.logger.log_every_n_steps == 0:
+        if self.global_step % self.cfg.logger.log_every_n_steps == 0:
 
             # aggregate metrics across all devices
             metrics = self.gather_on_step(
@@ -192,8 +192,8 @@ class ImageClassification(pl.LightningModule):
 
         # EarlyStopping callback reads from `self.log()` but 
         # not from `self.logger.log()` thus this line. The key 
-        # `m = self.config.train.early_stop_metric` must exist
+        # `m = self.cfg.train.early_stop_metric` must exist
         # in `validation_epoch_outputs`.
-        if self.config.train.early_stop_metric is not None:
-            m = self.config.train.early_stop_metric
+        if self.cfg.train.early_stop_metric is not None:
+            m = self.cfg.train.early_stop_metric
             self.log(m, metrics[m])
