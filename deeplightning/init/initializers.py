@@ -9,40 +9,40 @@ from deeplightning.init.imports import init_module
 
 
 
-def init_dataset(config: OmegaConf) -> LightningDataModule:
+def init_dataset(cfg: OmegaConf) -> LightningDataModule:
     """ Initialize LightningDataModule
     """
-    s = config.data.module
-    return init_module(short_config = s, config = config)
+    s = cfg.data.module
+    return init_module(short_cfg = s, cfg = cfg)
 
 
-def init_model(config: OmegaConf) -> LightningModule:
+def init_model(cfg: OmegaConf) -> LightningModule:
     """ Initialize LightningModule
     """
-    s = config.model.module
-    return init_module(short_config = s, config = config)
+    s = cfg.model.module
+    return init_module(short_cfg = s, cfg = cfg)
 
 
-def init_trainer(config: OmegaConf) -> DLTrainer:
+def init_trainer(cfg: OmegaConf) -> DLTrainer:
     """ Initialize Deep Lightning Trainer
     """
     args = {
-        "max_epochs": config.train.num_epochs,
-        "gpus": config.engine.gpus,
-        "num_nodes": config.engine.num_nodes,
-        "strategy": config.engine.backend,
-        "precision": config.engine.precision,
-        "check_val_every_n_epoch": config.train.val_every_n_epoch,
-        "log_every_n_steps": config.logger.log_every_n_steps,
+        "max_epochs": cfg.train.num_epochs,
+        "gpus": cfg.engine.gpus,
+        "num_nodes": cfg.engine.num_nodes,
+        "strategy": cfg.engine.backend,
+        "precision": cfg.engine.precision,
+        "check_val_every_n_epoch": cfg.train.val_every_n_epoch,
+        "log_every_n_steps": cfg.logger.log_every_n_steps,
         }
-    return DLTrainer(config, args)
+    return DLTrainer(cfg, args)
 
 
-def init_everything(config: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
+def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
     """ Initialize main modules
     """
-    model = init_model(config)
-    data = init_dataset(config)
-    trainer = init_trainer(config)
+    model = init_model(cfg)
+    data = init_dataset(cfg)
+    trainer = init_trainer(cfg)
     return model, data, trainer
 

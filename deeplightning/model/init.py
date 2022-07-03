@@ -1,5 +1,5 @@
-def init_model(config: OmegaConf) -> LightningModule:
+def init_model(cfg: OmegaConf) -> LightningModule:
     """ Initialize LightningModule
     """
-    s = config.model.module
-    return init_module(short_config = s, config = config)
+    s = cfg.model.module
+    return init_module(short_cfg = s, cfg = cfg)

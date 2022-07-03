@@ -17,22 +17,22 @@ from deeplightning.init.imports import get_reference
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--artifact_path", type=str, help="artifact storage path, containing checkpoint ('last.ckpt') and train config ('config.yaml').")
+parser.add_argument("--artifact_path", type=str, help="artifact storage path, containing checkpoint ('last.ckpt') and train config ('cfg.yaml').")
 parser.add_argument("--host", type=str, default="localhost", help="host address")
 parser.add_argument("--port", type=int, default=5000, help="host port")
 args = parser.parse_args()
 
 
-def load_model(config: OmegaConf, ckpt_path: str) -> LightningModule:
+def load_model(confcfgig: OmegaConf, ckpt_path: str) -> LightningModule:
     """
     Import LightningModule class and initialize model. 
     Note that `load_from_checkpoint()` method should 
     be used on class reference, not class instance.
     """
-    lightning_module = get_reference(config.model.module)
+    lightning_module = get_reference(cfg.model.module)
     model = lightning_module.load_from_checkpoint(
         checkpoint_path = ckpt_path, 
-        config = config, # input to LightningModule
+        cfg = cfg, # input to LightningModule
     )
     return model
 
@@ -65,15 +65,15 @@ app = Flask(__name__)
 
 # The `artifact_path` will contain the config 
 # file (.yaml) and the model checkpoint (.ckpt)
-CONFIG_PATH = os.path.join(args.artifact_path, "config.yaml")
+CONFIG_PATH = os.path.join(args.artifact_path, "cfg.yaml")
 CHECKPOINT_PATH = os.path.join(args.artifact_path, "last.ckpt")
 
 # load train config - required to load 
 # model with correct parameters
-config = OmegaConf.load(CONFIG_PATH)
+cfg = OmegaConf.load(CONFIG_PATH)
 
 # load pretrained model from checkpoint
-model = load_model(config, CHECKPOINT_PATH)
+model = load_model(cfg, CHECKPOINT_PATH)
 model.eval()
 
 

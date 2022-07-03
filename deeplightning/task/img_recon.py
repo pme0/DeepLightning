@@ -19,18 +19,18 @@ class ImageReconstruction(pl.LightningModule):
     Additionally, auto-logging doesn't log at step 0, which is useful.
 
     """
-    def __init__(self, config: OmegaConf):
+    def __init__(self, cfg: OmegaConf):
         super().__init__()
-        self.config = config
-        self.num_tokens = config.model.network.params.num_tokens
-        self.kl_weight = config.model.network.params.kl_div_loss_weight
+        self.cfg = cfg
+        self.num_tokens = cfg.model.network.params.num_tokens
+        self.kl_weight = cfg.model.network.params.kl_div_loss_weight
 
-        self.loss = init_obj_from_config(config.model.loss)
-        self.model = init_obj_from_config(config.model.network)
-        self.optimizer = init_obj_from_config(config.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(config.model.scheduler, self.optimizer)
+        self.loss = init_obj_from_config(cfg.model.loss)
+        self.model = init_obj_from_config(cfg.model.network)
+        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
+        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
        
-        self.maxlen = len(str(self.config.train.num_epochs))
+        self.maxlen = len(str(self.cfg.train.num_epochs))
 
         trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         info_message("Trainable parameters: {:,d}".format(trainable_params))
@@ -43,8 +43,8 @@ class ImageReconstruction(pl.LightningModule):
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": self.scheduler,
-                "interval": self.config.model.scheduler.call.interval,
-                "frequency": self.config.model.scheduler.call.frequency
+                "interval": self.cfg.model.scheduler.call.interval,
+                "frequency": self.cfg.model.scheduler.call.frequency
             }
         })
 

@@ -20,10 +20,10 @@ class DLTrainer(Trainer):
 
     Inherits from `pytorch_lightning.Trainer`
     """
-    def __init__(self, config: OmegaConf, args: dict) -> None:
-        self.config = config
-        logger = self.init_logger(config)
-        callbacks = self.init_callbacks(config, logger.artifact_path)
+    def __init__(self, cfg: OmegaConf, args: dict) -> None:
+        self.cfg = cfg
+        logger = self.init_logger(cfg)
+        callbacks = self.init_callbacks(cfg, logger.artifact_path)
         args = {
             **args, 
             "logger": logger,
@@ -32,15 +32,15 @@ class DLTrainer(Trainer):
         super().__init__(**args)
 
 
-    def init_logger(self, config: OmegaConf) -> None:
+    def init_logger(self, cfg: OmegaConf) -> None:
         """ Initialize logger
         """
-        logger = init_obj_from_config(config.logger)
+        logger = init_obj_from_config(cfg.logger)
 
         # BUG? without this line, the logger doesn't define 
         # `_experiment_id` and `_run_id`, which are needed
         # to create `artifact_path`
-        logger.log_hyperparams(config) 
+        logger.log_hyperparams(cfg) 
 
         # `artifact_path` is used to save model checkpoints, revised 
         # config file (after config checks/mods), and artifacts.
@@ -60,12 +60,12 @@ class DLTrainer(Trainer):
         logger.log_histogram = logging.log_histogram
 
         # log config file
-        logger.log_config(config, logger.artifact_path)
+        logger.log_config(cfg, logger.artifact_path)
 
         return logger
 
 
-    def init_callbacks(self, config: OmegaConf, artifact_path: str) -> List[Any]:
+    def init_callbacks(self, cfg: OmegaConf, artifact_path: str) -> List[Any]:
         """ Initialize callback functions
         """
         callbacks = []
@@ -75,8 +75,8 @@ class DLTrainer(Trainer):
         # every Y batches
         accumulator = GradientAccumulationScheduler(
             scheduling={
-                config.train.grad_accum_from_epoch: 
-                config.train.grad_accum_every_n_batches}
+                cfg.train.grad_accum_from_epoch: 
+                cfg.train.grad_accum_every_n_batches}
         )
         callbacks += [accumulator]
 
@@ -90,17 +90,17 @@ class DLTrainer(Trainer):
         # MODEL CHECKPOINTING: save model 'every_n_epochs'
         checkpoint = ModelCheckpoint(
             dirpath = artifact_path,
-            every_n_epochs = config.train.ckpt_every_n_epochs,
+            every_n_epochs = cfg.train.ckpt_every_n_epochs,
             save_last = True,
         )
         callbacks += [checkpoint]
 
         # EARLY STOPPING: stop training when 'monitor' metric asymptotes
-        if config.train.early_stop_metric is not None:
+        if cfg.train.early_stop_metric is not None:
             earlystopping = EarlyStopping(
-                monitor = config.train.early_stop_metric,
-                min_delta = config.train.early_stop_delta,
-                patience = config.train.early_stop_patience,
+                monitor = cfg.train.early_stop_metric,
+                min_delta = cfg.train.early_stop_delta,
+                patience = cfg.train.early_stop_patience,
                 check_on_train_epoch_end = False # False: check at validation_epoch_end
             )
             callbacks += [earlystopping]

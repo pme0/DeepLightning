@@ -69,8 +69,8 @@ def clean_experiments(args: argparse.Namespace):
 
             artifacts = os.listdir(artifact_dir)
 
-            if "config.yaml" not in artifacts or "last.ckpt" not in artifacts:
-                message = "EXPERIMENT '{}': Missing config ('config.yaml') " \
+            if "cfg.yaml" not in artifacts or "last.ckpt" not in artifacts:
+                message = "EXPERIMENT '{}': Missing config ('cfg.yaml') " \
                     "or checkpoint ('last.ckpt'). Deleting " \
                     "that experiment...".format(experiment)
                 status += delete_experiment(experiment, message)

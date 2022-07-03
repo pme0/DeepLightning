@@ -42,6 +42,9 @@ train:
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
   ckpt_every_n_epochs: 1
+  early_stop_metric: null
+  early_stop_delta: 0.001
+  early_stop_patience: 3
 
 logger:
   type: pytorch_lightning.loggers.MLFlowLogger
