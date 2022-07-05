@@ -1,4 +1,4 @@
-from omegacong import OmegaConf
+from omegaconf import OmegaConf
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
