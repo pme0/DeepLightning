@@ -1,6 +1,6 @@
 # https://github.com/vineeth2309/Non-Max-Suppression/blob/main/NMS.py
 
-def IoU(box1, box2):
+def IOU(box1, box2):
 	""" We assume that the box follows the format:
 		box1 = [x1,y1,x2,y2], and box2 = [x3,y3,x4,y4],
 		where (x1,y1) and (x3,y3) represent the top left coordinate,
@@ -48,7 +48,7 @@ def NMS(boxes, conf_threshold=0.7, iou_threshold=0.4):
 		bbox_list_new.append(current_box)				# Append it to the list of final boxes
 		for box in bbox_list_thresholded:
 			if current_box[4] == box[4]:				# Check if both boxes belong to the same class
-				iou = IoU(current_box[:4], box[:4])		# Calculate the IOU of the two boxes
+				iou = IOU(current_box[:4], box[:4])		# Calculate the IOU of the two boxes
 				if iou > iou_threshold:					# Check if the iou is greater than the threshold defined
 					bbox_list_thresholded.remove(box)	# If there is significant overlap, then remove the box
 	
