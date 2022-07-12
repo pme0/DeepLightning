@@ -43,7 +43,7 @@ if __name__ == "__main__":
                 info_message(f"Performing testing with last trained model '{trainer.logger.artifact_path}/last.ckpt'.")
                 trainer.test(
                     model = model,
-                    ckpt_path = "best",
+                    #ckpt_path = "best",
                     datamodule = data,
                 )
         else:
