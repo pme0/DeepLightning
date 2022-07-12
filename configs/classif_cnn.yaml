@@ -1,7 +1,6 @@
 modes: 
   train: True #{train/test}
   test: True
-  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.train=False` and `modes.test=True`
   
 task: classification
 data:
@@ -51,6 +50,9 @@ train:
   early_stop_delta: 0.001
   early_stop_patience: 3
 
+test:
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.train=False` and `modes.test=True`
+  
 logger:
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
