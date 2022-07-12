@@ -48,11 +48,11 @@ if __name__ == "__main__":
                 )
         else:
             if cfg.modes.test:
-                info_message(f"Performing testing with pretrained model '{cfg.ckpt_test_path}'.")
+                info_message(f"Performing testing with pretrained model '{cfg.test.ckpt_test_path}'.")
                 #https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html#testing
                 trainer.test(
                     model = model,
-                    ckpt_path = cfg.ckpt_test_path,
+                    ckpt_path = cfg.test.ckpt_test_path,
                     datamodule = data,
                 )
 
