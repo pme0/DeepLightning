@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 ckpt_path = cfg.train.ckpt_resume_path,
             )
             if cfg.modes.test:
-                info_message(f"Performing testing with best trained model '{trainer.logger.artifact_path}'.")
+                info_message(f"Performing testing with last trained model '{trainer.logger.artifact_path}/last.ckpt'.")
                 trainer.test(
                     model = model,
                     ckpt_path = "best",

@@ -56,7 +56,7 @@ class MNIST(pl.LightningDataModule):
                 root = self.cfg.data.root,
                 train = True,
                 download = False,
-                transform = self.transfor
+                transform = self.transform
             )
             self.train_ds, self.val_ds = random_split(mnist_full, [55000, 5000])
         else:
