@@ -39,29 +39,40 @@ class MNIST(pl.LightningDataModule):
             download = True)
 
     def setup(self, stage) -> None:
-        self.train_ds = datasets.MNIST(
-            root = self.cfg.data.root, 
-            train = True, 
-            download = False, 
-            transform = self.transform
-        )
-        self.val_ds = datasets.MNIST(
-            root = self.cfg.data.root, 
-            train = False, 
-            download = False, 
-            transform = self.transform
-        )
         """ 
         The MNIST dataset contains a training subset and a testing subset.
-        Here we use the testing data in the validation dataloader.
-        In case validation and testing dataloaders are required 
-        (e.g. cross-validation), use the following:
-        ```
-        self.test_ds = CIFAR10(root = self.cfg.data.root, train = False, download = False, transform = self.transform)
-        mnist_full = CIFAR10(root = self.cfg.data.root, train = True, download = False, transform = self.transform)
-        self.train_ds, self.val_ds = random_split(mnist_full, [55000, 5000])
-        ```
+        If testing is active (`cfg.modes.test=True`), split training data
+        into train and val subsets. Otherwise, use training data as train 
+        subset and testing data as val subset.
         """
+        if self.cfg.modes.test:
+            self.test_ds = datasets.MNIST(
+                root = self.cfg.data.root, 
+                train = False, 
+                download = False, 
+                transform = self.transform
+            )
+            mnist_full = datasets.MNIST(
+                root = self.cfg.data.root,
+                train = True,
+                download = False,
+                transform = self.transfor
+            )
+            self.train_ds, self.val_ds = random_split(mnist_full, [55000, 5000])
+        else:
+            self.train_ds = datasets.MNIST(
+                root = self.cfg.data.root, 
+                train = True, 
+                download = False, 
+                transform = self.transform
+            )
+            self.val_ds = datasets.MNIST(
+                root = self.cfg.data.root, 
+                train = False, 
+                download = False, 
+                transform = self.transform
+            )
+
         info_message("Training set size: {:,d}".format(len(self.train_ds)))
         info_message("Validation set size: {:,d}".format(len(self.val_ds)))
         #utils.info_message("Testing set size: {:,d}".format(len(self.test_ds)))
@@ -83,7 +94,12 @@ class MNIST(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
-        pass
+        return DataLoader(
+            dataset = self.test_ds, 
+            batch_size = self.cfg.data.batch_size,
+            shuffle = False,
+            num_workers = self.cfg.data.num_workers,
+        )
 
     def predict_dataloader(self) -> DataLoader:
         pass

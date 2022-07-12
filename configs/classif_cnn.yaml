@@ -1,3 +1,8 @@
+modes: 
+  train: True #{train/test}
+  test: True
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.train=False` and `modes.test=True`
+  
 task: classification
 data:
   root: /Users/pme12/data/
@@ -36,7 +41,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 10
+  num_epochs: 2
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1

@@ -197,3 +197,62 @@ class ImageClassification(pl.LightningModule):
         if self.cfg.train.early_stop_metric is not None:
             m = self.cfg.train.early_stop_metric
             self.log(m, metrics[m])
+
+
+    def test_step(self, batch, batch_idx):
+        """ Hook for test step.
+        """
+        # forward pass
+        x, y = batch
+        logits = self(x)
+
+        # compute metrics
+        loss = self.loss(logits, y)
+        acc = self.accuracy(logits, y)
+
+        return {"test_loss": loss, 
+                "test_acc": acc}
+
+
+    def test_step_end(self, test_step_outputs):
+        """ Hook for test step_end.
+
+        Arguments:
+            :test_step_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device).
+                The output from `test_step()`.
+        """
+
+        # aggregate metrics across all devices.
+        metrics = self.gather_on_step(
+            step_outputs = test_step_outputs, 
+            metrics = ["test_loss", "test_acc"], 
+            average = False)
+
+        return metrics
+
+
+    def test_epoch_end(self, test_epoch_outputs):
+        """ Hook for test epoch_end.
+
+        Arguments:
+            :test_epoch_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device). 
+                The output from `test_step_end()`.
+        """
+
+        # aggregate losses across all steps and average
+        metrics = self.gather_on_epoch(
+            epoch_outputs = test_epoch_outputs, 
+            metrics = ["test_loss", "test_acc"], 
+            average = True)
+
+        # log validation metrics
+        self.logger.log_metrics(metrics, step = self.global_step)
+        print('test_loss:', metrics['test_loss'])
+        print('test_acc:', metrics['test_acc'])
+        

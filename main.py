@@ -1,6 +1,7 @@
 import argparse
 
 from deeplightning.utilities.cleanup import clean_phantom_folder
+from deeplightning.utilities.messages import info_message, warning_message, error_message
 from deeplightning.config.load import load_config
 from deeplightning.init.initializers import init_everything
 
@@ -29,9 +30,37 @@ if __name__ == "__main__":
     cfg = load_config(config_file = args.cfg)
     
     try:
-        main(cfg)
+        model, data, trainer = init_everything(cfg)
+
+        if cfg.modes.train:
+            info_message("Performing training and validation.")
+            trainer.fit(
+                model = model,
+                datamodule = data,
+                ckpt_path = cfg.train.ckpt_resume_path,
+            )
+            if cfg.modes.test:
+                info_message(f"Performing testing with best trained model '{trainer.logger.artifact_path}'.")
+                trainer.test(
+                    model = model,
+                    ckpt_path = "best",
+                    datamodule = data,
+                )
+        else:
+            if cfg.modes.test:
+                info_message(f"Performing testing with pretrained model '{cfg.ckpt_test_path}'.")
+                #https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html#testing
+                trainer.test(
+                    model = model,
+                    ckpt_path = cfg.ckpt_test_path,
+                    datamodule = data,
+                )
+
+        info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
+
     except KeyboardInterrupt as e:
-        print("Interrupted by user.")
+        warning_message("Interrupted by user.")
+        info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
     finally:
         pass
     #clean_phantom_folder()
