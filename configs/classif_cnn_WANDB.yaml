@@ -1,6 +1,6 @@
 modes: 
-  train: True #{train/test}
-  test: True
+  train: true #{train/test}
+  test: true
   
 task: classification
 data:
@@ -40,7 +40,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 2
+  num_epochs: 1
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -54,7 +54,7 @@ test:
   ckpt_test_path: /PATH_TO_CKPT # used only when `modes.train=False` and `modes.test=True`
   
 logger:
-  log_to_wandb: True
+  log_to_wandb: true
   project_name: trial
   type: pytorch_lightning.loggers.MLFlowLogger
   params:

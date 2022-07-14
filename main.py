@@ -48,7 +48,7 @@ if __name__ == "__main__":
                 ckpt_path = cfg.train.ckpt_resume_path,
             )
             if cfg.modes.test:
-                info_message(f"Performing testing with last trained model '{trainer.logger.artifact_path}/last.ckpt'.")
+                info_message(f"Performing testing with last trained model '{trainer.logger_.artifact_path}/last.ckpt'.")
                 trainer.test(
                     model = model,
                     #ckpt_path = "best",
@@ -64,12 +64,13 @@ if __name__ == "__main__":
                     datamodule = data,
                 )
 
-        info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
-
     except KeyboardInterrupt as e:
         warning_message("Interrupted by user.")
-        info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
+
     finally:
-        if cfg.logger.log_to_wandb:
+        if cfg.logger.log_to_wandb:  # wandb logger
+            info_message("Artifact storage path: {}".format(trainer.logger_.artifact_path))
             wandb.finish()
+        else:  # mlflow logger
+            info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
             

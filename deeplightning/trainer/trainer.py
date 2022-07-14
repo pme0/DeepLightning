@@ -5,14 +5,13 @@ from omegaconf import OmegaConf
 
 from pytorch_lightning import Trainer
 from deeplightning.config.defaults import __ConfigGroups__
-from deeplightning.logger import logging
+from deeplightning.logger import logging, logwandb
 from deeplightning.init.imports import init_obj_from_config
 from pytorch_lightning.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
                                          ModelCheckpoint,
                                          EarlyStopping)
 from deeplightning.utilities.messages import info_message
-
 
 
 class DLTrainer(Trainer):
@@ -22,19 +21,27 @@ class DLTrainer(Trainer):
     """
     def __init__(self, cfg: OmegaConf, args: dict) -> None:
         self.cfg = cfg
-        logger = self.init_logger(cfg)
-        callbacks = self.init_callbacks(cfg, logger.artifact_path)
-        args = {
-            **args, 
-            "logger": logger,
-            "callbacks": callbacks,
-        }
+
+        # pass logger to trainer unless using wandb.
+        # by default `Trainer`` has an attribute `logger` so name 
+        # this one `logger_` to avoid conflicts
+        self.logger_ = self.init_logger(cfg)
+        if not cfg.logger.log_to_wandb:
+            args = {**args, "logger": self.logger_}
+
+        # pass callbacks to trainer
+        callbacks = self.init_callbacks(cfg, self.logger_.artifact_path)
+        args = {**args, "callbacks": callbacks,}
+
         super().__init__(**args)
 
 
     def init_logger(self, cfg: OmegaConf) -> None:
         """ Initialize logger
         """
+        if cfg.logger.log_to_wandb:
+            return logwandb.wandbLogger(cfg)
+
         logger = init_obj_from_config(cfg.logger)
 
         # BUG? without this line, the logger doesn't define 
