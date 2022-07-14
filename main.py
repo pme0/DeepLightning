@@ -1,4 +1,5 @@
 import argparse
+import wandb
 
 from deeplightning.utilities.cleanup import clean_phantom_folder
 from deeplightning.utilities.messages import info_message, warning_message, error_message
@@ -28,6 +29,13 @@ if __name__ == "__main__":
 
     args = parse_command_line_arguments()
     cfg = load_config(config_file = args.cfg)
+    
+    if cfg.logger.log_to_wandb:
+        wandb.init(
+            project = cfg.logger.project_name,
+            notes = "tweak baseline",
+            tags = ["baseline", "paper1"]
+        )
     
     try:
         model, data, trainer = init_everything(cfg)
@@ -62,5 +70,6 @@ if __name__ == "__main__":
         warning_message("Interrupted by user.")
         info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
     finally:
-        pass
-    #clean_phantom_folder()
+        if cfg.logger.log_to_wandb:
+            wandb.finish()
+            
