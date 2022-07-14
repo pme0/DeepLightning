@@ -36,6 +36,8 @@ def log_config(cfg: OmegaConf, path: str) -> None:
             "Attempting to save a config artifact but the object "
             "provided is not of type omegaconf.dictconfig.DictConfig.")
     
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
     OmegaConf.save(cfg, f = os.path.join(path, "cfg.yaml"))
 
 
