@@ -2,6 +2,7 @@ from typing import Tuple
 from omegaconf import OmegaConf
 from torch import Tensor
 import pytorch_lightning as pl
+import wandb
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
@@ -40,6 +41,19 @@ class ImageClassification(pl.LightningModule):
         self.trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         info_message("Trainable parameters: {:,d}".format(self.trainable_params))
        
+        # WandB logging:
+        if self.cfg.logger.log_to_wandb:
+            # define our custom x axis metric
+            self.step_label = "iteration"
+            wandb.define_metric(self.step_label)
+            # define which metrics will be plotted against it
+            wandb.define_metric("train_loss", step_metric=self.step_label)
+            wandb.define_metric("train_acc", step_metric=self.step_label)
+            wandb.define_metric("val_loss", step_metric=self.step_label)
+            wandb.define_metric("val_acc", step_metric=self.step_label)
+            #wandb.define_metric("test_loss", step_metric=self.step_label)
+            #wandb.define_metric("test_acc", step_metric=self.step_label)
+
 
     def forward(self, x: Tensor) -> Tensor:
         """ Model forward pass.
@@ -112,9 +126,13 @@ class ImageClassification(pl.LightningModule):
             metrics['train_loss']  = metrics.pop('loss')
 
             # log training metrics
-            self.logger.log_metrics(
-                metrics = metrics, 
-                step = self.global_step)
+            if self.cfg.logger.log_to_wandb:
+                metrics[self.step_label] = self.global_step
+                wandb.log(metrics)
+            else:
+                self.logger.log_metrics(
+                    metrics = metrics, 
+                    step = self.global_step)
 
 
     def training_epoch_end(self, training_step_outputs):
@@ -129,10 +147,15 @@ class ImageClassification(pl.LightningModule):
         """
 
         # log training metrics on the last batch only
-        self.logger.log_metrics(
-            metrics = {
-                "train_acc": training_step_outputs[-1]["train_acc"].item()}, 
-            step = self.global_step)
+        if self.cfg.logger.log_to_wandb:
+            metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
+            metrics[self.step_label] = self.global_step
+            wandb.log(metrics)
+        else:
+            self.logger.log_metrics(
+                metrics = {
+                    "train_acc": training_step_outputs[-1]["train_acc"].item()}, 
+                step = self.global_step)
     
 
     def validation_step(self, batch, batch_idx):
@@ -188,7 +211,11 @@ class ImageClassification(pl.LightningModule):
             average = True)
 
         # log validation metrics
-        self.logger.log_metrics(metrics, step = self.global_step)
+        if self.cfg.logger.log_to_wandb:
+            metrics[self.step_label] = self.global_step
+            wandb.log(metrics)
+        else:
+            self.logger.log_metrics(metrics, step = self.global_step)
 
         # EarlyStopping callback reads from `self.log()` but 
         # not from `self.logger.log()` thus this line. The key 
@@ -252,7 +279,11 @@ class ImageClassification(pl.LightningModule):
             average = True)
 
         # log validation metrics
-        self.logger.log_metrics(metrics, step = self.global_step)
-        print('test_loss:', metrics['test_loss'])
-        print('test_acc:', metrics['test_acc'])
+        if self.cfg.logger.log_to_wandb:
+            metrics[self.step_label] = self.global_step
+            wandb.log(metrics)
+        else:
+            self.logger.log_metrics(metrics, step = self.global_step)
+            print('test_loss:', metrics['test_loss'])
+            print('test_acc:', metrics['test_acc'])
         
