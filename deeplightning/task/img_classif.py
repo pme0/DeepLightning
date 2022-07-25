@@ -8,7 +8,7 @@ from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
 from deeplightning.trainer.metrics import metric_accuracy
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-
+from deeplightning.logger.logwandb import initilise_wandb_metrics
 
 class ImageClassification(pl.LightningModule):
     """ Task module for Image Classification. 
@@ -17,7 +17,6 @@ class ImageClassification(pl.LightningModule):
     is more flexible as PyTorchLightning automatic logging 
     `self.log()`) only allows scalars, not histograms, images, etc.
     Additionally, auto-logging doesn't log at step 0, which is useful.
-
     """
 
     def __init__(self, cfg: OmegaConf):
@@ -43,16 +42,10 @@ class ImageClassification(pl.LightningModule):
        
         # WandB logging:
         if self.cfg.logger.log_to_wandb:
-            # define our custom x axis metric
-            self.step_label = "iteration"
-            wandb.define_metric(self.step_label)
-            # define which metrics will be plotted against it
-            wandb.define_metric("train_loss", step_metric=self.step_label)
-            wandb.define_metric("train_acc", step_metric=self.step_label)
-            wandb.define_metric("val_loss", step_metric=self.step_label)
-            wandb.define_metric("val_acc", step_metric=self.step_label)
-            #wandb.define_metric("test_loss", step_metric=self.step_label)
-            #wandb.define_metric("test_acc", step_metric=self.step_label)
+            self.step_label = initilise_wandb_metrics(
+                metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
+                step_label = "iteration",
+            )
 
 
     def forward(self, x: Tensor) -> Tensor:
