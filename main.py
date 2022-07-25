@@ -33,8 +33,8 @@ if __name__ == "__main__":
     if cfg.logger.log_to_wandb:
         wandb.init(
             project = cfg.logger.project_name,
-            notes = "tweak baseline",
-            tags = ["baseline", "paper1"]
+            notes = cfg.logger.notes,
+            tags = cfg.logger.tags,
         )
     
     try:

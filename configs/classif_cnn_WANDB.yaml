@@ -40,7 +40,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 1
+  num_epochs: 2
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -51,11 +51,13 @@ train:
   early_stop_patience: 3
 
 test:
-  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.train=False` and `modes.test=True`
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
   
 logger:
   log_to_wandb: true
   project_name: trial
+  tags: ['classification'] # cannot be empty
+  notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default
