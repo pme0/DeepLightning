@@ -12,3 +12,16 @@ class wandbLogger():
         self.cfg = cfg
         self.artifact_path = os.path.join(wandb.run.dir)
         logging.log_config(cfg, self.artifact_path)
+
+
+def initilise_wandb_metrics(metrics: list, step_label: str) -> None:
+    """
+    """
+    # define custom x-axis metric `step_label` (synchronised with PL `global_step`)
+    wandb.define_metric(step_label)
+    
+    # initialise metrics to be plotted against `step_label`
+    for m in metrics:
+        wandb.define_metric(m, step_metric=step_label)
+
+    return step_label
