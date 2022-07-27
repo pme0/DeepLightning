@@ -10,6 +10,7 @@ from deeplightning.trainer.metrics import metric_accuracy
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.logger.logwandb import initilise_wandb_metrics
 
+
 class ImageClassification(pl.LightningModule):
     """ Task module for Image Classification. 
 
@@ -277,6 +278,4 @@ class ImageClassification(pl.LightningModule):
             wandb.log(metrics)
         else:
             self.logger.log_metrics(metrics, step = self.global_step)
-            print('test_loss:', metrics['test_loss'])
-            print('test_acc:', metrics['test_acc'])
         

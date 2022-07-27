@@ -54,28 +54,28 @@ def configuration_checks(cfg: OmegaConf) -> OmegaConf:
     if cfg.engine.gpus is not None:
         if not torch.cuda.is_available():
             warning_message(
-                "GPUs selected but not available in this machine. "
-                "Use 'engine.gpus: null' in the yaml config "
-                "file to use CPU backend instead. 'engine.backend' "
-                "can be set to 'null' or 'ddp'."
+                "GPUs {} selected but not available in this " 
+                "machine. Will overwrite `engine.gpus` to use "
+                "'None' (CPU backend).".format(cfg.engine.gpus)
             )
+            cfg.engine.gpus = None
     else:
         if cfg.engine.gpus is None and cfg.engine.backend is not None:
             warning_message(
                 "No GPUs selected, therefore will overwrite "
                 "cfg.engine.backend to use 'None' (CPU backend) "
-                "(currently using backend '{}')".format(cfg.engine.backend)
+                "(currently using backend '{}').".format(cfg.engine.backend)
             )
             cfg.engine.backend = None
 
 
     if cfg.engine.backend is not None:
         if "deepspeed" in cfg.engine.backend and \
-            cfg.model.optimizer.type != "deepspeed.ops.adam.FusedAdam":
+            cfg.model.optimizer.target != "deepspeed.ops.adam.FusedAdam":
             warning_message(
                 "PytorchLightning recommends FusedAdam optimizer "
                 "when using DeepSpeed parallel backend "
-                "(currently using '{}')".format(cfg.model.optimizer.type)
+                "(currently using '{}')".format(cfg.model.optimizer.target)
             )
 
     return cfg

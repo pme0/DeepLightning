@@ -37,6 +37,7 @@ if __name__ == "__main__":
             tags = cfg.logger.tags,
         )
     
+
     try:
         model, data, trainer = init_everything(cfg)
 
@@ -66,11 +67,12 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt as e:
         warning_message("Interrupted by user.")
-
     finally:
-        if cfg.logger.log_to_wandb:  # wandb logger
+        if cfg.logger.log_to_wandb:
+            # wandb logger
             info_message("Artifact storage path: {}".format(trainer.logger_.artifact_path))
             wandb.finish()
-        else:  # mlflow logger
+        else:
+            # mlflow logger
             info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
             

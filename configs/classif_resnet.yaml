@@ -5,28 +5,28 @@ data:
   num_workers: 4
   batch_size: 256
   module: 
-    type: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.mnist.MNIST
 
 model:
   module: 
-    type: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.img_classif.ImageClassification
   network:
-    type: deeplightning.models.resnet.resnet18
+    target: deeplightning.models.resnet.resnet18
     params: 
       num_classes: 10
       num_channels: 1
   optimizer:
-    type: torch.optim.Adadelta
+    target: torch.optim.Adadelta
     params:
   scheduler:
-    type: torch.optim.lr_scheduler.ExponentialLR
+    target: torch.optim.lr_scheduler.ExponentialLR
     params:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
-    type: torch.nn.CrossEntropyLoss
+    target: torch.nn.CrossEntropyLoss
     params:
 
 engine:
