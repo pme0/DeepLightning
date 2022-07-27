@@ -5,34 +5,34 @@ data:
   num_workers: 4
   batch_size: 256
   module:
-    type: tests.helpers.dummies.DummyDataset
+    target: tests.helpers.dummies.DummyDataset
     params:
       length: 5
       size: 8
 
 model:
   module:
-    type: tests.helpers.dummies.DummyModel
+    target: tests.helpers.dummies.DummyModel
   network:
     type: null
     params: 
       num_classes: 10
       num_channels: 1
   optimizer:
-    type: torch.optim.SGD
+    target: torch.optim.SGD
     params:
       lr: 0.01
       weight_decay: 0.01
       momentum: 0.9
   scheduler:
-    type: torch.optim.lr_scheduler.ExponentialLR
+    target: torch.optim.lr_scheduler.ExponentialLR
     params:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
-    type: torch.nn.CrossEntropyLoss
+    target: torch.nn.CrossEntropyLoss
     params:
 
 engine:
