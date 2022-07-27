@@ -35,7 +35,7 @@ trainer.fit(model, data)
 
 
 ### Contents
-* [Overview](overview)
+* [Overview](#overview)
 * [Installation](#installation)
 * [Usage](#usage)
   * [Run](#run)
@@ -121,7 +121,7 @@ bash predict.sh <image>
 ### \*Logic
 
 All config fields labelled `type` correspond to target classes. The format is `MODULE.CLASS` and the code will load class `CLASS` from `MODULE.py` (relative path). Note that `MODULE` can itself be composite, `X.Y.Z`, in which case the class `CLASS` will be loaded from `X/Y/Z.py`. 
-For example, `model.optimizer.type` could be existing `deepspeed.ops.adam.FusedAdam` or user-defined in `losses.custom.MyLoss`.
+For example, `model.optimizer.target` could be existing `deepspeed.ops.adam.FusedAdam` or user-defined in `losses.custom.MyLoss`.
 
 <!--It's possible to drop some of the parameters to obtain a light config file, see `deeplightning/defaults.py`. 
 For reproducibility and transparancy, parameters that affect training are not granted defaults.-->
@@ -159,33 +159,33 @@ data:
   root: /data
   dataset: MNIST
   module:
-    type: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.mnist.MNIST
   num_workers: 4
   batch_size: 256
    
 model:
   module:
-    type: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.img_classif.ImageClassification
   network:
-    type: deeplightning.model.cnn.SimpleCNN
+    target: deeplightning.model.cnn.SimpleCNN
     params: 
       num_classes: 10
       num_channels: 1
   optimizer:
-    type: torch.optim.SGD
+    target: torch.optim.SGD
     params:
       lr: 0.01
       weight_decay: 0.01
       momentum: 0.9
   scheduler:
-    type: torch.optim.lr_scheduler.ExponentialLR
+    target: torch.optim.lr_scheduler.ExponentialLR
     params:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
-    type: torch.nn.CrossEntropyLoss
+    target: torch.nn.CrossEntropyLoss
     params:
 
 engine:
@@ -214,9 +214,9 @@ logger:
 > Make sure you're familiar with the [configuration logic and details](#configure)!
 
 Beyond changing parameters values in existing configs, you can customize the following according to your needs:
-- **custom model**: put your model in `models/customnet.py`, and update the config field `model.network.type` and any required parameters to point to your new model;
-- **custom task**: duplicate the task module `lightning/model/classification.py`, rename it `lightning/model/customtask.py`, make the required modifications to run your task, and update the config field `model.module.type` to point to your new task module;
-- **custom dataset**: duplicate the data module `lightning/data/mnist.py`, rename it `lightning/data/customdataset.py`, make the required modifications to load your dataset, and update the config field `data.module.type` to point to your new data module;
+- **custom model**: put your model in `models/customnet.py`, and update the config field `model.network.target` and any required parameters to point to your new model;
+- **custom task**: duplicate the task module `lightning/model/classification.py`, rename it `lightning/model/customtask.py`, make the required modifications to run your task, and update the config field `model.module.target` to point to your new task module;
+- **custom dataset**: duplicate the data module `lightning/data/mnist.py`, rename it `lightning/data/customdataset.py`, make the required modifications to load your dataset, and update the config field `data.module.target` to point to your new data module;
 
 
 # Examples

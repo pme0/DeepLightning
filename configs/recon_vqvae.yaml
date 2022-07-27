@@ -6,13 +6,13 @@ data:
   num_workers: 4
   batch_size: 128
   module:
-    type: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.mnist.MNIST
 
 model:
   module:
-    type: deeplightning.task.img_recon.ImageReconstruction
+    target: deeplightning.task.img_recon.ImageReconstruction
   network:
-    type: deeplightning.model.vqvae.DiscreteVAE
+    target: deeplightning.model.vqvae.DiscreteVAE
     params: 
       image_size: 32
       num_tokens: 8 #512
@@ -26,17 +26,17 @@ model:
       kl_div_loss_weight: 0.0
       normalization: null
   optimizer:
-    type: torch.optim.Adadelta
+    target: torch.optim.Adadelta
     params:
   scheduler:
-    type: torch.optim.lr_scheduler.ExponentialLR
+    target: torch.optim.lr_scheduler.ExponentialLR
     params:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
-    type: deeplightning.modules.loss.vqvae_loss.VQVAE_Loss
+    target: deeplightning.modules.loss.vqvae_loss.VQVAE_Loss
     params:
       smooth_l1_loss: True
       num_tokens: ${model.network.params.num_tokens}

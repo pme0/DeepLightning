@@ -11,7 +11,7 @@ def exists(x: ConfigElement) -> bool:
 def get_reference(cfg: OmegaConf) -> Any:
     """ Get a reference of the target class.
     """
-    lib, target = cfg.type.rsplit(".", 1)
+    lib, target = cfg.target.rsplit(".", 1)
     module = importlib.import_module(lib)
     return getattr(module, target)
 

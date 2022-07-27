@@ -10,7 +10,7 @@
 
 # Tasks
 
-`pl.LightningModule` classes are available for the following tasks. Use the corresponding *Module* in the YAML config field `model.module.type`.
+`pl.LightningModule` classes are available for the following tasks. Use the corresponding *Module* in the YAML config field `model.module.target`.
 
 | Task                        | Module                                            | Tracked variable                                                      |
 | --------------------------- | --------------------------------------------------| --------------------------------------------------------------------- |
@@ -20,7 +20,7 @@
 
 # Models
 
-`torch.nn.Module` classes are available for the following models. Use the corresponding *Module* in the YAML config field `model.network.type`.
+`torch.nn.Module` classes are available for the following models. Use the corresponding *Module* in the YAML config field `model.network.target`.
 
 | Model                    | Module                             | Sources                                     |
 | ------------------------ | ---------------------------------- | ------------------------------------------- | 
@@ -40,7 +40,7 @@
 
 # Datasets
 
-`pl.LightningDataModule` classes are available for the following datasets. Use the corresponding *Module* in the YAML config field `data.module.type`.
+`pl.LightningDataModule` classes are available for the following datasets. Use the corresponding *Module* in the YAML config field `data.module.target`.
 
 | Dataset                 | Module                                             | 
 | ----------------------- | -------------------------------------------------- | 
