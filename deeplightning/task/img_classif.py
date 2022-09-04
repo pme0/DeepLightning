@@ -28,9 +28,12 @@ class ImageClassification(pl.LightningModule):
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
     
+        self.sanity_check = True # to avoid logging sanity check metrics
+
         # optional metrics to use during training
         self.accuracy = metric_accuracy
-
+        self.confusion_matrix = MetricsConfusionMatrix(cfg)
+        
         # aggregation utilities
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
@@ -158,11 +161,13 @@ class ImageClassification(pl.LightningModule):
         # forward pass
         x, y = batch
         logits = self(x)
-
+        preds = torch.argmax(logits, dim=1)
+        
         # compute metrics
         loss = self.loss(logits, y)
         acc = self.accuracy(logits, y)
-
+        self.confusion_matrix.update(preds, y)
+        
         return {"val_loss": loss, 
                 "val_acc": acc}
 
@@ -203,11 +208,19 @@ class ImageClassification(pl.LightningModule):
             epoch_outputs = validation_epoch_outputs, 
             metrics = ["val_loss", "val_acc"], 
             average = True)
+        
+        # confusion matrix - TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
+        cm = self.confusion_matrix.compute()
+        cm_fig = self.confusion_matrix.draw(cm)
+        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix (%)")
+        self.confusion_matrix.reset()
 
         # log validation metrics
         if self.cfg.logger.log_to_wandb:
             metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
+            if not self.sanity_check:
+                wandb.log(metrics)
+            self.sanity_check = False
         else:
             self.logger.log_metrics(metrics, step = self.global_step)
 
@@ -226,10 +239,12 @@ class ImageClassification(pl.LightningModule):
         # forward pass
         x, y = batch
         logits = self(x)
-
+        preds = torch.argmax(logits, dim=1)
+        
         # compute metrics
         loss = self.loss(logits, y)
         acc = self.accuracy(logits, y)
+        self.confusion_matrix.update(preds, y)
 
         return {"test_loss": loss, 
                 "test_acc": acc}
@@ -272,7 +287,13 @@ class ImageClassification(pl.LightningModule):
             metrics = ["test_loss", "test_acc"], 
             average = True)
 
-        # log validation metrics
+        # confusion matrix
+        cm = self.confusion_matrix.compute()
+        cm_fig = self.confusion_matrix.draw(cm)
+        metrics["test_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix (%)")
+        self.confusion_matrix.reset()
+        
+        # log test metrics
         if self.cfg.logger.log_to_wandb:
             metrics[self.step_label] = self.global_step
             wandb.log(metrics)
