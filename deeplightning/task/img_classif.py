@@ -30,9 +30,9 @@ class ImageClassification(pl.LightningModule):
     
         self.sanity_check = True # to avoid logging sanity check metrics
 
-        # optional metrics to use during training
-        self.accuracy = metric_accuracy
-        self.confusion_matrix = MetricsConfusionMatrix(cfg)
+        # metrics to use during training
+        self.accuracy = metric_accuracy # TODO create superclass from `torchmetrics.Accuracy()`
+        self.confusion_matrix = MetricsConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
         
         # aggregation utilities
         self.gather_on_step = gather_on_step
@@ -209,7 +209,7 @@ class ImageClassification(pl.LightningModule):
             metrics = ["val_loss", "val_acc"], 
             average = True)
         
-        # confusion matrix - TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
+        # confusion matrix
         cm = self.confusion_matrix.compute()
         cm_fig = self.confusion_matrix.draw(cm)
         metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix (%)")
