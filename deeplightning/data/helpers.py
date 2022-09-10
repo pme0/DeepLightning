@@ -1,19 +1,13 @@
 from deeplightning.utilities.messages import info_message, warning_message
-import numpy as np
 from torchvision import transforms as T
 
 
-def print_transforms(subset, trfs):
-    info_message("{}:".format(subset.upper()))
-    for i, k in enumerate(trfs):
-        info_message(f"  ({i+1}) {k}")
-
-def get_transforms(DataTransforms, cfg, field):
+def get_transforms(DataTransforms, cfg, subset):
     trfs = []
-    if cfg.data[field] is None:
+    if cfg.data[subset] is None:
         return trfs.append(DataTransforms["totensor"])
-    for k in cfg.data[field].keys():
-        p = cfg.data[field][k]
+    for k in cfg.data[subset].keys():
+        p = cfg.data[subset][k]
         t = DataTransforms[k](p)
         if t is not None:
             if isinstance(t, list):
@@ -22,6 +16,10 @@ def get_transforms(DataTransforms, cfg, field):
             else:
                 trfs.append(t)
         else:
-            warning_message(f"Transform '{k}' present in .cfg.data.{field}' but unused due to unsuitable parameters ({cfg.data[field][k]})")
-    print_transforms(field, trfs)
+            warning_message(f"Transform '{k}' present in .cfg.data.{subset}' but unused due to unsuitable parameters ({cfg.data[subset][k]})")
+    
+    info_message("{}:".format(subset.upper()))
+    for i, k in enumerate(trfs):
+        info_message(f"  ({i+1}) {k}")
+
     return T.Compose(trfs)
