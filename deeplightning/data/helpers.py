@@ -1,8 +1,10 @@
-from deeplightning.utilities.messages import info_message, warning_message
 from torchvision import transforms as T
 
+from deeplightning.utilities.messages import info_message, warning_message
+from deeplightning.data.transforms import DataTransforms
 
-def get_transforms(DataTransforms, cfg, subset):
+
+def get_transforms(cfg, subset):
     trfs = []
     if cfg.data[subset] is None:
         return trfs.append(DataTransforms["totensor"])

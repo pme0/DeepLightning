@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
 
 from deeplightning.utilities.messages import info_message
+from deeplightning.data.transforms import get_transforms
 
 class CIFAR10(pl.LightningDataModule):
     """ CIFAR10 dataset
@@ -16,7 +17,9 @@ class CIFAR10(pl.LightningDataModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.dataset = "CIFAR10"
+
+        #self.train_transform = get_transforms(cfg, "train_transforms")
+        
         trfs = [transforms.RandomHorizontalFlip(),
                 transforms.ToTensor()]
         if "normalize" in cfg.data:
@@ -24,6 +27,7 @@ class CIFAR10(pl.LightningDataModule):
                 trfs.append(transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)))
         if "resize" in cfg.data:
             trfs.append(transforms.Resize(cfg.data.resize))
+        
         self.transform = transforms.Compose(trfs)
 
     def prepare_data(self) -> None:
