@@ -27,14 +27,25 @@ def plot_image_and_bboxes(
     bboxes: dict = [], 
     resize: int = None, 
     save_path: str = None, 
-    show_image: bool = False
+    show_image: bool = True
     ):
-    """Assumes square image
+    """Plot an image together with a set of bounding boxes and class labels
+
+    Example:
+    ```
+    from deeplightning.viz.bboxes import plot_image_and_bboxes
+    img_path = "media/eye.jpg"
+    bboxes = [
+        {"class": "iris",  "box": [253, 245, 244, 240], "format": "xcxcwh"},
+        {"class": "pupil", "box": [244, 243, 68+x, 64], "format": "xcxcwh"}]
+    plot_image_and_bboxes(image_path=img_path, bboxes=bboxes, resize=500, 
+                    save_path=None, show_image=True)
+    ```
     """
     
     image = PIL.Image.open(image_path)
     img_w, img_h = imagesize.get(image_path)
-    assert img_w == img_h
+    assert img_w == img_h  # assumes square image
     if resize is None:
         resize = img_w
     else:
@@ -80,8 +91,10 @@ def plot_image_and_bboxes(
                 alpha=0.4,
             )
         )
+        label_conf = None if "conf" not in bbox else bbox["conf"]
+        label_text = "{}{}{:.2f}".format(bbox["class"].lower(), "" if label_conf is None else " ", round(label_conf,2))
         # label box
-        label_width = label_width_factor * resize_extra * len(bbox["class"])
+        label_width = label_width_factor * resize_extra * len(label_text)
         label_heigth = label_heigth_factor * resize_extra
         ax.add_patch(
             patches.Rectangle(
@@ -95,7 +108,7 @@ def plot_image_and_bboxes(
         )
         # label text
         plt.annotate(
-            text=bbox["class"].lower(), 
+            text=label_text, 
             xy=(box["x_LowerLeft"], box["y_LowerLeft"]),
             color='white',
             ha="left",
