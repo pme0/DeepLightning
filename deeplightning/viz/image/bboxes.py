@@ -20,6 +20,7 @@ def convert_image_sequence_to_video(image_folder):
     with zeros ('img_0000', 'img_0001', ...); otherwise images will 
     not appear in the correct order.
     """
+    pass
 
 
 def plot_image_and_bboxes(
@@ -33,7 +34,7 @@ def plot_image_and_bboxes(
 
     Example:
     ```
-    from deeplightning.viz.bboxes import plot_image_and_bboxes
+    from deeplightning.viz.image.bboxes import plot_image_and_bboxes
     img_path = "media/eye.jpg"
     bboxes = [
         {"class": "iris",  "box": [253, 245, 244, 240], "format": "xcxcwh"},
