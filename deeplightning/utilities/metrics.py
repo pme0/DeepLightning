@@ -2,8 +2,8 @@ from typing import Tuple, List, Union
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
-import torchmetrics
-from torchmetrics.functional import accuracy, mean_squared_error
+from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatrix
+from torchmetrics.functional.classification.accuracy import accuracy
 import seaborn as sn
 import numpy as np
 import pandas as pd
@@ -11,31 +11,40 @@ from matplotlib.figure import Figure as pltFigure
 from matplotlib import pyplot as plt
 
 
-class MetricsConfusionMatrix(torchmetrics.ConfusionMatrix):
+class MetricsConfusionMatrix(MulticlassConfusionMatrix):
     """
     """
     def __init__(self, cfg: OmegaConf):
         self.num_classes = cfg.model.network.params.num_classes
         args = {
+            "task": "binary" if self.num_classes == 2 else "multiclass",
             "num_classes": self.num_classes,
-            "normalize": "true",
+            "normalize": "true",  # 'true' normalizes over the true labels (targets)
         }
+        print('\n\n',args,'\n\n')
         super().__init__(**args)
 
-    def draw(self, cm: Tensor) -> pltFigure:
+    def draw(self, cm: Tensor, epoch: int = None) -> pltFigure:
         cm = np.round(100*cm.cpu().numpy()).astype(int)
-        df_cm = pd.DataFrame(cm, range(self.num_classes), range(self.num_classes))
-        fig, ax = plt.subplots(1, 1, figsize=(12, 9), tight_layout=True)
-        ax.set_xlabel("Predicted")
-        ax.set_ylabel("True")
-        #ax.set_title("Confusion Matrix")
-        sn.set(font_scale=1.4) # for label size
-        sn.heatmap(df_cm, cmap="YlGnBu", annot=True, fmt="d", annot_kws={"size": 16}) # font size
+        fig, ax = plt.subplots(1, 1, figsize=(8,6), tight_layout=True)
+        #aa = ax.matshow(cm, cmap=plt.cm.YlGnBu, alpha=0.9)
+        aa = ax.matshow(cm, cmap='viridis', alpha=0.9)
+        for m in range(cm.shape[0]):
+            for n in range(cm.shape[1]):
+                ax.text(x=m,y=n,s=cm[m, n], va='center', ha='center', size='large')
+        plt.xticks(range(len(cm)))
+        plt.yticks(range(len(cm)))
+        plt.xlabel("True class", size='large')
+        plt.ylabel("Predicted class", size='large')
+        plt.title(f"Confusion Matrix [val, epoch {epoch}] (%)", size='large')
+        plt.colorbar(aa)
+        plt.close()
         return fig
+        
     
-def metric_accuracy(logits: Tensor, y: Tensor) -> Tensor:
+def metric_accuracy(logits: Tensor, target: Tensor, task: str, num_classes: int) -> Tensor:
     preds = torch.argmax(logits, dim=1)
-    return accuracy(preds, y)
+    return accuracy(preds=preds, target=target, task=task, num_classes=num_classes)
 
 def metric_mse(preds: Tensor, target: Tensor) -> Tensor:
     return mean_squared_error(preds, target, squared = True)
