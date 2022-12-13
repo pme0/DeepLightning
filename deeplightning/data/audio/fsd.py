@@ -9,16 +9,32 @@ from deeplightning.utilities.messages import info_message, warning_message
 
 
 class FSD_dataset(Dataset):
-    def __init__(self, cfg: OmegaConf, subfolder: str, transform=None):
-        """
-        Args
-        ----------
-        :cfg: path to dataset main folder
+    """Free Spoken Digit dataset.
 
-        :subfolder: path to dataset subfolder (e.g. 'train' or 'test')
+    Preprocessing
+    ----------
+    After downloading the dataset and resources from 
+    the link above, following preprocessing steps:
+    ```
+        cd fsd
+        mkdir spectrograms
+        mkdir training-spectrograms
+        mkdir testing-spectrograms
+        python spectrometer.py  # change paths inside this script
+        python train-test-split.py
+    ```
+
+    Parameters
+    ----------
+    cfg : configuration.
+
+    subfolder : path to dataset subfolder (e.g. 'train' or 'test').
         
-        :transform: data transforms
-        """
+    transform : composition of torchvision data transforms.
+
+    """
+
+    def __init__(self, cfg: OmegaConf, subfolder: str, transform=None):
         super(FSD_dataset, self).__init__()
         self.subfolder = subfolder
         self.transform = transform
@@ -36,7 +52,7 @@ class FSD_dataset(Dataset):
         with open(path, "rb") as f:
             img = PIL.Image.open(f)
             return img.convert("RGB").convert("L")
-        
+
 
     def __len__(self):
         return len(self.labels)
@@ -53,26 +69,20 @@ class FSD_dataset(Dataset):
 
 
 class FreeSpokenDigit(pl.LightningDataModule):
-    """ FREE SPOKEN DIGIT dataset
-    https://github.com/Jakobovski/free-spoken-digit-dataset
+    """Lightning Data Module for Free Spoken Digit dataset. 
+    See https://github.com/Jakobovski/free-spoken-digit-dataset
     
+    Stats
+    ----------
     - classes: 10
     - samples: 3,000
         - training samples: 2,700
         - testing samples: 300
 
-    Preprocessing
+    Parameters
     ----------
-    After downloading the dataset and resources from the link above, 
-    following preprocessing steps:
-    ```
-        cd fsd
-        mkdir spectrograms
-        mkdir training-spectrograms
-        mkdir testing-spectrograms
-        python spectrometer.py  # change paths inside this script
-        python train-test-split.py
-    ```
+    cfg : configuration.
+    
     """
 
     def __init__(self, cfg: OmegaConf):

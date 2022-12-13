@@ -19,6 +19,10 @@ class AudioClassification(pl.LightningModule):
     is more flexible as PyTorchLightning automatic logging 
     `self.log()`) only allows scalars, not histograms, images, etc.
     Additionally, auto-logging doesn't log at step 0, which is useful.
+
+    Parameters
+    ----------
+
     """
 
     def __init__(self, cfg: OmegaConf):
@@ -89,12 +93,11 @@ class AudioClassification(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         """ Hook for training step.
 
-        Args
+        Parameters
         ----------
-        :batch: dictionary of data output by dataloader, e.g.
+        batch : dictionary of data output by dataloader, e.g.
             `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 'labels': tensor([...]), ...}`
-        
-        :batch_id: id of batch
+        batch_id : id of batch
         """
 
         # forward pass
@@ -114,9 +117,9 @@ class AudioClassification(pl.LightningModule):
     def training_step_end(self, training_step_outputs):
         """ Hook for training step_end.
 
-        Args
+        Parameters
         ----------
-        :training_step_outputs: (dict, list[dict]) metrics 
+        training_step_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `training_step()`.
@@ -145,12 +148,13 @@ class AudioClassification(pl.LightningModule):
     def training_epoch_end(self, training_step_outputs):
         """ Hook for training epoch_end.
         
-        Args
+        Parameters
         ----------
-        :training_step_outputs: (dict, list[dict]) metrics 
+        training_step_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `training_step()`.
+
         """
 
         # log training metrics on the last batch only
@@ -168,12 +172,13 @@ class AudioClassification(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         """ Hook for validation step.
 
-        Args
+        Parameters
         ----------
-        :batch: dictionary of data output by dataloader, e.g.
-            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 'labels': tensor([...]), ...}`
-        
-        :batch_id: id of batch
+        batch : dictionary of data output by dataloader, e.g.
+            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 
+            'labels': tensor([...]), ...}`
+        batch_id : id of batch
+
         """
 
         # forward pass
@@ -192,12 +197,13 @@ class AudioClassification(pl.LightningModule):
     def validation_step_end(self, validation_step_outputs):
         """ Hook for validation step_end.
 
-        Args
+        Parameters
         ----------
-        :validation_step_outputs: (dict, list[dict]) metrics 
+        validation_step_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `validation_step()`.
+
         """
 
         # aggregate metrics across all devices.
@@ -212,13 +218,14 @@ class AudioClassification(pl.LightningModule):
     def validation_epoch_end(self, validation_epoch_outputs):
         """ Hook for validation epoch_end.
 
-        Args
+        Parameters
         ----------
-        :validation_epoch_outputs: (dict, list[dict]) metrics 
+        validation_epoch_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). 
             The output from `validation_step_end()`.
+
         """
 
         # aggregate losses across all steps and average
@@ -254,12 +261,14 @@ class AudioClassification(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         """ Hook for test step.
 
-        Args
+        Parameters
         ----------
-        :batch: dictionary of data output by dataloader, e.g.
-            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 'labels': tensor([...]), ...}`
+        batch: dictionary of data output by dataloader, e.g.
+            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 
+            'labels': tensor([...]), ...}`.
         
-        :batch_id: id of batch
+        batch_id: id of batch.
+        
         """
 
         # forward pass
@@ -278,12 +287,13 @@ class AudioClassification(pl.LightningModule):
     def test_step_end(self, test_step_outputs):
         """ Hook for test step_end.
 
-        Args
+        Parameters
         ----------
-        :test_step_outputs: (dict, list[dict]) metrics 
+        test_step_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `test_step()`.
+
         """
 
         # aggregate metrics across all devices.
@@ -298,12 +308,13 @@ class AudioClassification(pl.LightningModule):
     def test_epoch_end(self, test_epoch_outputs):
         """ Hook for test epoch_end.
 
-        Args
+        Parameters
         ----------
-        :test_epoch_outputs: (dict, list[dict]) metrics 
+        test_epoch_outputs : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `test_step_end()`.
+            
         """
 
         # aggregate losses across all steps and average
