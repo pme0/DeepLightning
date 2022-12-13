@@ -51,9 +51,10 @@ trainer.fit(model, data)
 ### Features
 - Simplified trainer with **PyTorch-Lightning**
 - Memory-efficinet parallel training with **DeepSpeed**
-- Experiment tracking and cross-platform reproducibility with **MLflow**
+- Cross-platform reproducibility and project management with **MLflow**
+- Experiment tracking and logging with **Weights and Biases**
 - Deployment (prediction API) with **Flask**
-- Implementations of popular models {**ResNet**, **ViT**, ++soon!}
+- Implementations of popular models {**VQVAE**, **ViT**, ++soon!}
 
 > See [Development](#development) for a list of functionalities.
 
