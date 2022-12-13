@@ -4,10 +4,11 @@ from torch.utils.data import DataLoader
 def compute_dataset_mean_and_stdev(dataloader: DataLoader, images_index: int):
     """Compute mean and standard deviation of image dataset.
 
-    Args
+    Parameters
     ----------
-    :dataloader: torch dataloader
-    :images_index: index of tuple corresponding to images tensor
+    dataloader : torch dataloader.
+    
+    images_index : index of tuple corresponding to images tensor.
 
     """
 

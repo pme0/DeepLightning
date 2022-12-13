@@ -7,9 +7,9 @@ from librosa.display import waveshow, specshow
 def waveform(path: str):
     """Display Waveform in the time domain.
 
-    Args
+    Parameters
     ----------
-    :path: path to the audio file
+    path : path to the audio file.
 
     """    
 
@@ -21,11 +21,13 @@ def waveform(path: str):
 def stft(path: str, n_fft: int, hop_length: int):
     """Display Short Term Fourier Transformation(STFT) in the time-frequency domain.
 
-    Args
+    Parameters
     ----------
-    :path: path to the audio file
-    :n_fft: length of the windowed signal after padding with zeros
-    :hop_length: number of audio samples between adjacent STFT columns
+    path : path to the audio file.
+    
+    n_fft: length of the windowed signal after padding with zeros.
+    
+    hop_length: number of audio samples between adjacent STFT columns.
 
     """    
     # load data
@@ -50,9 +52,9 @@ def stft(path: str, n_fft: int, hop_length: int):
 def power_spectrum(path: str):
     """Display Power Spectrum.
 
-     Args
+     Parameters
     ----------
-    :path: path to the audio file
+    path : path to the audio file.
 
     """
 
@@ -86,18 +88,27 @@ def spectrogram(
 ):
     """Display Mel Frequency Cepstral Coefficients.
 
-    Args
+    Parameters
     ----------
-    :path: path to the audio file
-    :mode: 
-    :scale: 
-    :n_fft: 
-    :hop_length:
-    :figsize:
+    path : path to the audio file.
+    
+    mode : the type of features to be shown in the spectrogram. 
+        Can be Short Time Fourier Transform (STFT) amplitude 
+        (`stft_ampl`) or decibels (`stft_db`); or Mel Frequency 
+        Cepstral Coefficients (MFCC).
+    
+    scale : the y-axis scale. Can be `linear` or `log`. For 
+        `mode == "mfcc"` the scale is chosen automatically.
+     
+    n_fft : 
+    
+    hop_length :
+    
+    figsize : the figure size.
 
     """
     
-    assert scale is None or scale in ["linear", "log", "mel"]
+    assert scale is None or scale in ["linear", "log"]
 
     signal, sample_rate = librosa.load(path)
 
