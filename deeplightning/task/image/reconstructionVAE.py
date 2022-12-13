@@ -10,7 +10,7 @@ from deeplightning.utilities.messages import info_message
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 
 
-class ImageReconstruction(pl.LightningModule):
+class ImageReconstructionVAE(pl.LightningModule):
     """ Task module for Image Reconstruction. 
 
     LOGGING: manual logging `self.logger.log()` is used. This

@@ -1,13 +1,11 @@
 import os
 from omegaconf import OmegaConf
 from torchvision import transforms
-from torchvision import datasets
 from torch.utils.data import Dataset, DataLoader, random_split
 import pytorch_lightning as pl
 import PIL
 
 from deeplightning.utilities.messages import info_message, warning_message
-
 
 
 class FSD_dataset(Dataset):
@@ -16,7 +14,9 @@ class FSD_dataset(Dataset):
         Args
         ----------
         :cfg: path to dataset main folder
+
         :subfolder: path to dataset subfolder (e.g. 'train' or 'test')
+        
         :transform: data transforms
         """
         super(FSD_dataset, self).__init__()
@@ -43,16 +43,13 @@ class FSD_dataset(Dataset):
 
 
     def __getitem__(self, idx):
-        label = self.labels[idx]
-        image = self.pil_loader(self.images[idx])
+        labels = self.labels[idx]
+        images = self.pil_loader(self.images[idx])
         if self.transform is not None:
-            image = self.transform(image)
-        # return image paths as well to check which images are misclassified
-        return {
-            "paths": self.images[idx], 
-            "images": image, 
-            "labels": label,
-        }
+            images = self.transform(images)
+        return {"paths": self.images[idx], 
+                "images": images, 
+                "labels": labels}
 
 
 class FreeSpokenDigit(pl.LightningDataModule):

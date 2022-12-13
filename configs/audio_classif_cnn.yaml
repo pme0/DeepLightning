@@ -21,7 +21,7 @@ data:
  
 model:
   module: 
-    target: deeplightning.task.audio_classif.AudioClassification
+    target: deeplightning.task.audio.audio_classif.AudioClassification
   network:
     target: deeplightning.model.cnn.SimpleAudioCNN
     params: 
