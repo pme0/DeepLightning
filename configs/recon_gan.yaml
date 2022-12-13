@@ -10,9 +10,9 @@ data:
 
 model:
   module:
-    target: deeplightning.task.image.reconstructionVAE.ImageReconstructionVAE
+    target: deeplightning.task.image.reconstructionVAE.ImageReconstructionGAN
   network:
-    target: deeplightning.model.vqvae.DiscreteVAE
+    target: deeplightning.model.gan.SimpleGAN
     params: 
       image_size: 32
       num_tokens: 8 #512
