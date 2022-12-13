@@ -265,7 +265,7 @@ See [`examples`](https://github.com/pme0/DeepLightning/tree/master/examples) for
 - **DeepSpeed** 
   - DeepSpeed is a distributed backend which reduces the training memory footprint with a Zero Redundancy Optimizer (ZeRO). It partitions model states and gradients to save memory, unlike traditional data parallelism where memory states are replicated across data-parallel processes. This allows training of large models with large batch sizes.
   - :information_source: [website](https://www.deepspeed.ai)  :floppy_disk: [github](https://github.com/microsoft/DeepSpeed)  :page_with_curl: [ZeRO-3](https://arxiv.org/abs/1910.02054)
-- **PytorchLightning**
+- **Pytorch-Lightning**
   - PyTorch-Lightning organizes PyTorch code into hardware-agnostic, loop-less modules to make development quicker and less error-prone. It separates model from backend engine, making deep learning scalable to any distributed hardware, seemlessly.
   - :information_source: [website](https://www.pytorchlightning.ai)  :floppy_disk: [github](https://github.com/PyTorchLightning/pytorch-lightning)
 - **MLflow** 
