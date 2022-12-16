@@ -60,6 +60,10 @@ train:
   early_stop_patience: 3
 
 logger:
+log_to_wandb: true
+project_name: trial
+tags: ["image", "reconstruction", "vqvae"] # cannot be empty
+notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default

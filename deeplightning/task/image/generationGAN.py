@@ -22,13 +22,14 @@ class ImageReconstructionGAN(pl.LightningModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.num_tokens = cfg.model.network.params.num_tokens
-        self.kl_weight = cfg.model.network.params.kl_div_loss_weight
+        self.device = ""
 
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
-        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
+        self.d_optimizer = init_obj_from_config(cfg.model.optimizer, self.model.discriminator.parameters())
+        self.g_optimizer = init_obj_from_config(cfg.model.optimizer, self.model.generator.parameters())
+        self.d_scheduler = init_obj_from_config(cfg.model.scheduler, self.d_optimizer)
+        self.g_scheduler = init_obj_from_config(cfg.model.scheduler, self.g_optimizer)
        
         self.maxlen = len(str(self.cfg.train.num_epochs))
 
@@ -39,14 +40,24 @@ class ImageReconstructionGAN(pl.LightningModule):
         return self.model(x)
 
     def configure_optimizers(self):
-        return ({
-            "optimizer": self.optimizer,
-            "lr_scheduler": {
-                "scheduler": self.scheduler,
-                "interval": self.cfg.model.scheduler.call.interval,
-                "frequency": self.cfg.model.scheduler.call.frequency
+        return (
+            {
+                "optimizer": self.d_optimizer,
+                "lr_scheduler": {
+                    "scheduler": self.d_scheduler,
+                    "interval": self.cfg.model.scheduler.call.interval,
+                    "frequency": self.cfg.model.scheduler.call.frequency
+                }
+            },
+            {
+                "optimizer": self.g_optimizer,
+                "lr_scheduler": {
+                    "scheduler": self.g_scheduler,
+                    "interval": self.cfg.model.scheduler.call.interval,
+                    "frequency": self.cfg.model.scheduler.call.frequency
+                }
             }
-        })
+        )
 
     def _gather_on_step(self, step_outputs, var, average):
         if isinstance(step_outputs, list):
@@ -62,7 +73,6 @@ class ImageReconstructionGAN(pl.LightningModule):
             agg = epoch_outputs[var]
         return sum(agg) / (len(agg) if average is True else 1.0)
 
-
     def _save_artifact_images(self, step_outputs, phase):
         for img_type in [f"{phase}_original", f"{phase}_reconstruction"]:
             img = transforms.ToPILImage()(step_outputs[-1][img_type][0])
@@ -72,12 +82,63 @@ class ImageReconstructionGAN(pl.LightningModule):
                 artifact_file = file,
                 run_id = self.logger.run_id
             )
+
+    def discriminator_step(self, x):
+        """Training step for discriminator network.
+
+        1. For real images
+            1.1. compute probabilities of real images
+            1.2. compute loss on real images
+        2. For fake images:
+            2.1. generate fake images
+            2.2. compute probabilities of fake images
+            2.3. compute loss on fake images
+        3. Add losses
+
+        """
+
+        # the targets are computed on-the-fly because the last batch may
+        # have a different number of images. This is computationally
+        # inefficient, alternatively we can drop the last batch in the
+        # dataloader(*) and reuse the pre-computed targets.
+        #   (*) `torch.utils.data.DataLoader(..., drop_last=True)`
+        self.real_targets = torch.ones(x.shape[0], 1, device=self.device)
+        self.fake_targets = torch.zeros(x.shape[0], 1, device=self.device)
         
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        x_recon, logits = self(x)
-        train_loss = self.loss(x, x_recon, logits)
-            
+        # real images
+        d_probs = torch.squeeze(self.model.discriminator(x))
+        loss_real = self.loss(d_probs, torch.ones(x.shape[0], device=self.device))
+
+        # fake images
+        z = torch.randn(x.shape[0], 1, 100, device=self.device)
+        generated_imgs = self.model.generator(z)
+        d_probs = torch.squeeze(self.model.discriminator(generated_imgs))
+        loss_fake = self.loss(d_probs, torch.zeros(x.shape[0], device=self.device))
+
+        return loss_real + loss_fake
+
+    def generator_step(self, x):
+        """Training step for generator network.
+        """
+        pass
+
+    def training_step(self, batch, batch_idx, optimizer_idx):
+        #x, y = batch
+        #x_recon, logits = self(x)
+        #train_loss = self.loss(x, x_recon, logits)
+        
+        # train discriminator
+        if optimizer_idx == 0:
+            d_loss = self.generator_step(batch["images"])
+            # .... log
+            return d_loss
+    
+        # train generator
+        if optimizer_idx == 1:
+            g_loss = self.discriminator_step(batch["images"])
+            # .... log
+            return g_loss
+
         return {"loss": train_loss, 
                 "train_original": x,
                 "train_reconstruction": x_recon.detach()

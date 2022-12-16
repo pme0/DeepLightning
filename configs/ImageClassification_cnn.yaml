@@ -1,27 +1,23 @@
+modes: 
+  train: true
+  test: false
+  
 task: classification
 data:
-  root: /Users/pme12/data/
-  dataset: MNIST
+  root: ~/data/mnist
   num_workers: 4
   batch_size: 256
   module: 
     target: deeplightning.data.mnist.MNIST
-
+ 
 model:
   module: 
-    target: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.models.vit.VisionTransformer
+    target: deeplightning.model.cnn.SimpleCNN
     params: 
       num_classes: 10
       num_channels: 1
-      embed_dim: 64
-      hidden_dim: 128
-      num_heads: 8
-      num_layers: 4
-      patch_size: 7
-      num_patches: 16
-      dropout: 0.2
   optimizer:
     target: torch.optim.Adadelta
     params:
@@ -30,15 +26,15 @@ model:
     params:
       gamma: 0.99
     call:
-      interval: "step"
+      interval: "epoch"
       frequency: 1
   loss:
     target: torch.nn.CrossEntropyLoss
     params:
 
 engine:
-  backend: deepspeed_stage_3
-  gpus: null
+  backend: ddp
+  gpus: [0]
   num_nodes: 1
   precision: 32
 
@@ -53,7 +49,14 @@ train:
   early_stop_delta: 0.001
   early_stop_patience: 3
 
+test:
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
+  
 logger:
+  log_to_wandb: true
+  project_name: trial
+  tags: ["image", "classification", "cnn"] # cannot be empty
+  notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default

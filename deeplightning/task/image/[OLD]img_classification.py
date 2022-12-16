@@ -9,7 +9,6 @@ from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
 from deeplightning.utilities.metrics import metric_accuracy, MetricsConfusionMatrix
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.logger.logwandb import initilise_wandb_metrics
 
 
@@ -20,18 +19,11 @@ class ImageClassification(pl.LightningModule):
     is more flexible as PyTorchLightning automatic logging 
     `self.log()`) only allows scalars, not histograms, images, etc.
     Additionally, auto-logging doesn't log at step 0, which is useful.
-
-    Parameters
-    ----------
-    cfg : yaml configuration object
-    
     """
 
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.dataset = self.cfg.data.module.target.split(".")[-1]
-
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
@@ -40,8 +32,6 @@ class ImageClassification(pl.LightningModule):
         self.sanity_check = True # to avoid logging sanity check metrics
 
         # metrics to use during training
-        self.num_classes = cfg.model.network.params.num_classes
-        self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
         self.accuracy = metric_accuracy # TODO create superclass from `torchmetrics.Accuracy()`
         self.confusion_matrix = MetricsConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
         
@@ -94,28 +84,16 @@ class ImageClassification(pl.LightningModule):
         https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
     """
 
-
     def training_step(self, batch, batch_idx):
         """ Hook for training step.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-        
-        batch_idx : index of batch
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-
         # forward pass
-        logits = self(batch["images"])
+        x, y = batch
+        logits = self(x)
 
         # compute metrics
-        train_loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
+        train_loss = self.loss(logits, y)
+        acc = self.accuracy(logits, y)
 
         # `training_step()` expects one output with 
         # key 'loss'. This will be logged as 'train_loss' 
@@ -127,12 +105,12 @@ class ImageClassification(pl.LightningModule):
     def training_step_end(self, training_step_outputs):
         """ Hook for training step_end.
 
-        Parameters
-        ----------
-        training_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `training_step()`.
+        Arguments:
+            :training_step_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device).
+                The output from `training_step()`.
         """
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
 
@@ -158,13 +136,12 @@ class ImageClassification(pl.LightningModule):
     def training_epoch_end(self, training_step_outputs):
         """ Hook for training epoch_end.
         
-        Parameters
-        ----------
-        training_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `training_step()`.
-
+        Arguments:
+            :training_step_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device). 
+                The output from `training_step()`.
         """
 
         # log training metrics on the last batch only
@@ -181,28 +158,16 @@ class ImageClassification(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         """ Hook for validation step.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-
-        batch_idx : index of batch
-
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-        
         # forward pass
-        logits = self(batch["images"])
+        x, y = batch
+        logits = self(x)
         preds = torch.argmax(logits, dim=1)
         
         # compute metrics
-        loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds, batch["labels"])
+        loss = self.loss(logits, y)
+        acc = self.accuracy(logits, y)
+        self.confusion_matrix.update(preds, y)
         
         return {"val_loss": loss, 
                 "val_acc": acc}
@@ -211,13 +176,12 @@ class ImageClassification(pl.LightningModule):
     def validation_step_end(self, validation_step_outputs):
         """ Hook for validation step_end.
 
-        Parameters
-        ----------
-        validation_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `validation_step()`.
-
+        Arguments:
+            :validation_step_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device).
+                The output from `validation_step()`.
         """
 
         # aggregate metrics across all devices.
@@ -232,14 +196,12 @@ class ImageClassification(pl.LightningModule):
     def validation_epoch_end(self, validation_epoch_outputs):
         """ Hook for validation epoch_end.
 
-        Parameters
-        ----------
-        validation_epoch_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). 
-            The output from `validation_step_end()`.
-
+        Arguments:
+            :validation_epoch_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device). 
+                The output from `validation_step_end()`.
         """
 
         # aggregate losses across all steps and average
@@ -250,8 +212,8 @@ class ImageClassification(pl.LightningModule):
         
         # confusion matrix
         cm = self.confusion_matrix.compute()
-        cm_fig = self.confusion_matrix.draw(cm, epoch=self.current_epoch)
-        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption=f"Confusion Matrix [val, epoch {self.current_epoch}] (%)")
+        cm_fig = self.confusion_matrix.draw(cm)
+        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix (%)")
         self.confusion_matrix.reset()
 
         # log validation metrics
@@ -274,28 +236,16 @@ class ImageClassification(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         """ Hook for test step.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-        
-        batch_idx: index of batch.
-        
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-
         # forward pass
-        logits = self(batch["images"])
+        x, y = batch
+        logits = self(x)
         preds = torch.argmax(logits, dim=1)
         
         # compute metrics
-        loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds, batch["labels"])
+        loss = self.loss(logits, y)
+        acc = self.accuracy(logits, y)
+        self.confusion_matrix.update(preds, y)
 
         return {"test_loss": loss, 
                 "test_acc": acc}
@@ -304,13 +254,12 @@ class ImageClassification(pl.LightningModule):
     def test_step_end(self, test_step_outputs):
         """ Hook for test step_end.
 
-        Parameters
-        ----------
-        test_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `test_step()`.
-
+        Arguments:
+            :test_step_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device).
+                The output from `test_step()`.
         """
 
         # aggregate metrics across all devices.
@@ -325,13 +274,12 @@ class ImageClassification(pl.LightningModule):
     def test_epoch_end(self, test_epoch_outputs):
         """ Hook for test epoch_end.
 
-        Parameters
-        ----------
-        test_epoch_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `test_step_end()`.
-            
+        Arguments:
+            :test_epoch_outputs: (dict, list[dict]) metrics 
+                dictionary in single-device training, or list of 
+                metrics dictionaries in multi-device training (one 
+                element per device). 
+                The output from `test_step_end()`.
         """
 
         # aggregate losses across all steps and average
@@ -343,7 +291,7 @@ class ImageClassification(pl.LightningModule):
         # confusion matrix
         cm = self.confusion_matrix.compute()
         cm_fig = self.confusion_matrix.draw(cm)
-        metrics["test_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix - test (%)")
+        metrics["test_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix (%)")
         self.confusion_matrix.reset()
         
         # log test metrics

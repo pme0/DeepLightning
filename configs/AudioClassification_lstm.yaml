@@ -23,10 +23,10 @@ model:
   module: 
     target: deeplightning.task.audio.audio_classif.AudioClassification
   network:
-    target: deeplightning.model.cnn.SimpleAudioCNN
+    target: deeplightning.model.lstm.LSTM
     params: 
-      num_classes: 10
-      num_channels: 1
+      num_classes: .....
+      num_channels: .....
   optimizer:
     target: torch.optim.Adadelta
     params:
@@ -64,7 +64,7 @@ test:
 logger:
   log_to_wandb: true
   project_name: trial
-  tags: ['classification'] # cannot be empty
+  tags: ["audio", "classification", "lstm"] # cannot be empty
   notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:

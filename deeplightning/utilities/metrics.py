@@ -21,7 +21,6 @@ class MetricsConfusionMatrix(MulticlassConfusionMatrix):
             "num_classes": self.num_classes,
             "normalize": "true",  # 'true' normalizes over the true labels (targets)
         }
-        print('\n\n',args,'\n\n')
         super().__init__(**args)
 
     def draw(self, cm: Tensor, epoch: int = None) -> pltFigure:
