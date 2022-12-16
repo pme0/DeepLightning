@@ -1,7 +1,11 @@
 # Examples
 
-- **Object Tracking** : [here](object_tracking/README.md)
-- **Audio Classification** : 
+**click on the images** to go to the example page
+
+
+|Object Tracking</br> | Example  | Example |
+|:---:|:---:|:---:|
+| [<img src="blacksquare.jpeg" width=100px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=100px>](x/README.md)  | [<img src="blacksquare.jpeg" width=100px>](x/README.md) |
 
 
 
