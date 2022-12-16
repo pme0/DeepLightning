@@ -1,17 +1,28 @@
+modes: 
+  train: true
+  test: false
+  
 task: classification
 data:
-  root: /Users/pme12/data/
-  dataset: MNIST
+  root: ~/data/fsd
   num_workers: 4
   batch_size: 256
   module: 
-    target: deeplightning.data.mnist.MNIST
-
+    target: deeplightning.data.audio.fsd.FreeSpokenDigit
+  train_transforms:
+    normalize: # use `deeplightning.utilities.data.compute_dataset_mean_and_stdev()`
+      mean: [0.4711]
+      stdev: [0.1464]
+  test_transforms:
+    normalize:
+      mean: [0.4711]
+      stdev: [0.1464]
+ 
 model:
   module: 
-    target: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.models.resnet.resnet18
+    target: deeplightning.model.cnn.SimpleAudioCNN
     params: 
       num_classes: 10
       num_channels: 1
@@ -30,13 +41,13 @@ model:
     params:
 
 engine:
-  backend: deepspeed_stage_3
-  gpus: null
+  backend: ddp
+  gpus: [0]
   num_nodes: 1
   precision: 32
 
 train:
-  num_epochs: 2
+  num_epochs: 5
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -46,7 +57,14 @@ train:
   early_stop_delta: 0.001
   early_stop_patience: 3
 
+test:
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
+  
 logger:
+  log_to_wandb: true
+  project_name: trial
+  tags: ["audio", "classification", "cnn"] # cannot be empty
+  notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default

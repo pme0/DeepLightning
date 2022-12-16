@@ -1,24 +1,30 @@
-modes: 
-  train: true
-  test: false
-  
-task: classification
+task: reconstruction
 data:
   root: /Users/pme12/data/
   dataset: MNIST
+  resize: 32 # VQVAE requires image size to be power of 2
   num_workers: 4
-  batch_size: 256
-  module: 
+  batch_size: 128
+  module:
     target: deeplightning.data.mnist.MNIST
- 
+
 model:
-  module: 
-    target: deeplightning.task.img_classif.ImageClassification
+  module:
+    target: deeplightning.task.image.reconstructionVAE.ImageReconstructionGAN
   network:
-    target: deeplightning.model.cnn.SimpleCNN
+    target: deeplightning.model.gan.SimpleGAN
     params: 
-      num_classes: 10
-      num_channels: 1
+      image_size: 32
+      num_tokens: 8 #512
+      codebook_dim: 32 #256
+      num_layers: 1 #2
+      num_resnet_blocks: 1 #2
+      hidden_dim: 32 #128
+      channels: 1
+      temperature: 0.9
+      straight_through: False
+      kl_div_loss_weight: 0.0
+      normalization: null
   optimizer:
     target: torch.optim.Adadelta
     params:
@@ -30,17 +36,17 @@ model:
       interval: "epoch"
       frequency: 1
   loss:
-    target: torch.nn.CrossEntropyLoss
+    target: torch.nn.BCELoss  # BCEWithLogitsLoss
     params:
-
+  
 engine:
-  backend: ddp
-  gpus: [0]
+  backend: deepspeed_stage_3
+  gpus: null
   num_nodes: 1
   precision: 32
 
 train:
-  num_epochs: 2
+  num_epochs: 10
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -50,13 +56,10 @@ train:
   early_stop_delta: 0.001
   early_stop_patience: 3
 
-test:
-  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
-  
 logger:
   log_to_wandb: true
   project_name: trial
-  tags: ['classification'] # cannot be empty
+  tags: ["image", "generation", "gan"] # cannot be empty
   notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
   params:

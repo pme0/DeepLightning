@@ -9,6 +9,7 @@ from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
 from deeplightning.utilities.metrics import metric_accuracy, MetricsConfusionMatrix
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
+from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.logger.logwandb import initilise_wandb_metrics
 
 
@@ -22,12 +23,15 @@ class AudioClassification(pl.LightningModule):
 
     Parameters
     ----------
-
+    cfg : yaml configuration object
+    
     """
 
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
+        self.dataset = self.cfg.data.module.target.split(".")[-1]
+
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
@@ -90,15 +94,21 @@ class AudioClassification(pl.LightningModule):
         https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
     """
 
+
     def training_step(self, batch, batch_idx):
         """ Hook for training step.
 
         Parameters
         ----------
-        batch : dictionary of data output by dataloader, e.g.
-            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 'labels': tensor([...]), ...}`
-        batch_id : id of batch
+        batch : object containing the data output by the dataloader. For custom 
+            datasets this is a dictionary with keys ["paths", "images", "labels"].
+            For torchvision datasets, the function `dictionarify_batch()` is used
+            to convert the native format to dictionary format
+        
+        batch_idx : index of batch
         """
+
+        batch = dictionarify_batch(batch, self.dataset)
 
         # forward pass
         logits = self(batch["images"])
@@ -174,13 +184,17 @@ class AudioClassification(pl.LightningModule):
 
         Parameters
         ----------
-        batch : dictionary of data output by dataloader, e.g.
-            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 
-            'labels': tensor([...]), ...}`
-        batch_id : id of batch
+        batch : object containing the data output by the dataloader. For custom 
+            datasets this is a dictionary with keys ["paths", "images", "labels"].
+            For torchvision datasets, the function `dictionarify_batch()` is used
+            to convert the native format to dictionary format
+
+        batch_idx : index of batch
 
         """
 
+        batch = dictionarify_batch(batch, self.dataset)
+        
         # forward pass
         logits = self(batch["images"])
         preds = torch.argmax(logits, dim=1)
@@ -263,13 +277,16 @@ class AudioClassification(pl.LightningModule):
 
         Parameters
         ----------
-        batch: dictionary of data output by dataloader, e.g.
-            `{'paths': ['~/data/img1.png', ...], 'images': tensor([...]), 
-            'labels': tensor([...]), ...}`.
+        batch : object containing the data output by the dataloader. For custom 
+            datasets this is a dictionary with keys ["paths", "images", "labels"].
+            For torchvision datasets, the function `dictionarify_batch()` is used
+            to convert the native format to dictionary format
         
-        batch_id: id of batch.
+        batch_idx: index of batch.
         
         """
+
+        batch = dictionarify_batch(batch, self.dataset)
 
         # forward pass
         logits = self(batch["images"])
