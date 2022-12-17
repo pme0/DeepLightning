@@ -2,14 +2,14 @@
 
 **click on the images** to go to the example page
 
-| Object Tracking | Example | Example |
+| Object Tracking | Object Detection | Object Segmentation |
 |:---:|:---:|:---:|
-| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
+| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](object_detection/README.md)  | [<img src="blacksquare.jpeg" width=200px>](object_segmentation/README.md) |
 
 
 | Image Classification | Image Reconstruction | Image Generation |
 |:---:|:---:|:---:|
-| [<img src="image_classification/media/catVdog_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="image_classification/media/catVdog_reconstruction_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
+| [<img src="image_classification/media/catVdog_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="image_reconstruction/media/dog_reconstruction_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="image_generation/media/cat_generation_alt.jpeg" width=200px>](image_generation/README.md) |
 
 
 | Audio Classification CNN | Audio Classification RNN  | Example |
