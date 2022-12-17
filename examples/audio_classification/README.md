@@ -1,15 +1,8 @@
 # Audio Classification
 
-<p float="left">
-  <img src="media/thumbnail_spectrogram.png" width="300" />
-  <img src="media/thumbnail_spectrogram.png" width="300" /> 
-</p>
-
-
-|CNN | RNN  | 
-|:---:|:---:|
+| Audio as Image | Audio as Sequence  | 
+|:--------------:|:------------------:|
 | <img src="media/thumbnail_spectrogram.png" width=300px> | <img src="media/thumbnail_waveplot.png" width=300px> |
-| Audio as Image | [Audio as Sequence](#audio-as-sequence-rnn) |
 
 
 ## 1. Audio as Image - Convolutional Neural Network
