@@ -2,14 +2,19 @@
 
 **click on the images** to go to the example page
 
+| Object Tracking | Example | Example |
+|:---:|:---:|:---:|
+| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
+
+
+| Image Classification | Image Reconstruction | Image Generation |
+|:---:|:---:|:---:|
+| [<img src="image_classification/media/catVdog.png" width=200px>](image_classification/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
+
 
 | Audio Classification CNN | Audio Classification RNN  | Example |
 |:---:|:---:|:---:|
 | [<img src="audio_classification_cnn/media/thumbnail_spectrogram.png" width=200px>](audio_classification_cnn/README.md) | [<img src="audio_classification_cnn/media/thumbnail_waveplot.png" width=200px>](audio_classification_rnn/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
-
-|Object Tracking | Example  | Example |
-|:---:|:---:|:---:|
-| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
 
 
 
