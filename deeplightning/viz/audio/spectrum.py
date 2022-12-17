@@ -71,6 +71,8 @@ def spectrogram(
     n_fft: int = 2048, 
     hop_length: int = 512, 
     figsize: tuple = (5,5), 
+    save_plot: str = None,
+    show_plot: bool = True,
 ):
     """Display Mel Frequency Cepstral Coefficients.
 
@@ -81,16 +83,16 @@ def spectrogram(
     mode : the type of features to be shown in the spectrogram. 
         Can be Short Time Fourier Transform (STFT) amplitude 
         (`stft_ampl`) or decibels (`stft_db`); or Mel Frequency 
-        Cepstral Coefficients (MFCC).
+        Cepstral Coefficients (MFCC)
     
     scale : the y-axis scale. Can be `linear` or `log`. For 
-        `mode == "mfcc"` the scale is chosen automatically.
+        `mode == "mfcc"` the scale is chosen automatically
      
     n_fft : 
     
     hop_length :
     
-    figsize : the figure size.
+    figsize : the figure size
 
     """
     
@@ -129,3 +131,9 @@ def spectrogram(
         frequency_type if frequency_type is not None else '',
         scale_type if scale_type is not None else '',
     ))
+
+    if save_plot is not None:
+        plt.savefig(save_plot, bbox_inches='tight')
+    if show_plot:
+        plt.show()
+    plt.close()
