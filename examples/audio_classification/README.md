@@ -1,9 +1,8 @@
 # Audio Classification
 
 <p float="left">
-  <img src="media/thumbnail_spectrogram.png" width="100" />
-  <img src="media/thumbnail_spectrogram.png" width="100" /> 
-  <img src="media/thumbnail_spectrogram.png" width="100" />
+  <img src="media/thumbnail_spectrogram.png" width="300" />
+  <img src="media/thumbnail_spectrogram.png" width="300" /> 
 </p>
 
 
