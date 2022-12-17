@@ -2,9 +2,9 @@
 
 **click on the images** to go to the example page
 
-| Object Tracking | Object Detection | Object Segmentation |
+| Object Tracking | Example | Example |
 |:---:|:---:|:---:|
-| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](object_detection/README.md)  | [<img src="blacksquare.jpeg" width=200px>](object_segmentation/README.md) |
+| [<img src="blacksquare.jpeg" width=200px>](object_tracking/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
 
 
 | Image Classification | Image Reconstruction | Image Generation |
