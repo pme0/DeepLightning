@@ -14,4 +14,4 @@
  
  <img src="media/spectrogram.png" width=400px> 
 
-## 2. Audio as Sequence (Recurrent Neural Networks)
+## 2. Audio as Sequence (Recurrent Neural Network)
