@@ -9,7 +9,7 @@
 
 | Image Classification | Image Reconstruction | Image Generation |
 |:---:|:---:|:---:|
-| [<img src="image_classification/media/catVdog.jpeg" width=200px>](image_classification/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md)  | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
+| [<img src="image_classification/media/catVdog_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="image_classification/media/catVdog_reconstruction_alt.jpeg" width=200px>](image_classification/README.md) | [<img src="blacksquare.jpeg" width=200px>](x/README.md) |
 
 
 | Audio Classification CNN | Audio Classification RNN  | Example |
