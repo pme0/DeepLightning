@@ -4,7 +4,7 @@ modes:
   
 task: classification
 data:
-  root: ~/data/mnist
+  root: ~/data/MNIST
   num_workers: 4
   batch_size: 256
   module: 
