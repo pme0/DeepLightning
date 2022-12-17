@@ -1,6 +1,4 @@
-import os
-import numpy as np
-import pandas as pd
+from typing import List, Dict
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns
@@ -25,7 +23,7 @@ def convert_image_sequence_to_video(image_folder):
 
 def plot_image_and_bboxes(
     image_path: str, 
-    bboxes: dict = [], 
+    bboxes: List[Dict] = [],
     resize: int = None, 
     save_path: str = None, 
     show_image: bool = True
@@ -37,8 +35,8 @@ def plot_image_and_bboxes(
     from deeplightning.viz.image.bboxes import plot_image_and_bboxes
     img_path = "media/eye.jpg"
     bboxes = [
-        {"class": "iris",  "box": [253, 245, 244, 240], "format": "xcxcwh"},
-        {"class": "pupil", "box": [244, 243, 68+x, 64], "format": "xcxcwh"}]
+        {"class": "iris",  "box": [253, 245, 244, 240], "format": "xcycwh"},
+        {"class": "pupil", "box": [244, 243, 68+x, 64], "format": "xcycwh"}]
     plot_image_and_bboxes(image_path=img_path, bboxes=bboxes, resize=500, 
                     save_path=None, show_image=True)
     ```
@@ -69,7 +67,7 @@ def plot_image_and_bboxes(
     plt.imshow(image)
     for i, bbox in enumerate(bboxes):
         
-        if bbox["format"] == "xcxcwh":
+        if bbox["format"] == "xcycwh":
             box = {
                 "x_LowerLeft": bbox["box"][0] - bbox["box"][2]/2,
                 "y_LowerLeft": bbox["box"][1] - bbox["box"][3]/2,
