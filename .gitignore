@@ -4,6 +4,7 @@ wandb/
 lightning_logs/
 
 # Byte-compiled / optimized / DLL files
+*.DS_Store
 **/__pycache__
 *.py[cod]
 *$py.class
