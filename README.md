@@ -85,7 +85,6 @@ bash train.sh <cfg>
 # bash train.sh configs/classif_cnn.yaml
 ```
 - `cfg` is the configuration file (default: `configs/base.yaml`).
-<!-- #mlflow run . -P config=configs/your-cfg.yaml -->
 
 This will run the MLflow project file `MLproject` (setup conda env & run scripts).
 Create your own config following [Configuration](#configure) or see [Examples](#examples) for a list of provided configs.
@@ -94,7 +93,6 @@ Create your own config following [Configuration](#configure) or see [Examples](#
 ```bash
 bash monitor.sh
 ```
-<!-- mlflow ui -->
 This will allow you to track logged metrics in real-time and compare metrics across multiple runs/configurations:
 
 <img src="media/compare_runs.png" width="500">
