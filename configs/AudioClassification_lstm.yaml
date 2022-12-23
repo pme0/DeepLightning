@@ -63,7 +63,7 @@ test:
   
 logger:
   log_to_wandb: true
-  project_name: trial
+  project_name: AudioClassification_FSD_LSTM
   tags: ["audio", "classification", "lstm"] # cannot be empty
   notes: null
   type: pytorch_lightning.loggers.MLFlowLogger

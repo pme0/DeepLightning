@@ -1,10 +1,10 @@
 modes: 
   train: true
-  test: false
+  test: true
   
 task: classification
 data:
-  root: ~/data/FSD
+  root: /Users/pme/data/FSD
   num_workers: 4
   batch_size: 256
   module: 
@@ -22,13 +22,14 @@ model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.cnn.SimpleAudioCNN
+    target: deeplightning.model.cnn.SpectrogramCNN
     params: 
       num_classes: 10
       num_channels: 1
   optimizer:
-    target: torch.optim.Adadelta
+    target: torch.optim.Adam
     params:
+      lr: 0.001
   scheduler:
     target: torch.optim.lr_scheduler.ExponentialLR
     params:
@@ -47,7 +48,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 5
+  num_epochs: 30
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -58,11 +59,11 @@ train:
   early_stop_patience: 3
 
 test:
-  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True` and `modes.train=False`
   
 logger:
   log_to_wandb: true
-  project_name: trial
+  project_name: AudioClassification_FSD_CNN
   tags: ["audio", "classification", "cnn"] # cannot be empty
   notes: null
   type: pytorch_lightning.loggers.MLFlowLogger
