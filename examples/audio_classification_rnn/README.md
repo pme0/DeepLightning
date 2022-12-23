@@ -17,11 +17,7 @@ Music Genre Recognition
 Source: https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification
 
 
-## Exploration
-
-
 ## Model
 
-LSTM-RNN
 
-## Results
+## Conclusion
