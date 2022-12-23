@@ -7,7 +7,7 @@ import wandb
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utilities.messages import info_message
-from deeplightning.utilities.metrics import metric_accuracy, MetricsConfusionMatrix
+from deeplightning.utilities.metrics import metric_accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.logger.logwandb import initilise_wandb_metrics
@@ -42,9 +42,10 @@ class ImageClassification(pl.LightningModule):
         # metrics to use during training
         self.num_classes = cfg.model.network.params.num_classes
         self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
-        self.accuracy = metric_accuracy # TODO create superclass from `torchmetrics.Accuracy()`
-        self.confusion_matrix = MetricsConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
-        
+        self.accuracy = metric_accuracy # TODO create class inheriting from `torchmetrics.Accuracy()`
+        self.confusion_matrix = Metric_ConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
+        self.precision_recall = Metric_PrecisionRecallCurve(cfg)
+
         # aggregation utilities
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
@@ -202,7 +203,8 @@ class ImageClassification(pl.LightningModule):
         # compute metrics
         loss = self.loss(logits, batch["labels"])
         acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds, batch["labels"])
+        self.confusion_matrix.update(preds=preds, target=batch["labels"])
+        self.precision_recall.update(preds=logits, target=batch["labels"])
         
         return {"val_loss": loss, 
                 "val_acc": acc}
@@ -250,9 +252,15 @@ class ImageClassification(pl.LightningModule):
         
         # confusion matrix
         cm = self.confusion_matrix.compute()
-        cm_fig = self.confusion_matrix.draw(cm, epoch=self.current_epoch)
-        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption=f"Confusion Matrix [val, epoch {self.current_epoch}] (%)")
+        figure = self.confusion_matrix.draw(cm, subset="val", epoch=self.current_epoch+1)
+        metrics["val_confusion_matrix"] = wandb.Image(figure, caption=f"Confusion Matrix [val, epoch {self.current_epoch+1}]")
         self.confusion_matrix.reset()
+        
+        # precision-recall
+        precision, recall, thresholds = self.precision_recall.compute()
+        figure = self.precision_recall.draw(precision=precision, recall=recall, thresholds=thresholds, subset="val", epoch=self.current_epoch+1)
+        metrics["val_precision_recall"] = wandb.Image(figure, caption=f"Precision-Recall Curve [val, epoch {self.current_epoch+1}]")
+        self.precision_recall.reset()
 
         # log validation metrics
         if self.cfg.logger.log_to_wandb:
@@ -295,7 +303,8 @@ class ImageClassification(pl.LightningModule):
         # compute metrics
         loss = self.loss(logits, batch["labels"])
         acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds, batch["labels"])
+        self.confusion_matrix.update(preds=preds, target=batch["labels"])
+        self.precision_recall.update(preds=logits, target=batch["labels"])
 
         return {"test_loss": loss, 
                 "test_acc": acc}
@@ -342,10 +351,16 @@ class ImageClassification(pl.LightningModule):
 
         # confusion matrix
         cm = self.confusion_matrix.compute()
-        cm_fig = self.confusion_matrix.draw(cm)
-        metrics["test_confusion_matrix"] =  wandb.Image(cm_fig, caption="Confusion Matrix - test (%)")
+        figure = self.confusion_matrix.draw(cm, subset="test", epoch=self.current_epoch+1)
+        metrics["test_confusion_matrix"] =  wandb.Image(figure, caption=f"Confusion Matrix [test]")
         self.confusion_matrix.reset()
-        
+
+        # precision-recall
+        precision, recall, thresholds = self.precision_recall.compute()
+        figure = self.precision_recall.draw(precision, recall, thresholds, subset="test", epoch=self.current_epoch+1)
+        metrics["test_precision_recall"] = wandb.Image(figure, caption=f"Precision-Recall Curve [test, epoch {self.current_epoch+1}]")
+        self.precision_recall.reset()
+
         # log test metrics
         if self.cfg.logger.log_to_wandb:
             metrics[self.step_label] = self.global_step

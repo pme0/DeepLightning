@@ -28,10 +28,10 @@ class SimpleCNN(nn.Module):
 
 
 
-class SimpleAudioCNN(nn.Module):
+class SpectrogramCNN(nn.Module):
     
     def __init__(self, num_classes, num_channels):
-        super(SimpleAudioCNN, self).__init__()
+        super(SpectrogramCNN, self).__init__()
         self.num_classes = num_classes
         self.num_channels = num_channels
         self.conv1 = nn.Sequential(
@@ -55,6 +55,7 @@ class SimpleAudioCNN(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.fc = nn.Linear(64 * 5 * 5, num_classes)
+        #self.dropout = nn.Dropout(p=0.1)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -63,4 +64,5 @@ class SimpleAudioCNN(nn.Module):
         x = self.conv4(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
+        #x = self.dropout(x)
         return x
