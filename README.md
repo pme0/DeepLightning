@@ -54,7 +54,7 @@ trainer.fit(model, data)
 - Cross-platform reproducibility and project management with **MLflow**
 - Experiment tracking and logging with **Weights and Biases**
 - Deployment (prediction API) with **Flask**
-- Implementations of popular models {**VQVAE**, **ViT**, ++soon!}
+- Implementations of popular tasks/models with [**Examples**](https://github.com/pme0/DeepLightning/tree/master/examples)
 
 > See [Development](#development) for a list of functionalities.
 
