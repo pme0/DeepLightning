@@ -1,9 +1,11 @@
 <h1 align="center">
-  <b>Image Classification
+Image Classification
 </h1>
-<h2 align="center">
-    Object Recognition<br>
-</h2>
+  
 <h3 align="center">
-    #CNN #ViT #Transformer <br><br>
+Object Recognition
 </h3>
+
+<h5 align="center">
+#CNN #ViT #Transformer <br><br>
+</h5>
