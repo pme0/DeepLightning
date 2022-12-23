@@ -251,7 +251,7 @@ class AudioClassification(pl.LightningModule):
         # confusion matrix
         cm = self.confusion_matrix.compute()
         cm_fig = self.confusion_matrix.draw(cm, epoch=self.current_epoch)
-        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption=f"Confusion Matrix [val, epoch {self.current_epoch}] (%)")
+        metrics["val_confusion_matrix"] =  wandb.Image(cm_fig, caption=f"Confusion Matrix [val, epoch {self.current_epoch+1}]")
         self.confusion_matrix.reset()
 
         # log validation metrics

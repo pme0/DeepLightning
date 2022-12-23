@@ -1,64 +1,92 @@
+from bdb import effective
 from typing import Tuple, List, Union
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
 from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatrix
+from torchmetrics.classification.precision_recall_curve import MulticlassPrecisionRecallCurve
 from torchmetrics.functional.classification.accuracy import accuracy
 import seaborn as sn
 import numpy as np
-import pandas as pd
 from matplotlib.figure import Figure as pltFigure
 from matplotlib import pyplot as plt
 
 
-class MetricsConfusionMatrix(MulticlassConfusionMatrix):
-    """
-    """
-    def __init__(self, cfg: OmegaConf):
-        self.num_classes = cfg.model.network.params.num_classes
-        args = {
-            "task": "binary" if self.num_classes == 2 else "multiclass",
-            "num_classes": self.num_classes,
-            "normalize": "true",  # 'true' normalizes over the true labels (targets)
-        }
-        super().__init__(**args)
+class Metric_PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
+	"""Precision-Recall metric class; inherits methods from 
+	torchmetrics parent class.
+	"""
+	def __init__(self, cfg: OmegaConf):
+		self.num_classes = cfg.model.network.params.num_classes
+		args = {
+			"task": "binary" if self.num_classes == 2 else "multiclass",
+			"num_classes": self.num_classes,
+			}
+		super().__init__(**args)
 
-    def draw(self, cm: Tensor, epoch: int = None) -> pltFigure:
-        cm = np.round(100*cm.cpu().numpy()).astype(int)
-        fig, ax = plt.subplots(1, 1, figsize=(8,6), tight_layout=True)
-        #aa = ax.matshow(cm, cmap=plt.cm.YlGnBu, alpha=0.9)
-        aa = ax.matshow(cm, cmap='viridis', alpha=0.9)
-        for m in range(cm.shape[0]):
-            for n in range(cm.shape[1]):
-                ax.text(x=m,y=n,s=cm[m, n], va='center', ha='center', size='large')
-        plt.xticks(range(len(cm)))
-        plt.yticks(range(len(cm)))
-        plt.xlabel("True class", size='large')
-        plt.ylabel("Predicted class", size='large')
-        plt.title(f"Confusion Matrix [val, epoch {epoch}] (%)", size='large')
-        plt.colorbar(aa)
-        plt.close()
-        return fig
-        
-    
+
+	def draw(self, precision: Tensor, recall: Tensor, thresholds: Tensor, subset: str,  epoch: int) -> pltFigure:
+		assert self.num_classes == len(precision) and self.num_classes == len(recall)
+		
+		fig = plt.figure()
+		for i in range(self.num_classes):
+			plt.plot(recall[i], precision[i], label=i)
+		plt.title(f"Precision-Recall Curve [{subset}, epoch {epoch}]")
+		plt.xlabel("Recall")
+		plt.ylabel("Precision")
+		if self.num_classes <= 10:
+			plt.legend(loc="lower left", title="class", fontsize='small')
+		plt.close()
+		return fig
+
+		
+class Metric_ConfusionMatrix(MulticlassConfusionMatrix):
+	"""Confusion Matrix metric class; inherits methods from 
+	torchmetrics parent class.
+	"""
+	def __init__(self, cfg: OmegaConf):
+		self.num_classes = cfg.model.network.params.num_classes
+		args = {
+			"task": "binary" if self.num_classes == 2 else "multiclass",
+			"num_classes": self.num_classes,
+			"normalize": "true",  # 'true' normalizes over the true labels (targets)
+		}
+		super().__init__(**args)
+
+
+	def draw(self, cm: Tensor, subset: str,  epoch: int) -> pltFigure:
+		assert self.num_classes == cm.shape[0] and self.num_classes == cm.shape[1]
+		cm = np.round(100*cm.numpy()).astype(int)
+		
+		fig = plt.subplot()
+		cbar_args = {"label": "Correct predictions (%), normalized by true class"}
+		sn.heatmap(data = cm, annot = True, fmt = "g", square = True, 
+			cmap = "Blues", vmin=0, vmax=100, cbar_kws=cbar_args)
+		plt.title(f"Confusion Matrix [{subset}, epoch {epoch}]")
+		plt.xlabel("Predicted class")
+		plt.ylabel("True class")
+		plt.close()
+		return fig
+		
 def metric_accuracy(logits: Tensor, target: Tensor, task: str, num_classes: int) -> Tensor:
-    preds = torch.argmax(logits, dim=1)
-    return accuracy(preds=preds, target=target, task=task, num_classes=num_classes)
+	preds = torch.argmax(logits, dim=1)
+	return accuracy(preds=preds, target=target, task=task, num_classes=num_classes)
+
 
 def metric_mse(preds: Tensor, target: Tensor) -> Tensor:
-    return mean_squared_error(preds, target, squared = True)
+	return mean_squared_error(preds, target, squared = True)
+	
 
 def metric_rmse(preds: Tensor, target: Tensor) -> Tensor:
-    return mean_squared_error(preds, target, squared = False)
+	return mean_squared_error(preds, target, squared = False)
 
-
-# https://github.com/vineeth2309/Non-Max-Suppression/blob/main/NMS.py
 
 def IOU(box1, box2):
-	""" We assume that the box follows the format:
-		box1 = [x1,y1,x2,y2], and box2 = [x3,y3,x4,y4],
-		where (x1,y1) and (x3,y3) represent the top left coordinate,
-		and (x2,y2) and (x4,y4) represent the bottom right coordinate."""
+	"""We assume that the box follows the format: 
+	box1 = [x1,y1,x2,y2], and box2 = [x3,y3,x4,y4]
+	where (x1,y1) and (x3,y3) represent the top left coordinate, 
+	and (x2,y2) and (x4,y4) represent the bottom right coordinate.
+	"""
 
 	x1, y1, x2, y2 = box1
 	x3, y3, x4, y4 = box2
@@ -80,6 +108,7 @@ def IOU(box1, box2):
 	return iou
 
 
+# https://github.com/vineeth2309/Non-Max-Suppression/blob/main/NMS.py
 def NMS(boxes, conf_threshold=0.7, iou_threshold=0.4):
 	""" The function performs nms on the list of boxes:
 		boxes: [box1, box2, box3...]

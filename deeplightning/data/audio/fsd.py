@@ -13,8 +13,9 @@ class FSD_dataset(Dataset):
 
     Preprocessing
     ----------
-    After downloading the dataset and resources from 
-    the link above, following preprocessing steps:
+    After downloading the dataset and code from 
+    https://github.com/Jakobovski/free-spoken-digit-dataset
+    follow the preprocessing steps to obtain the spectrograms:
     ```
         cd fsd
         mkdir spectrograms
@@ -140,8 +141,13 @@ class FreeSpokenDigit(pl.LightningDataModule):
             transform = self.test_transforms,
         )
 
-        self.test_ds = self.val_ds
-
+        # TODO currently testing is the same as validation;
+        # split `testing-spectrograms` into two subsets
+        self.test_ds = FSD_dataset(
+            cfg = self.cfg,
+            subfolder = "testing-spectrograms",
+            transform = self.test_transforms,
+        )
     
         info_message("Training set size: {:,d}".format(len(self.train_ds)))
         info_message("Validation set size: {:,d}".format(len(self.val_ds)))
