@@ -9,9 +9,6 @@
 </h3>
 
 
-[ADD TO GITHUB] SEE FOR GTZAN CLASSIFICATION + RECOMMENDER SYSTEM : https://www.kaggle.com/code/andradaolteanu/work-w-audio-data-visualise-classify-recommend
-
-LSTM PyTorch : https://cnvrg.io/pytorch-lstm/
 
 ## Dataset
 
