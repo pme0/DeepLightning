@@ -1,12 +1,14 @@
 <h1 align="center">
-  <b>Audio Classification
+Audio Classification
 </h1>
+  
 <h3 align="center">
-    Spoken Word Recognition<br>
+Spoken Word Recognition
 </h3>
-<h4 align="center">
-    #CNN #AudioSpectrogram
-</h4>
+
+<h5 align="center">
+#CNN #AudioSpectrogram
+</h5>
 
 ## Introduction
 
