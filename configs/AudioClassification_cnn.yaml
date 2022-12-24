@@ -48,7 +48,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 30
+  num_epochs: 20
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -66,8 +66,8 @@ logger:
   project_name: AudioClassification_FSD_CNN
   tags: ["audio", "classification", "cnn"] # cannot be empty
   notes: null
+  log_every_n_steps: 10
   type: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default
     tracking_uri: mlruns
-  log_every_n_steps: 10
