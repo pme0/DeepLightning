@@ -16,7 +16,7 @@ Sound waves are represented digitally as audio data, most commonly in waveform. 
 
 In this example we will train a Machine Learning model to recognize spoken words. We will transform waveform sound data into spectrogram image data and so recast the original Audio Classification problem as an Image Classification one.
 
-<img src="media/waveplot_bw.png" width=400px> 
+<img src="media/waveform_bw.png" width=400px> 
 <img src="media/spectrogram_bw.png" width=400px> 
 
 
