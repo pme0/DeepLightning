@@ -30,14 +30,12 @@ In this example we will train a Machine Learning model to recognize spoken words
 - [3] https://arxiv.org/abs/1807.03418
 - [4] https://github.com/soerenab/AudioMNIST
 
-Taking the spectrograms as images, it is in principle possible to tackle spoken digit classification as an image classification problem - provided that the different digits have different spectral signatures. From the figure we can identify clear differences between the spectrograms of two digits (uttered by the same speaker):
+Taking the spectrograms as images, it is in principle possible to tackle spoken digit classification as an image classification problem - provided that the different digits have different spectral signatures. From the figure below we can identify clear differences between the spectrograms of two digits (uttered by the same speaker):
 
-[Fig.: Spectrograms of two different digits uttered by the same speaker.]
 <img src="media/digits_spectrograms.png" width=500px> 
 
-and in the figure below we can see some consistency in the spectrograms within each class:
+and in the figure below we can see some consistency in the spectrograms within each class (multiple audio samples (rows) uttered by the same speaker for each of the 10 digits (columns) in the dataset):
 
-[Fig.: Spectrograms of multiple audio samples (rows) uttered by the same speaker for each of the 10 digits (columns) in the dataset.]
 <img src="media/digits_spectrograms_grid.png" width=900px> 
 
 The spectrograms shown above are Short Time Fourier Transforms (STFT). Other spectral decompositions or feature extraction techniques for audio data could also be used to generate image-like features from audio signals, a common one being Mel Frequency Cepstral Coefficients (MFCC):
