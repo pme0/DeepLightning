@@ -16,14 +16,10 @@ Sound waves are represented digitally as audio data, most commonly in waveform. 
 
 In this example we will train a Machine Learning model to recognize spoken words. We will transform waveform sound data into spectrogram image data and so recast the original Audio Classification problem as an Image Classification one.
 
-<figure><center>
-  <img src="media/waveplot_bw.png" width=400px> 
-  <figcaption style="text-align: center">Fig.: Waveplot.</figcaption>
-</center></figure>
-<figure><center>
-  <img src="media/spectrogram_bw.png" width=400px> 
-  <figcaption style="text-align: center">Fig.: Spectrogram.</figcaption>
-</center></figure>
+<img src="media/waveplot_bw.png" width=400px> 
+<img src="media/spectrogram_bw.png" width=400px> 
+
+
 ## Data
 
 **Free Spoken Digits (FSD)** is a dataset for **Spoken Word Recognition** [1,2]. The dataset is a collection of 3,000 audio files (`.wav`) from 6 speakers. There are 50 recordings per speaker for each digit 0-9. This is a subset of 10% of the **AudioMNIST** dataset proposed in [3,4].
@@ -36,24 +32,17 @@ In this example we will train a Machine Learning model to recognize spoken words
 
 Taking the spectrograms as images, it is in principle possible to tackle spoken digit classification as an image classification problem - provided that the different digits have different spectral signatures. From the figure we can identify clear differences between the spectrograms of two digits (uttered by the same speaker):
 
-<figure><center>
-  <img src="media/digits_spectrograms.png" width=500px> 
-  <figcaption>Fig.: Spectrograms of two different digits uttered by the same speaker.</figcaption>
-</center></figure>
+[Fig.: Spectrograms of two different digits uttered by the same speaker.]
+<img src="media/digits_spectrograms.png" width=500px> 
 
 and in the figure below we can see some consistency in the spectrograms within each class:
 
-<figure><center>
-  <img src="media/digits_spectrograms_grid.png" width=900px> 
-  <figcaption>Fig.: Spectrograms of multiple audio samples (rows) uttered by the same speaker for each of the 10 digits (columns) in the dataset.</figcaption>
-</center></figure>
+[Fig.: Spectrograms of multiple audio samples (rows) uttered by the same speaker for each of the 10 digits (columns) in the dataset.]
+<img src="media/digits_spectrograms_grid.png" width=900px> 
 
 The spectrograms shown above are Short Time Fourier Transforms (STFT). Other spectral decompositions or feature extraction techniques for audio data could also be used to generate image-like features from audio signals, a common one being Mel Frequency Cepstral Coefficients (MFCC):
 
-<figure><center>
-  <img src="media/mfcc.png" width=300px> 
-  <figcaption>Fig.: Mel Frequency Cepstral Coefficient (MFCC) features.</figcaption>
-</center></figure>
+<img src="media/mfcc.png" width=300px> 
 
 The datset will consist of pairs of samples `(x,y)` where `x` is a 64x64 spectrogram greyscale image and `y` is the corresponding class label (0-9).
 
@@ -103,18 +92,13 @@ All hyperparameters can be found in the `.yaml` configuration file.
 
 The results, shown below, show that the model has learned to distinguish the different classes of spoken digits based on their spectrograms with 96.4% validation accuracy.
 
-<figure><center>
-        <img src="media/audioclassif_fsd_cnn__loss.png" width="350" />
-        <img src="media/audioclassif_fsd_cnn__acc.png" width="350" />
-        <figcaption style="text-align: center">Fig.: Loss and Accuracy of classification model during training.</figcaption>
-</center></figure>
+<img src="media/audioclassif_fsd_cnn__loss.png" width="350" />
+<img src="media/audioclassif_fsd_cnn__acc.png" width="350" />
 
 The Confusion Matrices below reveal something interesting: utterances of the digit 8 are often misclassified as the digit 6. This would be natural when classifying images of digits because of their visual similarity, but this result could suggest that the similarity also exists in the speech domain. However, this may just be the result of higher variability in the utterances of digits 8, as seems to be the case (see Fig. above depicting samples per class). Notice that the reverse is not true: utterances of the digit 6 are never misclassified as 8. A similar comment could be made about 9 being misclassified as 0.
 
-<figure><center>
-        <img src="media/audioclassif_fsd_cnn__confusion.png" width="350" />
-        <figcaption style="text-align: center">Fig.: Confusion Matrices for models without (left) and with (right) Dropout regularization.</figcaption>
-</center></figure>
+[Fig.: Confusion Matrices for models without (left) and with (right) Dropout regularization.]
+<img src="media/audioclassif_fsd_cnn__confusion.png" width="350" />
 
 ## Conclusion
 
