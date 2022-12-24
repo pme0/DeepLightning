@@ -90,15 +90,13 @@ bash ./train.sh configs/AudioClassification_cnn.yaml
 ```
 All hyperparameters can be found in the `.yaml` configuration file. 
 
-The results, shown below, show that the model has learned to distinguish the different classes of spoken digits based on their spectrograms with 96.4% validation accuracy.
+The results, shown below, show that the model has learned to distinguish the different classes of spoken digits based on their spectrograms with 95.0% validation accuracy.
 
-<img src="media/audioclassif_fsd_cnn__loss.png" width="350" />
-<img src="media/audioclassif_fsd_cnn__acc.png" width="350" />
+<img src="media/audioclassif_fsd_cnn.png" width="700" />
 
-The Confusion Matrices below reveal something interesting: utterances of the digit 8 are often misclassified as the digit 6. This would be natural when classifying images of digits because of their visual similarity, but this result could suggest that the similarity also exists in the speech domain. However, this may just be the result of higher variability in the utterances of digits 8, as seems to be the case (see Fig. above depicting samples per class). Notice that the reverse is not true: utterances of the digit 6 are never misclassified as 8. A similar comment could be made about 9 being misclassified as 0.
+The Confusion Matrices below reveal something interesting: utterances of the digit 8 are often misclassified as the digit 6. This would be natural when classifying images of digits because of their visual similarity, but this result could suggest that the similarity also exists in the speech domain. However, this may just be the result of higher variability in the utterances of digits 8, as seems to be the case (see Fig. above depicting samples per class). Notice that the reverse is not true: utterances of the digit 6 are never misclassified as 8.
 
-[Fig.: Confusion Matrices for models without (left) and with (right) Dropout regularization.]
-<img src="media/audioclassif_fsd_cnn__confusion.png" width="350" />
+<img src="media/audioclassif_fsd_cnn__confusion.png" width="400" />
 
 ## Conclusion
 
