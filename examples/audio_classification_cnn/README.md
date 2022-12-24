@@ -84,7 +84,7 @@ CNN(
 The model is trained for 30 epochs using Cross Entropy loss. No data augmentations were used but images are normalized to mean 0 and standard deviation 1. The training/validation split is 90%/10%, meaning 2,700 training samples and 300 validation samples.
 The run is done within the DeepLightning framework using the command
 ```bash
-bash ./train.sh configs/AudioClassification_cnn.yaml
+bash ./train.sh configs/SpokenWordRecognition_cnn.yaml
 ```
 All hyperparameters can be found in the `.yaml` configuration file. 
 
