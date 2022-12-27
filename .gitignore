@@ -2,7 +2,16 @@ mlruns/
 logs/
 wandb/
 lightning_logs/
+
+# model weights
 *.pt
+*.torchscript
+*.onnx
+*.engine
+*.mlmodel
+*.pb
+*.tflite
+*_openvino_model/
 
 # Byte-compiled / optimized / DLL files
 *.DS_Store
