@@ -2,6 +2,7 @@ mlruns/
 logs/
 wandb/
 lightning_logs/
+*.pt
 
 # Byte-compiled / optimized / DLL files
 *.DS_Store
