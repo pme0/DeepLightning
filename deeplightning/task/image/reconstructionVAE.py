@@ -6,7 +6,7 @@ from torchvision import transforms
 import pytorch_lightning as pl
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.utilities.messages import info_message
+from deeplightning.utils.messages import info_message
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 
 

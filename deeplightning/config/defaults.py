@@ -20,7 +20,7 @@ data_defaults = \
         num_workers: 4
         batch_size: 64
         module:
-            target: deeplightning.data.mnist.MNIST
+            target: deeplightning.data.dataloaders.mnist.MNIST
     """
 
 model_defaults = \

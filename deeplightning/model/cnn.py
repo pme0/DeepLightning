@@ -1,10 +1,10 @@
 import torch.nn as nn
 
 
-class SimpleCNN(nn.Module):
+class SymbolCNN(nn.Module):
     
     def __init__(self, num_classes, num_channels):
-        super(SimpleCNN, self).__init__()
+        super(SymbolCNN, self).__init__()
         self.num_classes = num_classes
         self.num_channels = num_channels
         self.conv1 = nn.Sequential(

@@ -6,7 +6,7 @@ data:
   num_workers: 4
   batch_size: 128
   module:
-    target: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.dataloaders.mnist.MNIST
 
 model:
   module:

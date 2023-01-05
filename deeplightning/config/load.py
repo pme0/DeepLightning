@@ -3,9 +3,10 @@ ConfigElement = Union[str, int, float, None]
 from omegaconf import OmegaConf
 import torch
 
-from deeplightning.utilities.registry import __TaskRegistry__
+from deeplightning.config.compute import runtime_compute
+from deeplightning.utils.registry import __TaskRegistry__
 from deeplightning.config.defaults import __ConfigGroups__
-from deeplightning.utilities.messages import (info_message, 
+from deeplightning.utils.messages import (info_message, 
                                               warning_message,
                                               error_message,
                                               config_print)
@@ -17,13 +18,15 @@ def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
     to the logger's artifact storage path.
     """
     cfg = OmegaConf.load(config_file)
-    cfg = configuration_defaults(cfg)
-    cfg = configuration_checks(cfg)
+    cfg = merge_defaults(cfg)
+    cfg = check_consistency(cfg)
+    cfg = runtime_compute(cfg)
+    OmegaConf.resolve(cfg)
     config_print(OmegaConf.to_yaml(cfg))
     return cfg
 
 
-def configuration_defaults(user_config: OmegaConf) -> OmegaConf:
+def merge_defaults(user_config: OmegaConf) -> OmegaConf:
     """ Merge provided config with default config.
     The default parameters are overwritten if present
     in the user config provided.
@@ -40,7 +43,7 @@ def configuration_defaults(user_config: OmegaConf) -> OmegaConf:
     return cfg
     
 
-def configuration_checks(cfg: OmegaConf) -> OmegaConf:
+def check_consistency(cfg: OmegaConf) -> OmegaConf:
     """ Perform parameter checks and modify where inconsistent.
     """
     
@@ -79,5 +82,3 @@ def configuration_checks(cfg: OmegaConf) -> OmegaConf:
             )
 
     return cfg
-   
-

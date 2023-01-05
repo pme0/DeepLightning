@@ -44,17 +44,19 @@ CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
 )
 def test_trainer(kwargs):
 
-    cfg = load_config(config_file = "helpers/dummy_cfg.yaml")
+    cfg = load_config(config_file = "helpers/dummy_config.yaml")
     
     cfg.engine.backend = kwargs["strategy"]
     cfg.engine.precision = kwargs["precision"]
     cfg.engine.gpus = kwargs["gpus"]
     # TODO extra params for quick testing
+    '''
     cfg.test_params.limit_train_batches = 2
     cfg.test_params.limit_val_batches = 2
     cfg.test_params.enable_model_summary = False,
     cfg.test_params.enable_progress_bar = False,
     cfg.test_params.logger = False
+    '''
     
     model = init_model(cfg)
     trainer = init_trainer(cfg)
