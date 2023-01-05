@@ -1,5 +1,14 @@
+from typing import Tuple, Union
+import math
 import torch
 import torch.nn as nn
+import torchvision.transforms as T
+from PIL import Image
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure as pltFigure
+
+
+pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
 
 class AttentionBlock(nn.Module):
@@ -33,41 +42,68 @@ class AttentionBlock(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    def __init__(
-        self,
-        embed_dim,
-        hidden_dim,
-        num_channels,
-        num_heads,
-        num_layers,
-        num_classes,
-        patch_size,
-        num_patches,
-        dropout=0.0,
+    """Vision Transformer (ViT) architecture.
+
+    References
+    ----------
+    ORIGINAL PAPER
+        "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+            https://arxiv.org/abs/2010.11929
+    TRAINING TIPS 
+        "How to train your ViT? Data, Augmentation, and  Regularization in Vision Transformers"
+            https://arxiv.org/abs/2106.10270
+        "When Vision Transformers Outperform ResNets without Pre-training or Strong Data Augmentations"
+            https://arxiv.org/abs/2106.01548
+
+    Parameters
+    ----------
+   
+    [IMAGE]
+    num_channels : number of channels of the input (3 for RGB)
+    image_size : image size `dim` for square images `(dim, dim)`, or 
+        `(width, height)` for rectangular images
+    
+    [PATCHING & EMBEDDING]
+    patch_size : number of pixels per dimension in each patch; patches are 
+        assumed square (`patch_size * patch_size`)
+    embed_dim : size of the patch embeddings
+    
+    [TRANSFORMER]
+    hidden_dim : size of the hidden layer in the MLP
+    num_heads : number of heads in the Multi-Head Attention block
+    num_layers : number of layers in the Transformer
+    dropout - probability of dropout in the MLP
+    
+    [CLASSIFIER]
+    num_classes : number of classes in the MLP
+
+    """
+
+    def __init__(self,
+        image_size: Union[int, Tuple[int,int]],
+        embed_dim: int,
+        hidden_dim: int,
+        num_channels: int,
+        num_heads: int,
+        num_layers: int,
+        num_classes: int,
+        patch_size: int,
+        dropout: float = 0.0,
     ):
-        """
-        Inputs:
-            embed_dim - Dimensionality of the input feature vectors to the Transformer
-            hidden_dim - Dimensionality of the hidden layer in the feed-forward networks
-                         within the Transformer
-            num_channels - Number of channels of the input (3 for RGB)
-            num_heads - Number of heads to use in the Multi-Head Attention block
-            num_layers - Number of layers to use in the Transformer
-            num_classes - Number of classes to predict
-            patch_size - Number of pixels that the patches have per dimension
-            num_patches - Maximum number of patches an image can have
-            dropout - Amount of dropout to apply in the feed-forward network and
-                      on the input encoding
-        """
         super().__init__()
 
         self.patch_size = patch_size
 
+        # check patchify parameters 
+        image_w, image_h = pair(image_size)
+        assert (image_w % patch_size) == 0, f"image width ({image_w}) must be divisible by patch size ({patch_size})"
+        assert (image_h % patch_size) == 0, f"image height ({image_h}) must be divisible by patch size ({patch_size})"
+        num_patches = (image_w // patch_size) * (image_h // patch_size)
+
         # Layers/Networks
-        self.input_layer = nn.Linear(num_channels * (patch_size ** 2), embed_dim)
+        self.embed = nn.Linear(num_channels * (patch_size ** 2), embed_dim)
         self.transformer = nn.Sequential(
-            *(AttentionBlock(embed_dim, hidden_dim, num_heads, dropout=dropout) for _ in range(num_layers))
-        )
+            *(AttentionBlock(embed_dim, hidden_dim, num_heads, dropout=dropout) for _ in range(num_layers)))
         self.mlp_head = nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, num_classes))
         self.dropout = nn.Dropout(dropout)
 
@@ -76,61 +112,85 @@ class VisionTransformer(nn.Module):
         self.pos_embedding = nn.Parameter(torch.randn(1, 1 + num_patches, embed_dim))
 
 
-    def patchify(self, x, patch_size, flatten_channels=True):
-        """
-        Inputs:
-            x - torch.Tensor representing the image of shape [B, C, H, W]
-            patch_size - Number of pixels per dimension of the patches (integer)
-            flatten_channels - If True, the patches will be returned in a flattened format
-                            as a feature vector instead of a image grid.
-        """
-        B, C, H, W = x.shape
-        x = x.reshape(B, C, H // patch_size, patch_size, W // patch_size, patch_size)
-        x = x.permute(0, 2, 4, 1, 3, 5)  # [B, H', W', C, p_H, p_W]
-        x = x.flatten(1, 2)  # [B, H'*W', C, p_H, p_W]
-        if flatten_channels:
-            x = x.flatten(2, 4)  # [B, H'*W', C*p_H*p_W]
-        return x
-        """ PLOT PATCHES ON A GRID
-        from torchvision.utils import make_grid
-        import torch
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import torchvision.transforms.functional as F
-        def show(imgs):
-            if not isinstance(imgs, list):
-                imgs = [imgs]
-            fix, axs = plt.subplots(ncols=len(imgs), squeeze=False)
-            for i, img in enumerate(imgs):
-                img = img.detach()
-                img = F.to_pil_image(img)
-                axs[0, i].imshow(np.asarray(img))
-                axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
-                
-        patches = image.unfold(2, PATCH_SIZE, PATCH_SIZE).unfold(3, PATCH_SIZE, PATCH_SIZE)
-        > patches.shape: B x C x p_H x p_W x H' x W'
-        patches = patches.permute(0,2,3,1,4,5)
-        > patches.shape: B x p_H x p_W x C X H' x W'
-        patches = patches.flatten(1,2)
-        > patches.shape:  B x (p_H x p_W) x C x W' x H'
-        print('patches 3', flat_patches.shape)
+    def patchify(self, x: torch.Tensor, patch_size: int, flatten_channels: bool = True) -> torch.Tensor:
+        """Convert image into patches.
 
-        show(make_grid(flat_patches[0], nrow=4, ncol=4))
+        The implementation used is equivalent to the one below but is slightly faster though more verbose:
+        # https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
+        # Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_height, p2 = patch_width)
+
+        Parameters
+        ----------
+        x : image tensor of shape [B, C, H, W]
+        patch_size : number of pixels per dimension in each patch; patches are 
+            assumed square (`patch_size x patch_size`)
+        flatten_pixels : if True, the patches will be returned in a flattened format
+            as a feature vector instead of a image grid.
+
         """
+
+        B, C, H, W = x.shape
+        # H' : number of patches in the height dimension (H // patch_size)
+        # W' : number of patches in the width dimension (W // patch_size)
+        # pH : patch size (in pixels) in the height dimension
+        # pW : patch size (in pixels) in the width dimension
+        x = x.reshape(B, C, H // patch_size, patch_size, W // patch_size, patch_size) # [B, C, H', pH, W', pW]
+        x = x.permute(0, 2, 4, 3, 5, 1)  # [B, H', W', pH, pW, C]
+        x = x.flatten(1, 2)  # [B, H' * W', pH, pW, C]
+        if flatten_pixels:
+            x = x.flatten(2, 4)  # [B, H' * W', C * pH * pW]
+        return x
+
+    @staticmethod
+    def show_patches(x: Union[torch.Tensor, str], resize: Tuple[int,int] = None) -> pltFigure:
+        """Plot a grid of image patches.
+
+        Parameters
+        ----------
+        x : either a path to an image or an image tensor of size [P,H,W,C] where P is
+            number of patches (flattened), H is patch height, W is patch width, C is 
+            number of channels
+        resize : target size if `x` is a path
+
+        """
+
+        if isinstance(x, str):
+            x = Image.open(x)
+            x = T.Resize()(pair(resize))
+            x = T.ToTensor()(x)
+
+        P, _, _, _ = x.shape
+        rows = int(math.sqrt(P))
+        cols = int(math.sqrt(P))
+        
+        fig = plt.figure(figsize=(4,4))
+        gs = fig.add_gridspec(nrows=rows, ncols=cols, hspace=0.1, wspace=0.1)
+        axs = gs.subplots()
+
+        p = 0
+        for i in range(rows):
+            for j in range(cols):
+                img = x[p,:,:,:]
+                axs[i,j].imshow(img)
+                axs[i,j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+                axs[i,j].axis('off')
+                p += 1
+
 
     def forward(self, x):
+
         # Preprocess input
         x = self.patchify(x, self.patch_size)
         B, T, _ = x.shape
-        x = self.input_layer(x)
+        x = self.embed(x)
 
         # Add CLS token and positional encoding
         cls_token = self.cls_token.repeat(B, 1, 1)
         x = torch.cat([cls_token, x], dim=1)
-        x = x + self.pos_embedding[:, : T + 1]
+        x += self.pos_embedding[:, : T + 1]
+        x = self.dropout(x)
 
         # Apply Transforrmer
-        x = self.dropout(x)
         x = x.transpose(0, 1)
         x = self.transformer(x)
 

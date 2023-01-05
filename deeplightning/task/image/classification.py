@@ -6,8 +6,8 @@ import pytorch_lightning as pl
 import wandb
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.utilities.messages import info_message
-from deeplightning.utilities.metrics import metric_accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
+from deeplightning.utils.messages import info_message
+from deeplightning.utils.metrics import metric_accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.logger.logwandb import initilise_wandb_metrics
@@ -36,7 +36,7 @@ class ImageClassification(pl.LightningModule):
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
-    
+
         self.sanity_check = True # to avoid logging sanity check metrics
 
         # metrics to use during training
@@ -59,7 +59,7 @@ class ImageClassification(pl.LightningModule):
         # WandB logging:
         if self.cfg.logger.log_to_wandb:
             self.step_label = initilise_wandb_metrics(
-                metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
+                metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc", "lr"], 
                 step_label = "iteration",
             )
 
@@ -146,6 +146,11 @@ class ImageClassification(pl.LightningModule):
             # chenge key from 'loss' to 'train_loss' (see `training_step()` for why)
             metrics['train_loss']  = metrics.pop('loss')
 
+            # log learning rate
+            metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
+            #print('self.optimizers', self.optimizers())
+            #print('self.lr_schedulers', self.lr_schedulers())
+            
             # log training metrics
             if self.cfg.logger.log_to_wandb:
                 metrics[self.step_label] = self.global_step

@@ -158,7 +158,7 @@ data:
   root: /data
   dataset: MNIST
   module:
-    target: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.dataloaders.mnist.MNIST
   num_workers: 4
   batch_size: 256
    

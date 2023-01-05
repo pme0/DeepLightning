@@ -1,17 +1,21 @@
+modes: 
+  train: true
+  test: true
+  
 task: classification
+
 data:
   root: /Users/pme12/data/
-  dataset: MNIST
   num_workers: 4
   batch_size: 256
   module: 
-    target: deeplightning.data.mnist.MNIST
+    target: deeplightning.data.dataloaders.mnist.MNIST
 
 model:
   module: 
-    target: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.models.resnet.resnet18
+    target: deeplightning.model.resnet.resnet18
     params: 
       num_classes: 10
       num_channels: 1

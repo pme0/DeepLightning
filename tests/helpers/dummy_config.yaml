@@ -42,7 +42,7 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 2
+  num_epochs: 1
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -51,7 +51,8 @@ train:
   early_stop_metric: null
 
 logger:
-  type: pytorch_lightning.loggers.MLFlowLogger
+  log_to_wandb: false
+  target: pytorch_lightning.loggers.MLFlowLogger
   params:
     experiment_name: Default
     tracking_uri: mlruns

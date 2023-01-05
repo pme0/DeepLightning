@@ -6,8 +6,8 @@ import pytorch_lightning as pl
 import wandb
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.utilities.messages import info_message
-from deeplightning.utilities.metrics import metric_accuracy, MetricsConfusionMatrix
+from deeplightning.utils.messages import info_message
+from deeplightning.utils.metrics import metric_accuracy, MetricsConfusionMatrix
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.logger.logwandb import initilise_wandb_metrics

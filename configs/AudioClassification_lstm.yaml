@@ -9,9 +9,9 @@ data:
   num_workers: 4
   batch_size: 256
   module: 
-    target: deeplightning.data.audio.fsd.FreeSpokenDigit
+    target: deeplightning.data.dataloaders.audio.fsd.FreeSpokenDigit
   train_transforms:
-    normalize: # use `deeplightning.utilities.data.compute_dataset_mean_and_stdev()`
+    normalize: # use `deeplightning.utils.data.compute_dataset_mean_and_stdev()`
       mean: [0.4711]
       stdev: [0.1464]
   test_transforms:

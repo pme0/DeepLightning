@@ -6,7 +6,9 @@ conda_env: conda_env.yaml
 #    image:  mlflow-docker-example
 
 entry_points:
+  
   main:
     parameters:
       cfg: {type: path, default: 'configs/base.yaml'}
-    command: "python3 main.py --cfg {cfg}"
+    command: "python3 train.py --cfg {cfg}"
+  

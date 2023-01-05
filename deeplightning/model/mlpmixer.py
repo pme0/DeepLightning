@@ -3,6 +3,7 @@ from torch import nn
 from functools import partial
 from einops.layers.torch import Rearrange, Reduce
 
+
 pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
 
@@ -28,9 +29,13 @@ def FeedForward(dim, expansion_factor = 4, dropout = 0., dense = nn.Linear):
     
 
 def MLPMixer(*, image_size, num_channels, patch_size, dim, depth, num_classes, expansion_factor = 4, expansion_factor_token = 0.5, dropout = 0.):
+    
+    # check patchify parameters 
     image_h, image_w = pair(image_size)
-    assert (image_h % patch_size) == 0 and (image_w % patch_size) == 0, 'image must be divisible by patch size'
-    num_patches = (image_h // patch_size) * (image_w // patch_size)
+    assert (image_w % patch_size) == 0, f"image width ({image_w}) must be divisible by patch size ({patch_size})"
+    assert (image_h % patch_size) == 0, f"image height ({image_h}) must be divisible by patch size ({patch_size})"
+    
+    num_patches = (image_w // patch_size) * (image_h // patch_size)
     chan_first, chan_last = partial(nn.Conv1d, kernel_size = 1), nn.Linear
 
     return nn.Sequential(
