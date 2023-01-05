@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
                                          ModelCheckpoint,
                                          EarlyStopping)
-from deeplightning.utilities.messages import info_message
+from deeplightning.utils.messages import info_message
 
 
 class DLTrainer(Trainer):

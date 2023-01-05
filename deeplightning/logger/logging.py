@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 from torchvision import transforms
 
-from deeplightning.utilities.messages import warning_message, error_message
+from deeplightning.utils.messages import warning_message, error_message
 
 
 # helpers

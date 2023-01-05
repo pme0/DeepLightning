@@ -1,11 +1,15 @@
 #!/bin/bash
 
-conda activate deeplightning
-pip install pytest
+# before running the script make sure to activate `deeplightning`
+# environment and install `pytest` library
+#conda activate deeplightning
+#pip install pytest
 
-#pytest -q test_initialization.py -r s
-#pytest -q test_trainer.py -r s
-pytest -q test_checkpoint.py -r s
+# run `pytest --help` to see argument options
 
+# the following runs `pytest` on all files in the current directory
+pytest .  -q  -r A  --disable-pytest-warnings
 
-#for f in test_*.py; do pytest -q "$f" -r s; done
+#pytest test_trainer.py     -q  -r A  --disable-pytest-warnings
+#pytest test_checkpoint.py  -q  -r A  --disable-pytest-warnings
+#pytest test_transforms.py  -q  -r A  --disable-pytest-warnings

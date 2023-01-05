@@ -1,0 +1,91 @@
+modes: 
+  train: true
+  test: true
+  
+task: classification
+
+data:
+  root: /Users/pme/data/CIFAR10
+  num_workers: 4
+  batch_size: 256
+  module: 
+    target: deeplightning.data.dataloaders.image.cifar10.CIFAR10
+  # transformations/augmentations
+  train_transforms:
+    crop:
+      size: 32
+      pad: 4
+    hflip: 0.5
+    normalize:
+      mean: [0.4914, 0.4822, 0.4465]
+      std: [0.2023, 0.1994, 0.2010]
+  test_transforms:
+    normalize:
+      mean: [0.4914, 0.4822, 0.4465]
+      std: [0.2023, 0.1994, 0.2010]
+  # the following may be required inputs for model/lr_scheduler/etc
+  image_size: 32
+  num_channels: 3
+  num_classes: 10
+  num_training_samples: 45000
+
+model:
+  module: 
+    target: deeplightning.task.image.classification.ImageClassification
+  network:
+    target: deeplightning.model.vit.VisionTransformer
+    params: 
+      image_size: "${data.image_size}"
+      num_classes: "${data.num_classes}"
+      num_channels: "${data.num_channels}"
+      embed_dim: 128
+      mlp_dim: 512
+      num_heads: 8
+      num_layers: 6
+      patch_size: 4
+      dropout: 0.2
+  optimizer:
+    target: torch.optim.Adam
+    params:
+      lr: 0.001
+  scheduler:
+    #target: torch.optim.lr_scheduler.ExponentialLR
+    target: torch.optim.lr_scheduler.CosineAnnealingLR
+    params:
+      #gamma: 0.99
+      eta_min: 0.0001
+      T_max: "AUTO"  # will be computed at runtime
+    call:
+      interval: "step"
+      frequency: 1
+  loss:
+    target: torch.nn.CrossEntropyLoss
+    params:
+
+engine:
+  backend: deepspeed_stage_3
+  gpus: null
+  num_nodes: 1
+  precision: 32
+
+train:
+  num_epochs: 10
+  val_every_n_epoch: 1
+  grad_accum_from_epoch: 0
+  grad_accum_every_n_batches: 1
+  ckpt_resume_path: null
+  ckpt_every_n_epochs: 1
+  early_stop_metric: null
+  early_stop_delta: 0.001
+  early_stop_patience: 3
+
+logger:
+  log_to_wandb: true
+  project_name: ObjectRecognition
+  tags: ["image", "classification", "vit"] # cannot be empty
+  notes: null
+  log_every_n_steps: 10
+  type: pytorch_lightning.loggers.MLFlowLogger
+  params:
+    experiment_name: Default
+    tracking_uri: mlruns

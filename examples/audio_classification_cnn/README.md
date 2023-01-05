@@ -80,19 +80,13 @@ CNN(
 
 ## Training
 
-
 The model is trained for 30 epochs using Cross Entropy loss. No data augmentations were used but images are normalized to mean 0 and standard deviation 1. The training/validation split is 90%/10%, meaning 2,700 training samples and 300 validation samples.
-The run is done within the DeepLightning framework using the command
-```bash
-bash ./train.sh configs/SpokenWordRecognition_cnn.yaml
-```
-All hyperparameters can be found in the `.yaml` configuration file. 
 
-The results, shown below, show that the model has learned to distinguish the different classes of spoken digits based on their spectrograms with 95.0% validation accuracy.
+The results, shown below, show that the model has learned to distinguish the different classes of spoken digits based on their spectrograms >95% validation accuracy.
 
 <img src="media/audioclassif_fsd_cnn.png" width="700" />
 
-The Confusion Matrices below reveal something interesting: utterances of the digit 8 are often misclassified as the digit 6. This would be natural when classifying images of digits because of their visual similarity, but this result could suggest that the similarity also exists in the speech domain. However, this may just be the result of higher variability in the utterances of digits 8, as seems to be the case (see Fig. above depicting samples per class). Notice that the reverse is not true: utterances of the digit 6 are never misclassified as 8.
+The Confusion Matrix below reveals something interesting: 10% of utterances of the digit 8 are misclassified as the digit 6. This would be natural when classifying images of digits because of the visual similarity between 8 and 6, but this suggests that the similarity also exists in the speech/audio domain. However, this may just be the result of higher variability in the utterances of digits 8, as seems to be the case (see Fig. above depicting samples per class). Notice that the reverse is not true: utterances of the digit 6 are never misclassified as 8.
 
 <img src="media/audioclassif_fsd_cnn__confusion.png" width="400" />
 
@@ -100,4 +94,8 @@ The Confusion Matrices below reveal something interesting: utterances of the dig
 
 We have created a model that successfully learned to predict spoken words from audio spectrograms. An alternative way to tackle the problem of audio classification is to employ a sequence model such as a Recurrent Neural Network (RNN), which we will explore in another example.
 
-Additionally, there is some evidence of overfitting as shown by an a slight increase in the validation loss towards the end of training as well as the gap between training and validation loss. Applying regularization such as Dropout and using Data Augmentations should help minimize the effect of overfitting and improve the robustness the model.
+Additionally, there is some evidence of overfitting as shown by an a slight increase in the validation loss towards the end of training as well as the gap between training and validation loss. Applying regularization such as Dropout and using Data Augmentations will help to minimize the effect of overfitting and improve the robustness the model.
+
+## Resources
+
+- Training configuration: `SpokenWordRecognition_cnn.yaml` 
