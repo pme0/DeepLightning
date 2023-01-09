@@ -20,12 +20,6 @@ if __name__ == "__main__":
     args = parse_command_line_arguments()
     cfg = load_config(config_file = args.cfg)
 
-    # exiting the training script will launch the inference script
-    # specified in the `MLproject` file
-    # TODO the following does not currently work as expected TODO
-    #if cfg.modes.inference:
-    #    info_message('Skipping `train.py`')
-    #    sys.exit(0)
     
     if cfg.logger.log_to_wandb:
         wandb.init(
