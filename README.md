@@ -77,21 +77,28 @@ conda activate deeplightning
 
 ## Run
 
-**1. Train the model:**
+The syntax for running a project is 
 ```bash
-bash train.sh <cfg>
-
-# Example: 
-# bash train.sh configs/classif_cnn.yaml
+bash run.sh --mode <mode> --config <cfg>
 ```
-- `cfg` is the configuration file (default: `configs/base.yaml`).
+- `mode` is the run modality: 'train' for projects involving training and testing; 'infer' for projects involving only inference;
+- `config` is the configuration file;
 
-This will run the MLflow project file `MLproject` (setup conda env & run scripts).
-Create your own config following [Configuration](#configure) or see [Examples](#examples) for a list of provided configs.
+This command will run the appropriate entry point from the MLflow project file `MLproject` under the conda enviroment secified there.
+To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
+
+For example, for model **training** use
+```bash
+./run.sh --mode train --config configs/ObjectRecognition_vit.yaml
+```
+or for model **inference** use
+```bash
+./run.sh --mode infer --config configs/PedestrianDetecton_yolo.yaml
+```
 
 **2. Monitor the training progress:**
 ```bash
-bash monitor.sh
+./monitor.sh
 ```
 This will allow you to track logged metrics in real-time and compare metrics across multiple runs/configurations:
 
@@ -99,7 +106,7 @@ This will allow you to track logged metrics in real-time and compare metrics acr
 
 **3. Deploy the model:**
 ```bash
-bash deploy.sh <artifact-storage-path>
+./deploy.sh <artifact-storage-path>
 
 # Example:
 # bash deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
@@ -108,7 +115,7 @@ bash deploy.sh <artifact-storage-path>
 
 **4. Predict using the API:**
 ```bash
-bash predict.sh <image>
+./predict.sh <image>
 
 # Example:
 # bash predict.sh image.jpg
