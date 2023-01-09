@@ -8,7 +8,7 @@ cd DeepLightning
 pip3 install --upgrade pip
 
 # install required packages
-PACKAGES="mlflow"  # "pkg1 pkg2 pkg3"
+PACKAGES="mlflow"  # packages to be installed as space-separated string: "pkg1 pkg2 pkg3"
 for package in $PACKAGES
 do
     line=$(grep '$package' conda_env.yaml)
