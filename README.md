@@ -99,7 +99,7 @@ or for model **inference** use
 **2. Monitor the training progress:**
 
 When a training run has been initiated, a link will be displayed in the terminal; clicking it will open the Weights & Biases web interface where you can monitor the relevant metrics during training/testing:
-<img src="media/wandb.png" width="500">
+<img src="media/wandb.png" width="700">
 
 **3. Deploy the model:**
 ```bash
