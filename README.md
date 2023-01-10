@@ -97,12 +97,9 @@ or for model **inference** use
 ```
 
 **2. Monitor the training progress:**
-```bash
-./monitor.sh
-```
-This will allow you to track logged metrics in real-time and compare metrics across multiple runs/configurations:
 
-<img src="media/compare_runs.png" width="500">
+When a training run has been initiated, a link will be displayed in the terminal; clicking it will open the Weights & Biases web interface where you can monitor the relevant metrics during training/testing:
+<img src="media/wandb.png" width="500">
 
 **3. Deploy the model:**
 ```bash
