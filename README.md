@@ -64,7 +64,7 @@ Pre-requirement: Anaconda (installation instructions [here](https://docs.anacond
 
 All dependencies in the environment `conda_env.yaml` will be installed automatically when running the `MLproject` file via MLflow (see [Usage](#usage)). Only basic requirements are needed to run the project:
 ```bash
-bash install.sh
+./install.sh
 ```
 
 Optionally, creating the environment manually makes it available also for development:
@@ -79,7 +79,7 @@ conda activate deeplightning
 
 The syntax for running a project is 
 ```bash
-bash run.sh --mode <mode> --config <cfg>
+./run.sh --mode <mode> --config <cfg>
 ```
 - `mode` is the run modality: 'train' for projects involving training and testing; 'infer' for projects involving only inference;
 - `config` is the configuration file;
@@ -107,7 +107,7 @@ When a training run has been initiated, a link will be displayed in the terminal
 ./deploy.sh <artifact-storage-path>
 
 # Example:
-# bash deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
+# ./deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
 ```
 - `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`cfg.yaml`) and model checkpoint (`last.ckpt`);
 
@@ -116,7 +116,7 @@ When a training run has been initiated, a link will be displayed in the terminal
 ./predict.sh <image>
 
 # Example:
-# bash predict.sh image.jpg
+# ./predict.sh image.jpg
 ```
 - `image` is the path to the image to be predicted;
 
