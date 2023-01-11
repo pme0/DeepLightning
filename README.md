@@ -79,21 +79,21 @@ conda activate deeplightning
 
 The syntax for running a project is 
 ```bash
-./run.sh --mode <mode> --config <cfg>
+./run.sh <mode> <cfg>
 ```
 - `mode` is the run modality: 'train' for projects involving training and testing; 'infer' for projects involving only inference;
-- `config` is the configuration file;
+- `cfg` is the configuration YAML file;
 
 This command will run the appropriate entry point from the MLflow project file `MLproject` under the conda enviroment secified there.
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
 
 For example, for model **training** use
 ```bash
-./run.sh --mode train --config configs/ObjectRecognition_vit.yaml
+./run.sh train configs/ObjectRecognition_vit.yaml
 ```
 or for model **inference** use
 ```bash
-./run.sh --mode infer --config configs/PedestrianDetecton_yolo.yaml
+./run.sh infer configs/PedestrianDetecton_yolo.yaml
 ```
 
 **2. Monitor the training progress:**
