@@ -12,8 +12,8 @@ entry_points:
       cfg: {type: path}
     command: "python3 training.py --cfg {cfg}"
   
-  infer:
+  infer_PedestrainDetection:
     parameters:
       cfg: {type: path}
-    command: "python3 infer.py --cfg {cfg}"
+    command: "python3 inference/pedestrian_detection/main.py"
   
