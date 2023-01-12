@@ -1,7 +1,10 @@
 """ 
 Usage:
+    python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --input_path /Users/pme/Downloads/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
 
-    python  tools/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --input_path /Users/pme/Downloads/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
+Sources:
+    - https://www.pexels.com/photo/people-walking-on-pedestrian-lane-4019405/
+    - 
 
 """
 
@@ -69,7 +72,9 @@ class PedestrianDetector():
             force_reload = True).eval()
         
 
-    def infer(self, input_path):
+    def infer(self, input_path, classes):
+
+        self.classes = classes
         
         if self.input_type == "image":
 
@@ -87,9 +92,8 @@ class PedestrianDetector():
             raise NotImplementedError
 
 
-        conf_thres=0.30     # confidence threshold
+        conf_thres=0.20     # confidence threshold
         iou_thres=0.45      # IoU threshold
-        classes = 0         # class filter
         max_det = 1000      # maximum number of detections
         agnostic_nms = False
 
@@ -111,17 +115,39 @@ class PedestrianDetector():
             })
 
 
-    def vizualize(self, input_path, output_path, resize, show_label, blur_bboxes):
+    def vizualize(
+        self, 
+        input_path, 
+        output_path, 
+        resize, 
+        show_label, 
+        show_counter, 
+        blur_people, 
+        color_by,
+        label_linewidth_factor,
+        label_fontsize_factor,
+        label_width_factor,
+        label_heigth_factor,
+    ):
         """
         """
         if self.input_type == "image":
+
             self.plot_image_and_bboxes(
                 image_path = input_path, 
                 output_path = output_path,
                 resize = resize, 
                 show_label = show_label,
-                blur_bboxes = blur_bboxes)
+                show_counter = show_counter,
+                blur_people = blur_people, 
+                color_by = color_by,
+                label_linewidth_factor = label_linewidth_factor,
+                label_fontsize_factor = label_fontsize_factor,
+                label_width_factor = label_width_factor,
+                label_heigth_factor = label_heigth_factor,
+                )
         else:
+
             raise NotImplementedError
 
 
@@ -131,7 +157,13 @@ class PedestrianDetector():
         resize: int = None, 
         output_path: str = None, 
         show_label: bool = True,
-        blur_bboxes: bool = False,
+        show_counter: bool = False,
+        blur_people: bool = False,
+        color_by: str = "object",
+        label_linewidth_factor: float = 0.002,
+        label_fontsize_factor: float = 0.015,
+        label_width_factor: float = 0.08,
+        label_heigth_factor: float = 1.4,
         ):
         """Plot an image together with a set of bounding boxes and class labels
 
@@ -146,18 +178,18 @@ class PedestrianDetector():
                         output_path=None, show_image=True)
         ```
         """
-        sncolors = sn.color_palette("Set2") #sncolors[6]
-        colors = {0: (255/255, 198/255, 0/255) , 1: sncolors[1]} #colors[0] #(255/255, 198/255, 0/255) 
-        colors = sncolors
-        
+        assert color_by in ("object", "class")
+       
         image = Image.open(image_path)
         img_w, img_h = imagesize.get(image_path)
 
         # params
-        label_linewidth = 0.02 * img_w
-        label_fontsize = 0.018 * img_w
-        label_width_factor = 0.8 * label_fontsize
-        label_heigth_factor = 1.4 * label_fontsize
+        colors = sn.color_palette("Set2")
+        color_class = {self.classes[i]: colors[i] for i in range(len(self.classes))}
+        label_linewidth = label_linewidth_factor * img_w
+        label_fontsize = label_fontsize_factor * img_w
+        label_width_size = label_width_factor * label_fontsize
+        label_heigth_size = label_heigth_factor * label_fontsize
         
         # plot
         # figure size is set in pixels; by default some pixels in each 
@@ -169,7 +201,7 @@ class PedestrianDetector():
         fig, ax = plt.subplots(1,1, figsize=(resize_extra*px, resize_extra*px))  
         
         # blur bboxes
-        if blur_bboxes:
+        if blur_people:
             for i, bbox in enumerate(self.bboxes):
                 cbox = (math.floor(bbox["box"][0])-1, math.floor(bbox["box"][1])-1, math.ceil(bbox["box"][0]+bbox["box"][2])+1, math.floor(bbox["box"][1]+bbox["box"][3])+1) #left, upper, right, and lower
                 ic = image.crop(cbox)
@@ -185,12 +217,12 @@ class PedestrianDetector():
             ax.add_patch(
                 patches.Rectangle(
                     xy=(bbox["box"][0], bbox["box"][1]), 
-                    width=bbox["box"][2], 
+                    width=bbox["box"][2],
                     height=bbox["box"][3], 
-                    facecolor='none',
-                    edgecolor=colors[i%len(colors)], #colors[box["class"]],
-                    linewidth=1.5,
-                    alpha=1,
+                    edgecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]],
+                    facecolor='none', 
+                    alpha=1, 
+                    linewidth=label_linewidth,
                 )
             )
             
@@ -198,16 +230,13 @@ class PedestrianDetector():
             if show_label:
                 label_conf = None if "conf" not in bbox else bbox["conf"]
                 label_text = "{}{}{:.2f}".format(OBJECTS[bbox["class"]].lower(), "" if label_conf is None else " ", round(label_conf,2))
-                label_width = label_width_factor * len(label_text)
-                label_heigth = label_heigth_factor
                 ax.add_patch(
                     patches.Rectangle(
-                        xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth), 
-                        width=label_width, 
-                        height=label_heigth, 
-                        facecolor=colors[i%len(colors)], #colors[box["class"]]
-                        edgecolor='none',
-                        linewidth=label_linewidth,
+                        xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth_size), 
+                        width=label_width_size * len(label_text), 
+                        height=label_heigth_size, 
+                        facecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]], 
+                        edgecolor='none', 
                         alpha=0.6,
                     )
                 )
@@ -217,13 +246,34 @@ class PedestrianDetector():
                 plt.annotate(
                     text=label_text, 
                     xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3]),
-                    color='white',
-                    ha="left",
-                    va = "bottom",
-                    alpha=1,
-                    font=dict(size=label_fontsize),
+                    color='white', alpha=1, font=dict(size=label_fontsize),
+                    ha="left", va = "bottom",
                     clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
                 )
+
+        # counter
+        if show_counter:
+            ax.add_patch(
+                patches.Rectangle(
+                    xy=(0, 0), width=0.15*img_h, height=0.15*img_h, 
+                    facecolor=(16/255, 173/255, 237/255), edgecolor='none', alpha=0.6,
+                )
+            )
+            plt.annotate(
+                text="counter", 
+                xy=(0.075*img_h, 0.02*img_h),
+                color='white', alpha=1, font=dict(size=0.8*label_fontsize),
+                ha="center", va = "top",
+                clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
+            )
+            plt.annotate(
+                text=len(self.bboxes), 
+                xy=(0.075*img_h, 0.075*img_h),
+                color='white', alpha=1, font=dict(size=1.1*label_fontsize),
+                ha="center", va = "center",
+                clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
+            )
+
         # https://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-image
         plt.gca().set_axis_off()
 
@@ -253,6 +303,8 @@ if __name__ == "__main__":
         "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
         "scissors", "teddy bear", "hair drier", "toothbrush"
     ]
+    OBJECTS_DICT_INV = {i: OBJECTS[i] for i in range(len(OBJECTS))}
+    OBJECTS_DICT = {v: k for k, v in OBJECTS_DICT_INV.items()}
 
     args = parse_command_line_arguments()
 
@@ -262,12 +314,21 @@ if __name__ == "__main__":
         input_path = args.input_path)
 
     detector.infer(
-        input_path = args.input_path)
+        input_path = args.input_path,
+        classes = [OBJECTS_DICT[x] for x in ['person']]
+        #['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
+        )
 
     detector.vizualize(
         input_path = args.input_path, 
         output_path = args.output_path,
         resize = None,
         show_label = True,
-        blur_bboxes = True)
-    
+        show_counter = False,
+        blur_people = False,
+        color_by = "object",
+        label_fontsize_factor = 0.018,
+        label_linewidth_factor = 0.004,
+        label_width_factor = 0.8,
+        label_heigth_factor = 1.4,
+        )
