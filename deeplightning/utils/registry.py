@@ -1,4 +1,5 @@
 __TaskRegistry__ = [
     "classification",
-    "reconstruction"
+    "reconstruction",
+    "detection",
 ]
