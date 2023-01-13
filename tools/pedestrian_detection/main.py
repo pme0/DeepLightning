@@ -1,21 +1,25 @@
 """ 
 Usage:
-    python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --input_path /Users/pme/Downloads/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
+    python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person,bicycle,car,motorcycle,bus,truck"  --input_path /Users/pme/Downloads/pexels-picas-joe-11347831.jpg  --output_path /Users/pme/Downloads/tests/
+
+python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person,bicycle,car,motorcycle,bus,truck"  --input_path /Users/pme/Downloads/pexels-hugh-mitton-6574285.mp4  --output_path /Users/pme/Downloads/tests/
 
 Sources:
     - https://www.pexels.com/photo/people-walking-on-pedestrian-lane-4019405/
-    - 
+    - https://www.pexels.com/photo/vehicles-and-people-on-road-2962589/
 
 """
 
+from typing import Union, Tuple
 import os
 import sys
 # ugly hack to be able to load modules as `import external.yolov5.ABC`.
 # add path two levels upstream, to the main project folder.
 current = os.path.dirname(os.path.realpath(__file__))
 parent1 = os.path.dirname(current)
-sys.path.append(parent1)
-print(f"Added to system path: '{parent1}'")
+parent2 = os.path.dirname(parent1)
+sys.path.append(parent2)
+print(f"Added to system path: '{parent2}'")
 
 from typing import List, Dict
 import numpy as np
@@ -32,6 +36,7 @@ from matplotlib import patches
 import argparse
 
 from deeplightning.utils.detection.bbox_converter import x0y0x1y1_to_x0y0wh
+from deeplightning.utils.io import read_video
 from deeplightning.utils.messages import info_message, warning_message, error_message
 from external.yolov5.utils.general import non_max_suppression
 
@@ -40,6 +45,7 @@ def parse_command_line_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_cfg", type=str, default="external/yolov5/models/yolov5x.yaml", help="path to model configuration yaml")
     parser.add_argument("--model_ckpt", type=str, help="path to model checkpoint/weights; will be downloaded from torch hub if not found")
+    parser.add_argument("--classes", type=str, help="comma-separated classes to detect")
     parser.add_argument("--input_path", type=str, help="path to image/video")
     parser.add_argument("--output_path", type=str, help="path to save outputs")
     args = parser.parse_args()
@@ -62,6 +68,9 @@ class PedestrianDetector():
         else:
             raise ValueError
 
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(f"Performing inference on '{self.device}' device")
+
         self.model_cfg = model_cfg
         self.model_ckpt = model_ckpt
         self.model = torch.hub.load(
@@ -69,7 +78,7 @@ class PedestrianDetector():
             model = "custom", 
             source = "local", 
             path = model_ckpt, 
-            force_reload = True).eval()
+            force_reload = True).eval().to(self.device)
         
 
     def infer(self, input_path, classes):
@@ -78,19 +87,24 @@ class PedestrianDetector():
         
         if self.input_type == "image":
 
-            w, h = imagesize.get(input_path)
-            image = Image.open(input_path)
             transforms = T.Compose([T.Resize((640,640)), T.ToTensor()])
-            image_tensors = transforms(image).unsqueeze(0)
+            image_tensors = Image.open(input_path)
+            image_tensors = transforms(image_tensors).unsqueeze(0)
+            w, h = imagesize.get(input_path)
 
         elif self.input_type == "video":
 
-            raise NotImplementedError
+            transforms = T.Compose([T.Resize((640,640))])
+            image_tensors, _, _ = read_video(video_path = args.input_path)
+            image_tensors = torch.from_numpy(image_tensors).permute(0,3,1,2) # (B,C,H,W)
+            image_tensors = transforms(image_tensors)
+            _, _, h, w = image_tensors.shape
             
         else:
 
             raise NotImplementedError
 
+        image_tensors = image_tensors.to(self.device)
 
         conf_thres=0.20     # confidence threshold
         iou_thres=0.45      # IoU threshold
@@ -98,7 +112,9 @@ class PedestrianDetector():
         agnostic_nms = False
 
         pred = self.model(image_tensors)
-        pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)[0]
+        pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)#[0]
+        print(pred.shape)
+        raise
         # rescale bboxes to original image size
         pred[:,0] = pred[:,0] * w / 640
         pred[:,1] = pred[:,1] * h / 640
@@ -115,19 +131,18 @@ class PedestrianDetector():
             })
 
 
-    def vizualize(
-        self, 
-        input_path, 
-        output_path, 
-        resize, 
-        show_label, 
-        show_counter, 
-        blur_people, 
-        color_by,
-        label_linewidth_factor,
-        label_fontsize_factor,
-        label_width_factor,
-        label_heigth_factor,
+    def vizualize(self, 
+        input_path: str, 
+        output_path: str, 
+        resize: Union[int, Tuple[int,int]], 
+        show_label: bool, 
+        show_counter: bool, 
+        blur_people: bool, 
+        color_by: str,
+        label_linewidth_factor: float,
+        label_fontsize_factor: float,
+        label_width_factor: float,
+        label_heigth_factor: float,
     ):
         """
         """
@@ -151,8 +166,7 @@ class PedestrianDetector():
             raise NotImplementedError
 
 
-    def plot_image_and_bboxes(
-        self,
+    def plot_image_and_bboxes(self,
         image_path: str, 
         resize: int = None, 
         output_path: str = None, 
@@ -315,7 +329,7 @@ if __name__ == "__main__":
 
     detector.infer(
         input_path = args.input_path,
-        classes = [OBJECTS_DICT[x] for x in ['person']]
+        classes = [OBJECTS_DICT[x] for x in args.classes.strip().replace(" ", "").split(',')]
         #['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
         )
 
@@ -323,12 +337,12 @@ if __name__ == "__main__":
         input_path = args.input_path, 
         output_path = args.output_path,
         resize = None,
-        show_label = True,
+        show_label = False,
         show_counter = False,
         blur_people = False,
-        color_by = "object",
+        color_by = "class",
         label_fontsize_factor = 0.018,
-        label_linewidth_factor = 0.004,
+        label_linewidth_factor = 0.002,
         label_width_factor = 0.8,
         label_heigth_factor = 1.4,
         )
