@@ -10,7 +10,7 @@ entry_points:
   train:
     parameters:
       cfg: {type: path}
-    command: "python3 training.py --cfg {cfg}"
+    command: "python3 train.py --cfg {cfg}"
   
   infer_PedestrainDetection:
     parameters:
