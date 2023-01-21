@@ -26,7 +26,8 @@ class CIFAR10(pl.LightningDataModule):
         self.cfg = cfg
 
         # check that config params are set correctly
-        assert cfg.data.image_size == 32
+        assert cfg.data.image_size[0] == 32
+        assert cfg.data.image_size[1] == 32
         assert cfg.data.num_channels == 3
         assert cfg.data.num_classes == 10
 

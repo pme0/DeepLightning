@@ -24,7 +24,7 @@ data:
       mean: [0.4914, 0.4822, 0.4465]
       std: [0.2023, 0.1994, 0.2010]
   # the following may be required inputs for model/lr_scheduler/etc
-  image_size: 32
+  image_size: [32, 32]
   num_channels: 3
   num_classes: 10
   num_training_samples: 45000
