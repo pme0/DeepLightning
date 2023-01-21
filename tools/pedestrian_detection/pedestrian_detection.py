@@ -1,12 +1,7 @@
 """ 
-Usage:
-    python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person,bicycle,car,motorcycle,bus,truck"  --input_path /Users/pme/Downloads/pexels-picas-joe-11347831.jpg  --output_path /Users/pme/Downloads/tests/
-
-python  tools/pedestrian_detection/main.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person,bicycle,car,motorcycle,bus,truck"  --input_path /Users/pme/Downloads/pexels-hugh-mitton-6574285.mp4  --output_path /Users/pme/Downloads/tests/
-
-Sources:
-    - https://www.pexels.com/photo/people-walking-on-pedestrian-lane-4019405/
-    - https://www.pexels.com/photo/vehicles-and-people-on-road-2962589/
+Usage
+-----
+python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-luis-dalvan-1770808-zoom.jpg  --output_path /Users/pme/Downloads/tests/
 
 """
 
@@ -84,6 +79,7 @@ class PedestrianDetector():
     def infer(self, input_path, classes):
 
         self.classes = classes
+        self.input_filename = input_path.split("/")[-1].split(".")[0]
         
         if self.input_type == "image":
 
@@ -104,6 +100,9 @@ class PedestrianDetector():
 
             raise NotImplementedError
 
+
+        print(image_tensors.shape)
+        num_frames = image_tensors.shape[0]
         image_tensors = image_tensors.to(self.device)
 
         conf_thres=0.20     # confidence threshold
@@ -113,28 +112,28 @@ class PedestrianDetector():
 
         pred = self.model(image_tensors)
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)#[0]
-        print(pred.shape)
-        raise
-        # rescale bboxes to original image size
-        pred[:,0] = pred[:,0] * w / 640
-        pred[:,1] = pred[:,1] * h / 640
-        pred[:,2] = pred[:,2] * w / 640
-        pred[:,3] = pred[:,3] * h / 640
 
-        self.bboxes = []
-        for obj in pred:
-            self.bboxes.append(
-            {
-                "class": int(obj[5]), 
-                "box": x0y0x1y1_to_x0y0wh(box=[float(x) for x in obj[0:4]]),
-                "conf": float(obj[4]), 
-            })
+        # rescale bboxes to original image size
+        for i in range(num_frames):
+            pred[i][:,0] = pred[i][:,0] * w / 640
+            pred[i][:,1] = pred[i][:,1] * h / 640
+            pred[i][:,2] = pred[i][:,2] * w / 640
+            pred[i][:,3] = pred[i][:,3] * h / 640
+
+        # create bounding boxes list
+        self.bboxes = [[] for _ in range(num_frames)]
+        for frame in range(num_frames):
+            for obj in pred[frame]:
+                self.bboxes[frame].append({
+                    "class": int(obj[5]),
+                    "box": x0y0x1y1_to_x0y0wh(box=[float(x) for x in obj[0:4]]),
+                    "conf": float(obj[4]),
+                })
 
 
     def vizualize(self, 
         input_path: str, 
         output_path: str, 
-        resize: Union[int, Tuple[int,int]], 
         show_label: bool, 
         show_counter: bool, 
         blur_people: bool, 
@@ -144,14 +143,14 @@ class PedestrianDetector():
         label_width_factor: float,
         label_heigth_factor: float,
     ):
+        """Visualize
         """
-        """
+
         if self.input_type == "image":
 
-            self.plot_image_and_bboxes(
+            self.make_image_with_bboxes(
                 image_path = input_path, 
                 output_path = output_path,
-                resize = resize, 
                 show_label = show_label,
                 show_counter = show_counter,
                 blur_people = blur_people, 
@@ -161,14 +160,18 @@ class PedestrianDetector():
                 label_width_factor = label_width_factor,
                 label_heigth_factor = label_heigth_factor,
                 )
+
+        elif self.input_type == "video":
+
+            self.make_video_with_bboxes()
+
         else:
 
             raise NotImplementedError
 
 
-    def plot_image_and_bboxes(self,
+    def make_image_with_bboxes(self,
         image_path: str, 
-        resize: int = None, 
         output_path: str = None, 
         show_label: bool = True,
         show_counter: bool = False,
@@ -180,18 +183,8 @@ class PedestrianDetector():
         label_heigth_factor: float = 1.4,
         ):
         """Plot an image together with a set of bounding boxes and class labels
-
-        Example:
-        ```
-        from deeplightning.viz.image.bboxes import plot_image_and_bboxes
-        img_path = "media/eye.jpg"
-        bboxes = [
-            {"class": "iris",  "box": [253, 245, 244, 240], "format": "xcycwh"},
-            {"class": "pupil", "box": [244, 243, 68+x, 64], "format": "xcycwh"}]
-        plot_image_and_bboxes(image_path=img_path, bboxes=bboxes, resize=500, 
-                        output_path=None, show_image=True)
-        ```
         """
+
         assert color_by in ("object", "class")
        
         image = Image.open(image_path)
@@ -224,78 +217,79 @@ class PedestrianDetector():
                 image.paste(ic, cbox)
 
         plt.imshow(image)
-            
-        for i, bbox in enumerate(self.bboxes):
 
-            # boundings box
-            ax.add_patch(
-                patches.Rectangle(
-                    xy=(bbox["box"][0], bbox["box"][1]), 
-                    width=bbox["box"][2],
-                    height=bbox["box"][3], 
-                    edgecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]],
-                    facecolor='none', 
-                    alpha=1, 
-                    linewidth=label_linewidth,
-                )
-            )
-            
-            # label box
-            if show_label:
-                label_conf = None if "conf" not in bbox else bbox["conf"]
-                label_text = "{}{}{:.2f}".format(OBJECTS[bbox["class"]].lower(), "" if label_conf is None else " ", round(label_conf,2))
+        for j, frame in enumerate(self.bboxes):
+            for i, bbox in enumerate(frame):
+
+                # boundings box
                 ax.add_patch(
                     patches.Rectangle(
-                        xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth_size), 
-                        width=label_width_size * len(label_text), 
-                        height=label_heigth_size, 
-                        facecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]], 
-                        edgecolor='none', 
-                        alpha=0.6,
+                        xy=(bbox["box"][0], bbox["box"][1]), 
+                        width=bbox["box"][2],
+                        height=bbox["box"][3], 
+                        edgecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]],
+                        facecolor='none', 
+                        alpha=1, 
+                        linewidth=label_linewidth,
                     )
                 )
+                
+                # label box
+                if show_label:
+                    label_conf = None if "conf" not in bbox else bbox["conf"]
+                    label_text = "{}{}{:.2f}".format(OBJECTS[bbox["class"]].lower(), "" if label_conf is None else " ", round(label_conf,2))
+                    ax.add_patch(
+                        patches.Rectangle(
+                            xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth_size), 
+                            width=label_width_size * len(label_text), 
+                            height=label_heigth_size, 
+                            facecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]], 
+                            edgecolor='none', 
+                            alpha=0.6,
+                        )
+                    )
 
-            # label text
-            if show_label:
+                # label text
+                if show_label:
+                    plt.annotate(
+                        text=label_text, 
+                        xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3]),
+                        color='white', alpha=1, font=dict(size=label_fontsize),
+                        ha="left", va = "bottom",
+                        clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
+                    )
+
+            # counter
+            if show_counter:
+                ax.add_patch(
+                    patches.Rectangle(
+                        xy=(0, 0), width=0.15*img_h, height=0.15*img_h, 
+                        facecolor=(16/255, 173/255, 237/255), edgecolor='none', alpha=0.6,
+                    )
+                )
                 plt.annotate(
-                    text=label_text, 
-                    xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3]),
-                    color='white', alpha=1, font=dict(size=label_fontsize),
-                    ha="left", va = "bottom",
+                    text="counter", 
+                    xy=(0.075*img_h, 0.02*img_h),
+                    color='white', alpha=1, font=dict(size=0.8*label_fontsize),
+                    ha="center", va = "top",
+                    clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
+                )
+                plt.annotate(
+                    text=len(self.bboxes), 
+                    xy=(0.075*img_h, 0.075*img_h),
+                    color='white', alpha=1, font=dict(size=1.1*label_fontsize),
+                    ha="center", va = "center",
                     clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
                 )
 
-        # counter
-        if show_counter:
-            ax.add_patch(
-                patches.Rectangle(
-                    xy=(0, 0), width=0.15*img_h, height=0.15*img_h, 
-                    facecolor=(16/255, 173/255, 237/255), edgecolor='none', alpha=0.6,
-                )
-            )
-            plt.annotate(
-                text="counter", 
-                xy=(0.075*img_h, 0.02*img_h),
-                color='white', alpha=1, font=dict(size=0.8*label_fontsize),
-                ha="center", va = "top",
-                clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
-            )
-            plt.annotate(
-                text=len(self.bboxes), 
-                xy=(0.075*img_h, 0.075*img_h),
-                color='white', alpha=1, font=dict(size=1.1*label_fontsize),
-                ha="center", va = "center",
-                clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
-            )
+            # https://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-image
+            plt.gca().set_axis_off()
 
-        # https://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-image
-        plt.gca().set_axis_off()
-
-        if output_path is not None:
-            if not os.path.isdir(output_path):
-                os.makedirs(output_path)
-            plt.savefig(os.path.join(output_path, "test.png"), bbox_inches='tight', pad_inches=0)
-        plt.close()
+            if output_path is not None:
+                if not os.path.isdir(output_path):
+                    os.makedirs(output_path)
+                plt.savefig(os.path.join(output_path, f"{self.input_filename}_bboxes_{j}.png"), bbox_inches='tight', pad_inches=0)
+            plt.close()
 
 
 if __name__ == "__main__":
@@ -336,13 +330,12 @@ if __name__ == "__main__":
     detector.vizualize(
         input_path = args.input_path, 
         output_path = args.output_path,
-        resize = None,
-        show_label = False,
+        show_label = True,
         show_counter = False,
         blur_people = False,
-        color_by = "class",
+        color_by = "object",
         label_fontsize_factor = 0.018,
-        label_linewidth_factor = 0.002,
+        label_linewidth_factor = 0.004,
         label_width_factor = 0.8,
         label_heigth_factor = 1.4,
         )
