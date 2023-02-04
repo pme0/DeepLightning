@@ -87,7 +87,6 @@ class PedestrianDetector():
             source = "local", 
             path = model_ckpt, 
             force_reload = True).eval().to(self.device)
-        
 
     def infer(self, input_path, classes):
 
@@ -118,7 +117,7 @@ class PedestrianDetector():
         num_frames = image_tensors.shape[0]
         image_tensors = image_tensors.to(self.device)
 
-        conf_thres=0.20     # confidence threshold
+        conf_thres=0.50     # confidence threshold
         iou_thres=0.45      # IoU threshold
         max_det = 1000      # maximum number of detections
         agnostic_nms = False
@@ -211,6 +210,8 @@ class PedestrianDetector():
         label_width_size = label_width_factor * label_fontsize
         label_heigth_size = label_heigth_factor * label_fontsize
         
+        min_conf_for_label_box_and_text = 0.2
+
         # plot
         # figure size is set in pixels; by default some pixels in each 
         # direction are allocated to white border/axes, so adjustment for that 
@@ -260,26 +261,30 @@ class PedestrianDetector():
                 if show_label:
                     label_conf = None if "conf" not in bbox else bbox["conf"]
                     label_text = "{}{}{:.2f}".format(OBJECTS[bbox["class"]].lower(), "" if label_conf is None else " ", round(label_conf,2))
-                    ax.add_patch(
-                        patches.Rectangle(
-                            xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth_size), 
-                            width=label_width_size * len(label_text), 
-                            height=label_heigth_size, 
-                            facecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]], 
-                            edgecolor='none', 
-                            alpha=0.6,
+                    # avoid labelling unconfident predictiong, usually small objects
+                    if label_conf > min_conf_for_label_box_and_text:
+                        ax.add_patch(
+                            patches.Rectangle(
+                                xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3] - label_heigth_size), 
+                                width=label_width_size * len(label_text), 
+                                height=label_heigth_size, 
+                                facecolor=colors[i%len(colors)] if color_by == "object" else color_class[bbox["class"]], 
+                                edgecolor='none', 
+                                alpha=0.6,
+                            )
                         )
-                    )
 
                 # label text
                 if show_label:
-                    plt.annotate(
-                        text=label_text, 
-                        xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3]),
-                        color='white', alpha=1, font=dict(size=label_fontsize),
-                        ha="left", va = "bottom",
-                        clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
-                    )
+                    # avoid labelling unconfident predictiong, usually small objects
+                    if label_conf > min_conf_for_label_box_and_text:
+                        plt.annotate(
+                            text=label_text, 
+                            xy=(bbox["box"][0], bbox["box"][1]+bbox["box"][3]),
+                            color='white', alpha=1, font=dict(size=label_fontsize),
+                            ha="left", va = "bottom",
+                            clip_on=True, # avoids annotation outside the plot area, which cretes a white margin that cannot be trimmed by off-ing the axes
+                        )
 
             # counter
             if show_counter:
@@ -361,9 +366,9 @@ if __name__ == "__main__":
         show_label = True,
         show_counter = False,
         blur_people = False,
-        color_by = "class",   #{object,class}
+        color_by = "object",   #{object,class}
         label_fontsize_factor = 0.018,
-        label_linewidth_factor = 0.004,
+        label_linewidth_factor = 0.003,
         label_width_factor = 0.8,
         label_heigth_factor = 1.4,
         )
