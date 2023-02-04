@@ -150,13 +150,12 @@ class AttentionBlock(nn.Module):
 
     References
     ----------
-    ORIGINAL PAPER
-        "Attention Is All You Need", https://arxiv.org/abs/1706.03762
+    (paper) "Attention Is All You Need", https://arxiv.org/abs/1706.03762
 
     Parameters
     ----------
     embed_dim: dimensionality of input and attention feature vectors
-    hidden_dim: dimensionality of hidden layer in feed-forward network,
+    mlp_dim: dimensionality of hidden layer in feed-forward network,
         usually 2-4x larger than `embed_dim`
     num_heads: number of heads in the attention layer
     dropout: dropout probability applied in the linear layer
@@ -164,26 +163,27 @@ class AttentionBlock(nn.Module):
     """
     def __init__(self, 
         embed_dim: int, 
-        hidden_dim: int, 
+        mlp_dim: int, 
         num_heads: int, 
         dropout=0.0
     ):
         super().__init__()
         self.layer_norm_1 = nn.LayerNorm(embed_dim)
-        self.attn = nn.MultiheadAttention(embed_dim, num_heads)
+        self.attention = nn.MultiheadAttention(embed_dim, num_heads)
         self.layer_norm_2 = nn.LayerNorm(embed_dim)
         self.linear = nn.Sequential(
-            nn.Linear(embed_dim, hidden_dim),
+            nn.Linear(embed_dim, mlp_dim),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, embed_dim),
+            nn.Linear(mlp_dim, embed_dim),
             nn.Dropout(dropout),
         )
 
     def forward(self, x):
-        inp_x = self.layer_norm_1(x)
-        x = x + self.attn(inp_x, inp_x, inp_x)[0]  # `attn` returns tuple (attn_output, attn_output_weights)
-        x = x + self.linear(self.layer_norm_2(x))
+        x_norm = self.layer_norm_1(x)
+        x += self.attention(x_norm, x_norm, x_norm)[0]  # `attn` returns tuple (attn_output, attn_output_weights)
+        x_norm = self.layer_norm_2(x)
+        x += self.linear(x_norm)
         return x
 
 
@@ -192,31 +192,27 @@ class VisionTransformer(nn.Module):
 
     References
     ----------
-    (paper) "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale", https://arxiv.org/abs/2010.11929
-    (tips) "How to train your ViT? Data, Augmentation, and  Regularization in Vision Transformers", https://arxiv.org/abs/2106.10270
-    (tips) "When Vision Transformers Outperform ResNets without Pre-training or Strong Data Augmentations", https://arxiv.org/abs/2106.01548
+    (paper) https://arxiv.org/abs/2010.11929, "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+    (tips) https://arxiv.org/abs/2106.10270, "How to train your ViT? Data, Augmentation, and  Regularization in Vision Transformers"
+    (tips) https://arxiv.org/abs/2106.01548, "When Vision Transformers Outperform ResNets without Pre-training or Strong Data Augmentations"
 
     Parameters
     ----------
-   
-    [IMAGE]
-    num_channels : number of channels of the input (3 for RGB)
-    image_size : image size `dim` for square images `(dim, dim)`, or 
-        `(width, height)` for rectangular images
-    
-    [PATCHING & EMBEDDING]
-    patch_size : number of pixels per dimension in each patch; patches are 
-        assumed square (`patch_size * patch_size`)
-    embed_dim : size of the patch embeddings
-    
-    [TRANSFORMER]
-    mlp_dim : size of the hidden layer in the Transformer MLP
-    num_heads : number of heads in the Multi-Head Attention block
-    num_layers : number of layers in the Transformer
-    dropout - probability of dropout in the MLP
-    
-    [CLASSIFIER]
-    num_classes : number of classes in the MLP
+    IMAGE
+        num_channels : number of channels of the input (3 for RGB)
+        image_size : image size `dim` for square images `(dim, dim)`, 
+            or `(width, height)` for rectangular images
+    PATCHING & EMBEDDING
+        embed_dim : size of the patch embeddings
+        patch_size : number of pixels per dimension in each patch; 
+            patches are assumed square (`patch_size * patch_size`)
+    TRANSFORMER
+        mlp_dim : size of the hidden layer in the Transformer MLP
+        num_heads : number of heads in the Multi-Head Attention block
+        num_layers : number of layers in the Transformer
+        dropout - probability of dropout in the MLP
+    CLASSIFIER
+        num_classes : number of classes in the MLP classifier
 
     """
     def __init__(self,
@@ -235,9 +231,7 @@ class VisionTransformer(nn.Module):
         image_w, image_h = pair(image_size)
         assert (image_w % patch_size) == 0, f"image width ({image_w}) must be divisible by patch size ({patch_size})"
         assert (image_h % patch_size) == 0, f"image height ({image_h}) must be divisible by patch size ({patch_size})"
-        #self.num_patches = (image_w // patch_size) * (image_h // patch_size)
 
-        # Layers
         self.patchify = Patchify(patch_size=patch_size)
         self.embedding = Embedding(num_channels, image_size, patch_size, embed_dim)
         self.transformer = nn.Sequential(
@@ -250,11 +244,9 @@ class VisionTransformer(nn.Module):
         x = self.patchify(x)
         x = self.embedding(x)
         x = self.dropout(x)
-        
         # Transformer
         x = x.transpose(0, 1)
         x = self.transformer(x)
-        
         # Classifier
         cls = x[0]
         x = self.mlp_head(cls)
