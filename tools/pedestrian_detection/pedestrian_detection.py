@@ -31,7 +31,7 @@ from matplotlib import patches
 import argparse
 
 from deeplightning.utils.detection.bbox_converter import x0y0x1y1_to_x0y0wh
-from deeplightning.utils.io import read_video
+from deeplightning.utils.io_local import read_video
 from deeplightning.utils.messages import info_message, warning_message, error_message
 from external.yolov5.utils.general import non_max_suppression
 
@@ -53,11 +53,24 @@ class PedestrianDetector():
 
     def __init__(self, model_cfg, model_ckpt, input_path):
 
+        excludes = (".DS_Store")
+
         if isinstance(input_path, str):
+            
             if input_path.endswith(IMG_EXT):
                 self.input_type = "image"
+
+            elif os.path.isdir(input_path):
+                filetypes = ["."+x.split(".")[-1] for x in os.listdir(input_path) if x not in excludes]
+                filetypes_unique = set(filetypes)
+                if len([x for x in filetypes_unique if x in IMG_EXT]) == len(filetypes_unique):
+                    self.input_type = "image_folder"
+                elif len([x for x in filetypes_unique if x in VID_EXT]) == len(filetypes_unique):
+                    self.input_type = "video_folder"
+
             elif input_path.endswith(VID_EXT):
                 self.input_type = "video"
+
             else:
                 raise NotImplementedError
         else:
@@ -101,7 +114,7 @@ class PedestrianDetector():
             raise NotImplementedError
 
 
-        print(image_tensors.shape)
+        print("image tensor shape:", image_tensors.shape)
         num_frames = image_tensors.shape[0]
         image_tensors = image_tensors.to(self.device)
 
@@ -162,8 +175,8 @@ class PedestrianDetector():
                 )
 
         elif self.input_type == "video":
-
-            self.make_video_with_bboxes()
+            
+            self.make_video_with_bboxes()  #save video instead of frames
 
         else:
 
@@ -202,11 +215,20 @@ class PedestrianDetector():
         # figure size is set in pixels; by default some pixels in each 
         # direction are allocated to white border/axes, so adjustment for that 
         # is required if the saved image is to be exactly `resize x resize`;
-        resize_extra = 1.3 * img_w
+        #resize_extra = 1.3 * img_w
         # https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html#figure-size-in-pixel
-        px = 1/plt.rcParams['figure.dpi']
-        fig, ax = plt.subplots(1,1, figsize=(resize_extra*px, resize_extra*px))  
+        #px = 1/plt.rcParams['figure.dpi']
+        #fig, ax = plt.subplots(1,1, figsize=(resize_extra*px, resize_extra*px)) 
         
+        # TO CREATE IMAGES THAT ARE OF FIXED SIZE
+        # follow the approach in spectogramer.py in https://www.kaggle.com/datasets/joserzapata/free-spoken-digit-dataset-fsdd 
+        fig = plt.figure()
+        dpi = fig.get_dpi()
+        fig.set_size_inches((img_w/dpi, img_h/dpi))
+        ax = plt.Axes(fig, [0., 0., 1., 1.])
+        ax.set_axis_off()
+        fig.add_axes(ax)
+
         # blur bboxes
         if blur_people:
             for i, bbox in enumerate(self.bboxes):
@@ -283,12 +305,18 @@ class PedestrianDetector():
                 )
 
             # https://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-image
-            plt.gca().set_axis_off()
+            #plt.gca().set_axis_off()
+            ax.xaxis.set_major_locator(plt.NullLocator())
+            ax.yaxis.set_major_locator(plt.NullLocator())
 
             if output_path is not None:
                 if not os.path.isdir(output_path):
                     os.makedirs(output_path)
-                plt.savefig(os.path.join(output_path, f"{self.input_filename}_bboxes_{j}.png"), bbox_inches='tight', pad_inches=0)
+                plt.savefig(
+                    fname = os.path.join(output_path, f"{self.input_filename}_bboxes_{j}.png"), 
+                    bbox_inches = 'tight', 
+                    pad_inches = 0,
+                )
             plt.close()
 
 
@@ -333,7 +361,7 @@ if __name__ == "__main__":
         show_label = True,
         show_counter = False,
         blur_people = False,
-        color_by = "object",
+        color_by = "class",   #{object,class}
         label_fontsize_factor = 0.018,
         label_linewidth_factor = 0.004,
         label_width_factor = 0.8,
