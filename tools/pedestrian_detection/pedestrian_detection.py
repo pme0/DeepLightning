@@ -1,7 +1,8 @@
 """ 
 Usage
 -----
-python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5x6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-luis-dalvan-1770808-zoom.jpg  --output_path /Users/pme/Downloads/tests/
+python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5n6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-luis-dalvan-1770808-zoom.jpg  --output_path /Users/pme/Downloads/tests/
+python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5n6.pt  --classes "person"  --input_path /Users/pme/Downloads/a.png  --output_path /Users/pme/Downloads/tests/
 
 """
 
@@ -47,34 +48,54 @@ def parse_command_line_arguments():
     return args
 
 
+class DataSequence():
+    """
+    """
+    def __init__(self, input_path):
+        self.input_path = input_path
+        self.transforms = T.Compose([T.Resize((640,640))])
+        self.excludes = (".DS_Store",)
+
+        self.get_input_type()
+
+    
+    def get_input_type(self):
+
+        if isinstance(self.input_path, str):
+            
+            if self.input_path.endswith(IMG_EXT):
+
+                self.input_type = "image"
+                self.image_tensors = Image.open(self.input_path).convert("RGB")
+                self.w, self.h = self.image_tensors.size
+                self.image_tensors =  T.ToTensor()(self.image_tensors).unsqueeze(0)
+                print(f"Loaded image; tensor shape {tuple(self.image_tensors.shape)}")
+                self.image_tensors = self.transforms(self.image_tensors)
+
+            elif self.input_path.endswith(VID_EXT):
+
+                self.input_type = "video"
+                self.image_tensors, _, _ = read_video(video_path=self.input_path)
+                self.w, self.h = self.image_tensors.shape[2], self.image_tensors.shape[1]
+                self.image_tensors = torch.from_numpy(self.image_tensors).permute(0,3,1,2) # (B,C,H,W)
+                print(f"Loaded video; tensor shape {tuple(self.image_tensors.shape)}")
+                self.image_tensors = self.transforms(self.image_tensors)
+
+            else:
+                raise NotImplementedError
+        else:
+            raise ValueError
+
+
+
+
 class PedestrianDetector():
     """
     """
 
     def __init__(self, model_cfg, model_ckpt, input_path):
 
-        excludes = (".DS_Store")
-
-        if isinstance(input_path, str):
-            
-            if input_path.endswith(IMG_EXT):
-                self.input_type = "image"
-
-            elif os.path.isdir(input_path):
-                filetypes = ["."+x.split(".")[-1] for x in os.listdir(input_path) if x not in excludes]
-                filetypes_unique = set(filetypes)
-                if len([x for x in filetypes_unique if x in IMG_EXT]) == len(filetypes_unique):
-                    self.input_type = "image_folder"
-                elif len([x for x in filetypes_unique if x in VID_EXT]) == len(filetypes_unique):
-                    self.input_type = "video_folder"
-
-            elif input_path.endswith(VID_EXT):
-                self.input_type = "video"
-
-            else:
-                raise NotImplementedError
-        else:
-            raise ValueError
+        #data
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Performing inference on '{self.device}' device")
@@ -90,39 +111,21 @@ class PedestrianDetector():
 
     def infer(self, input_path, classes):
 
+        self.data = DataSequence(input_path)
+        w, h = self.data.w, self.data.h
         self.classes = classes
         self.input_filename = input_path.split("/")[-1].split(".")[0]
-        
-        if self.input_type == "image":
 
-            transforms = T.Compose([T.Resize((640,640)), T.ToTensor()])
-            image_tensors = Image.open(input_path)
-            image_tensors = transforms(image_tensors).unsqueeze(0)
-            w, h = imagesize.get(input_path)
-
-        elif self.input_type == "video":
-
-            transforms = T.Compose([T.Resize((640,640))])
-            image_tensors, _, _ = read_video(video_path = args.input_path)
-            image_tensors = torch.from_numpy(image_tensors).permute(0,3,1,2) # (B,C,H,W)
-            image_tensors = transforms(image_tensors)
-            _, _, h, w = image_tensors.shape
-            
-        else:
-
-            raise NotImplementedError
-
-
-        print("image tensor shape:", image_tensors.shape)
-        num_frames = image_tensors.shape[0]
-        image_tensors = image_tensors.to(self.device)
+        print("image tensor shape:", self.data.image_tensors.shape)
+        num_frames = self.data.image_tensors.shape[0]
+        self.data.image_tensors = self.data.image_tensors.to(self.device)
 
         conf_thres=0.50     # confidence threshold
         iou_thres=0.45      # IoU threshold
         max_det = 1000      # maximum number of detections
         agnostic_nms = False
 
-        pred = self.model(image_tensors)
+        pred = self.model(self.data.image_tensors)
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)#[0]
 
         # rescale bboxes to original image size
@@ -158,7 +161,7 @@ class PedestrianDetector():
         """Visualize
         """
 
-        if self.input_type == "image":
+        if self.data.input_type == "image":
 
             self.make_image_with_bboxes(
                 image_path = input_path, 
@@ -173,7 +176,7 @@ class PedestrianDetector():
                 label_heigth_factor = label_heigth_factor,
                 )
 
-        elif self.input_type == "video":
+        elif self.data.data.input_type == "video":
             
             self.make_video_with_bboxes()  #save video instead of frames
 
