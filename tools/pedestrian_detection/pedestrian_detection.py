@@ -57,45 +57,57 @@ class DataSequence():
         self.excludes = (".DS_Store",)
 
         self.get_input_type()
+        self.get_tensors()
 
     
     def get_input_type(self):
-
+        """
+        """
         if isinstance(self.input_path, str):
-            
             if self.input_path.endswith(IMG_EXT):
-
                 self.input_type = "image"
-                self.image_tensors = Image.open(self.input_path).convert("RGB")
-                self.w, self.h = self.image_tensors.size
-                self.image_tensors =  T.ToTensor()(self.image_tensors).unsqueeze(0)
-                print(f"Loaded image; tensor shape {tuple(self.image_tensors.shape)}")
-                self.image_tensors = self.transforms(self.image_tensors)
-
             elif self.input_path.endswith(VID_EXT):
-
                 self.input_type = "video"
-                self.image_tensors, _, _ = read_video(video_path=self.input_path)
-                self.w, self.h = self.image_tensors.shape[2], self.image_tensors.shape[1]
-                self.image_tensors = torch.from_numpy(self.image_tensors).permute(0,3,1,2) # (B,C,H,W)
-                print(f"Loaded video; tensor shape {tuple(self.image_tensors.shape)}")
-                self.image_tensors = self.transforms(self.image_tensors)
-
             else:
                 raise NotImplementedError
         else:
             raise ValueError
 
 
+    def get_tensors(self):
+        """
+        """
+        if self.input_type == "image":
+            self.image_input_handler()
+        elif self.input_type == "video":
+            self.video_input_handler()
+
+
+    def image_input_handler(self):
+        """
+        """
+        self.image_tensors = Image.open(self.input_path).convert("RGB")
+        self.w, self.h = self.image_tensors.size
+        self.image_tensors =  T.ToTensor()(self.image_tensors).unsqueeze(0)
+        print(f"Loaded image; tensor shape {tuple(self.image_tensors.shape)}")
+        self.image_tensors = self.transforms(self.image_tensors)
+
+
+    def video_input_handler(self):
+        """
+        """
+        self.image_tensors, _, _ = read_video(video_path=self.input_path)
+        self.w, self.h = self.image_tensors.shape[2], self.image_tensors.shape[1]
+        self.image_tensors = torch.from_numpy(self.image_tensors).permute(0,3,1,2) # (B,C,H,W)
+        print(f"Loaded video; tensor shape {tuple(self.image_tensors.shape)}")
+        self.image_tensors = self.transforms(self.image_tensors)
 
 
 class PedestrianDetector():
     """
     """
 
-    def __init__(self, model_cfg, model_ckpt, input_path):
-
-        #data
+    def __init__(self, model_cfg, model_ckpt):
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Performing inference on '{self.device}' device")
@@ -108,6 +120,7 @@ class PedestrianDetector():
             source = "local", 
             path = model_ckpt, 
             force_reload = True).eval().to(self.device)
+
 
     def infer(self, input_path, classes):
 
@@ -355,7 +368,7 @@ if __name__ == "__main__":
     detector = PedestrianDetector(
         model_cfg = args.model_cfg, 
         model_ckpt = args.model_ckpt,
-        input_path = args.input_path)
+        )
 
     detector.infer(
         input_path = args.input_path,
