@@ -1,8 +1,8 @@
 """ Usage:
-python  -m  scripts.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5n6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
-python  -m  scripts.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5x6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
+python  -m  examples.object_detection.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5n6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
+python  -m  examples.object_detection.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5x.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5x6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-kate-trifo-4019405.jpg  --output_path /Users/pme/Downloads/tests/
 
-python  -m  scripts.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5n6.pt  --classes "person"  --input_path /Users/pme/Downloads/pexels-people-walking-2670-cut.mp4  --output_path /Users/pme/Downloads/tests/
+python  -m  examples.object_detection.pedestrian_detection.main  --conf_threshold 0.1  --model_flavour YOLO-v5  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/data/_checkpoints/yolov5/yolov5n6.pt  --classes "person"  --input_path /Users/pme/Downloads/pexels-people-walking-2670-cut.mp4  --output_path /Users/pme/Downloads/tests/
 
 """
 
