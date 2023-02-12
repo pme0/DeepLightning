@@ -1,53 +1,41 @@
-""" 
-Usage
------
-python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5n6.pt  --classes "person"  --input_path tools/pedestrian_detection/media/pexels-luis-dalvan-1770808-zoom.jpg  --output_path /Users/pme/Downloads/tests/
-python  tools/pedestrian_detection/pedestrian_detection.py  --model_cfg external/yolov5/models/yolov5n.yaml  --model_ckpt /Users/pme/code/yolov5/yolov5n6.pt  --classes "person"  --input_path /Users/pme/Downloads/a.png  --output_path /Users/pme/Downloads/tests/
-
-"""
-
-from typing import Union, Tuple
 import os
-import sys
-# ugly hack to be able to load modules as `import external.yolov5.ABC`.
-# add path two levels upstream, to the main project folder.
-current = os.path.dirname(os.path.realpath(__file__))
-parent1 = os.path.dirname(current)
-parent2 = os.path.dirname(parent1)
-sys.path.append(parent2)
-print(f"Added to system path: '{parent2}'")
-
-from typing import List, Dict
-import numpy as np
-import time
 import math
 import torch
-import torchvision
 import torchvision.transforms as T
 from PIL import Image, ImageDraw, ImageFilter
 import imagesize
 import seaborn as sn
 import matplotlib.pyplot as plt
 from matplotlib import patches
-import argparse
 
-from deeplightning.utils.detection.bbox_converter import x0y0x1y1_to_x0y0wh
 from deeplightning.utils.io_local import read_video
-from deeplightning.utils.messages import info_message, warning_message, error_message
+from deeplightning.utils.detection.bbox_converter import x0y0x1y1_to_x0y0wh
+from inference.load_model import load_inference_model
 from external.yolov5.utils.general import non_max_suppression
 
 
-def parse_command_line_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_cfg", type=str, default="external/yolov5/models/yolov5x.yaml", help="path to model configuration yaml")
-    parser.add_argument("--model_ckpt", type=str, help="path to model checkpoint/weights; will be downloaded from torch hub if not found")
-    parser.add_argument("--classes", type=str, help="comma-separated classes to detect")
-    parser.add_argument("--input_path", type=str, help="path to image/video")
-    parser.add_argument("--output_path", type=str, help="path to save outputs")
-    args = parser.parse_args()
-    return args
+#TODO move these variables into another file - use `OBJECTS = DETECTED_OBJECTS[model_flavour]`
+IMG_EXT = (".png", ".jpg", ".jpeg")
+VID_EXT = (".mp4")
+OBJECTS = [
+        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
+        "truck", "boat", "traffic light", "fire hydrant", "stop sign",
+        "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+        "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+        "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
+        "sports ball", "kite", "baseball bat", "baseball glove", "skateboard",
+        "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork",
+        "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
+        "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair",
+        "couch", "potted plant", "bed", "dining table", "toilet", "tv",
+        "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave",
+        "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
+        "scissors", "teddy bear", "hair drier", "toothbrush"
+    ]
+OBJECTS_DICT_INV = {i: OBJECTS[i] for i in range(len(OBJECTS))}
+OBJECTS_DICT = {v: k for k, v in OBJECTS_DICT_INV.items()}
 
-
+#TODO move this class into another file
 class DataSequence():
     """
     """
@@ -89,7 +77,7 @@ class DataSequence():
         self.image_tensors = Image.open(self.input_path).convert("RGB")
         self.w, self.h = self.image_tensors.size
         self.image_tensors =  T.ToTensor()(self.image_tensors).unsqueeze(0)
-        print(f"Loaded image; tensor shape {tuple(self.image_tensors.shape)}")
+        print("Image tensor shape (original image):", tuple(self.image_tensors.shape))
         self.image_tensors = self.transforms(self.image_tensors)
 
 
@@ -99,43 +87,52 @@ class DataSequence():
         self.image_tensors, _, _ = read_video(video_path=self.input_path)
         self.w, self.h = self.image_tensors.shape[2], self.image_tensors.shape[1]
         self.image_tensors = torch.from_numpy(self.image_tensors).permute(0,3,1,2) # (B,C,H,W)
-        print(f"Loaded video; tensor shape {tuple(self.image_tensors.shape)}")
+        print("Video tensor shape (original video):", tuple(self.image_tensors.shape))
         self.image_tensors = self.transforms(self.image_tensors)
 
 
-class PedestrianDetector():
-    """
+
+class ObjectDetector():
+    """Base Object Detector class.
+
+    Parameters
+    ----------
+    model_flavour : model name
+    model_cfg : path to model configuration
+    model_ckpt : path to model checkpoint
+    device: 
     """
 
-    def __init__(self, model_cfg, model_ckpt):
-
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        print(f"Performing inference on '{self.device}' device")
+    def __init__(self, model_flavour, model_cfg, model_ckpt, device=None):
+        
+        self.device = torch.device(
+                'cuda' if torch.cuda.is_available() else 'cpu'
+            ) if device is None else torch.device(device)
+        print(f"Inference device: {self.device}")
 
         self.model_cfg = model_cfg
         self.model_ckpt = model_ckpt
-        self.model = torch.hub.load(
-            repo_or_dir = "external/yolov5/", 
-            model = "custom", 
-            source = "local", 
-            path = model_ckpt, 
-            force_reload = True).eval().to(self.device)
+        self.model = load_inference_model(
+            model_flavour = model_flavour, 
+            params = {'model_ckpt': model_ckpt},
+            device = device,
+        )
 
 
-    def infer(self, input_path, classes):
+    def infer(self, input_path, conf_threshold, iou_threshold, classes):
 
         self.data = DataSequence(input_path)
         w, h = self.data.w, self.data.h
         self.classes = classes
         self.input_filename = input_path.split("/")[-1].split(".")[0]
 
-        print("image tensor shape:", self.data.image_tensors.shape)
+        print("Image tensor shape (after converting to model input requirements):", tuple(self.data.image_tensors.shape))
         num_frames = self.data.image_tensors.shape[0]
         self.data.image_tensors = self.data.image_tensors.to(self.device)
 
-        conf_thres=0.50     # confidence threshold
-        iou_thres=0.45      # IoU threshold
-        max_det = 1000      # maximum number of detections
+        conf_thres=conf_threshold   # Confidence threshold
+        iou_thres=iou_threshold     # IoU threshold
+        max_det = 1000              # maximum number of detections
         agnostic_nms = False
 
         pred = self.model(self.data.image_tensors)
@@ -170,6 +167,7 @@ class PedestrianDetector():
         label_fontsize_factor: float,
         label_width_factor: float,
         label_heigth_factor: float,
+        output_format: str,
     ):
         """Visualize
         """
@@ -187,9 +185,10 @@ class PedestrianDetector():
                 label_fontsize_factor = label_fontsize_factor,
                 label_width_factor = label_width_factor,
                 label_heigth_factor = label_heigth_factor,
+                output_format = output_format,
                 )
 
-        elif self.data.data.input_type == "video":
+        elif self.data.input_type == "video":
             
             self.make_video_with_bboxes()  #save video instead of frames
 
@@ -209,6 +208,7 @@ class PedestrianDetector():
         label_fontsize_factor: float = 0.015,
         label_width_factor: float = 0.08,
         label_heigth_factor: float = 1.4,
+        output_format: str = "png",
         ):
         """Plot an image together with a set of bounding boxes and class labels
         """
@@ -248,12 +248,18 @@ class PedestrianDetector():
 
         # blur bboxes
         if blur_people:
-            for i, bbox in enumerate(self.bboxes):
-                cbox = (math.floor(bbox["box"][0])-1, math.floor(bbox["box"][1])-1, math.ceil(bbox["box"][0]+bbox["box"][2])+1, math.floor(bbox["box"][1]+bbox["box"][3])+1) #left, upper, right, and lower
-                ic = image.crop(cbox)
-                for i in range(3):  # use BLUR filter multiple times to get the desired effect
-                    ic = ic.filter(ImageFilter.BLUR)
-                image.paste(ic, cbox)
+            for j, frame in enumerate(self.bboxes):
+                for i, bbox in enumerate(frame):
+                    cbox = (  #left, upper, right, and lower
+                        math.floor(bbox["box"][0])-1, 
+                        math.floor(bbox["box"][1])-1, 
+                        math.ceil(bbox["box"][0]+bbox["box"][2])+1, 
+                        math.floor(bbox["box"][1]+bbox["box"][3])+1
+                    )
+                    ic = image.crop(cbox)
+                    for i in range(3):  # use BLUR filter multiple times to get the desired effect
+                        ic = ic.filter(ImageFilter.BLUR)
+                    image.paste(ic, cbox)
 
         plt.imshow(image)
 
@@ -334,57 +340,14 @@ class PedestrianDetector():
                 if not os.path.isdir(output_path):
                     os.makedirs(output_path)
                 plt.savefig(
-                    fname = os.path.join(output_path, f"{self.input_filename}_bboxes_{j}.png"), 
+                    fname = os.path.join(output_path, f"{self.input_filename}_bboxes_{j}.{output_format}"), 
                     bbox_inches = 'tight', 
                     pad_inches = 0,
                 )
             plt.close()
 
 
-if __name__ == "__main__":
-
-    IMG_EXT = (".png", ".jpg", ".jpeg")
-    VID_EXT = (".mp4")
-    OBJECTS = [
-        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
-        "truck", "boat", "traffic light", "fire hydrant", "stop sign",
-        "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
-        "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
-        "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
-        "sports ball", "kite", "baseball bat", "baseball glove", "skateboard",
-        "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork",
-        "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
-        "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair",
-        "couch", "potted plant", "bed", "dining table", "toilet", "tv",
-        "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave",
-        "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
-        "scissors", "teddy bear", "hair drier", "toothbrush"
-    ]
-    OBJECTS_DICT_INV = {i: OBJECTS[i] for i in range(len(OBJECTS))}
-    OBJECTS_DICT = {v: k for k, v in OBJECTS_DICT_INV.items()}
-
-    args = parse_command_line_arguments()
-
-    detector = PedestrianDetector(
-        model_cfg = args.model_cfg, 
-        model_ckpt = args.model_ckpt,
-        )
-
-    detector.infer(
-        input_path = args.input_path,
-        classes = [OBJECTS_DICT[x] for x in args.classes.strip().replace(" ", "").split(',')]
-        #['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
-        )
-
-    detector.vizualize(
-        input_path = args.input_path, 
-        output_path = args.output_path,
-        show_label = True,
-        show_counter = False,
-        blur_people = False,
-        color_by = "object",   #{object,class}
-        label_fontsize_factor = 0.018,
-        label_linewidth_factor = 0.003,
-        label_width_factor = 0.8,
-        label_heigth_factor = 1.4,
-        )
+    def make_video_with_bboxes():
+        """
+        """
+        raise NotImplementedError("automate the (currently) manual process for video inputs")
