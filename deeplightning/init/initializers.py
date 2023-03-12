@@ -6,6 +6,7 @@ from pytorch_lightning import LightningModule, LightningDataModule
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.trainer.trainer import DLTrainer
 from deeplightning.init.imports import init_module
+from deeplightning.utils.registry import __MetricsRegistry__
 
 
 
@@ -46,3 +47,8 @@ def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModul
     trainer = init_trainer(cfg)
     return model, data, trainer
 
+
+def init_metrics(cfg: OmegaConf) -> dict:
+    """ Initialize performance metrics
+    """
+    return {k: v(cfg) for k, v in __MetricsRegistry__[cfg.task].items()}

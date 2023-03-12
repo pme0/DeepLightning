@@ -14,15 +14,15 @@ def dictionarify_batch(batch: Any, dataset: str):
             dataset : the dataset name
             """
 
-            if isinstance(batch, dict):
-                if "paths" in batch and "images" in batch and "labels" in batch:
-                    return batch
-                else:
-                    raise ValueError("batch dictionary should have keys ['paths', 'images', 'labels'].")
-
             if dataset in ["MNIST", "CIFAR10"]:
                 # assumes dataloaders return tuple (images, labels)
-                batch = {"paths": None, "images": batch[0], "labels": batch[1]}
+                batch = {"paths": None, "inputs": batch[0], "labels": batch[1]}
                 return batch
+            
+            elif isinstance(batch, dict):
+                if "paths" in batch and "inputs" in batch and "labels" in batch and len(batch.keys()) == 3:
+                    return batch
+                raise ValueError(f"batch dictionary keys unrecognised ({batch.keys()}).")
+
             else:
                 raise NotImplementedError

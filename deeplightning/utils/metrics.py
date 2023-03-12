@@ -3,6 +3,7 @@ from typing import Tuple, List, Union
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
+from torchmetrics.classification.accuracy import MulticlassAccuracy
 from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatrix
 from torchmetrics.classification.precision_recall_curve import MulticlassPrecisionRecallCurve
 from torchmetrics.functional.classification.accuracy import accuracy
@@ -10,6 +11,7 @@ import seaborn as sn
 import numpy as np
 from matplotlib.figure import Figure as pltFigure
 from matplotlib import pyplot as plt
+
 
 
 class Metric_PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
@@ -68,6 +70,20 @@ class Metric_ConfusionMatrix(MulticlassConfusionMatrix):
 		plt.close()
 		return fig
 		
+
+class Metric_Accuracy(MulticlassAccuracy):
+	"""Accuracy metric class; inherits methods from 
+	torchmetrics parent class.
+	"""
+	def __init__(self, cfg: OmegaConf):
+		self.num_classes = cfg.model.network.params.num_classes
+		args = {
+			"task": "binary" if self.num_classes == 2 else "multiclass",
+			"num_classes": self.num_classes,
+		}
+		super().__init__(**args)
+	
+
 def metric_accuracy(logits: Tensor, target: Tensor, task: str, num_classes: int) -> Tensor:
 	preds = torch.argmax(logits, dim=1)
 	return accuracy(preds=preds, target=target, task=task, num_classes=num_classes)
