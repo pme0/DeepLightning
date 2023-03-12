@@ -2,19 +2,23 @@ modes:
   train: true
   test: false
   
-task: classification
+task: ImageClassification
 data:
+  dataset: MNIST
   root: ~/data/MNIST
   num_workers: 4
   batch_size: 256
   module: 
-    target: deeplightning.data.dataloaders.mnist.MNIST
- 
+    target: deeplightning.data.dataloaders.image.mnist.MNIST
+  image_size: 28
+  num_channels: 1
+  num_classes: 10
+
 model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.cnn.SimpleCNN
+    target: deeplightning.model.cnn.SymbolCNN
     params: 
       num_classes: 10
       num_channels: 1
@@ -53,6 +57,7 @@ test:
   ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
   
 logger:
+  name: wandb
   log_to_wandb: true
   project_name: trial
   tags: ["image", "classification", "cnn"] # cannot be empty

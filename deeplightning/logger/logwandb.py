@@ -5,6 +5,27 @@ import wandb
 from deeplightning.logger import logging
 
 
+def get_artifact_path(logger_name: str) -> str:
+    """
+    """
+    if logger_name == "wandb":
+        return os.path.join(wandb.run.dir)
+    else:
+        raise ValueError(
+            f"Unrecognized logger name '{logger_name}'. "
+             "See `deeplightning.utils.registry.__LoggerRegistry__`.")
+    
+
+class Logger():
+    """
+    """
+    def __init__(self, cfg: OmegaConf) -> None:
+        self.cfg = cfg
+        self.logger_name = cfg.logger.name
+        self.artifact_path = get_artifact_path(self.logger_name)
+        logging.log_config(cfg, self.artifact_path)
+
+
 class wandbLogger():
     """
     """

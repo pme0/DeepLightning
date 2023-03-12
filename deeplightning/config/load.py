@@ -4,12 +4,13 @@ from omegaconf import OmegaConf
 import torch
 
 from deeplightning.config.compute import runtime_compute
-from deeplightning.utils.registry import __TaskRegistry__
+from deeplightning.utils.registry import (__TaskRegistry__, 
+                                          __LoggerRegistry__,)
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.utils.messages import (info_message, 
-                                              warning_message,
-                                              error_message,
-                                              config_print)
+                                          warning_message,
+                                          error_message,
+                                          config_print,)
 
 
 def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
@@ -51,6 +52,13 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
         error_message(
             f"Task (cfg.task={cfg.task}) not in the registry "
             f"(__TaskRegistry__={__TaskRegistry__})."
+        )
+        raise ValueError
+    
+    if cfg.logger.name not in __LoggerRegistry__:
+        error_message(
+            f"Logger (cfg.logger.name={cfg.logger.name}) not in the registry "
+            f"(__LoggerRegistry__={__LoggerRegistry__})."
         )
         raise ValueError
 
