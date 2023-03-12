@@ -2,10 +2,10 @@ modes:
   train: true
   test: false
   
-task: classification
+task: ImageClassification
 data:
-  root: /Users/pme/data/fsd
   dataset: FSD
+  root: /Users/pme/data/fsd
   num_workers: 4
   batch_size: 256
   module: 

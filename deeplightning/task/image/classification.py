@@ -6,11 +6,24 @@ import pytorch_lightning as pl
 import wandb
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.utils.messages import info_message
-from deeplightning.utils.metrics import metric_accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
+from deeplightning.init.initializers import init_metrics
+from deeplightning.logger.logwandb import initilise_wandb_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.trainer.batch import dictionarify_batch
-from deeplightning.logger.logwandb import initilise_wandb_metrics
+from deeplightning.trainer.hooks.ImageClassification_hooks import (
+    training_step__ImageClassification,
+    training_step_end__ImageClassification,
+    training_epoch_end__ImageClassification,
+    validation_step__ImageClassification,
+    validation_step_end__ImageClassification,
+    validation_epoch_end__ImageClassification,
+    #test_step__ImageClassification,
+    #test_step_end__ImageClassification,
+    #test_epoch_end__ImageClassification,
+)
+from deeplightning.utils.messages import info_message
+from deeplightning.utils.registry import __MetricsRegistry__
+
 
 
 class ImageClassification(pl.LightningModule):
@@ -30,21 +43,20 @@ class ImageClassification(pl.LightningModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.dataset = self.cfg.data.module.target.split(".")[-1]
+        self.num_classes = cfg.model.network.params.num_classes
+        self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
 
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
 
-        self.sanity_check = True # to avoid logging sanity check metrics
+        # PyTorch-Lightning performs a partial validation epoch to ensure that
+        # everything is correct. Use this to avoid logging metrics to W&B for that 
+        self.sanity_check = True
 
-        # metrics to use during training
-        self.num_classes = cfg.model.network.params.num_classes
-        self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
-        self.accuracy = metric_accuracy # TODO create class inheriting from `torchmetrics.Accuracy()`
-        self.confusion_matrix = Metric_ConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus
-        self.precision_recall = Metric_PrecisionRecallCurve(cfg)
+        # initialise metrics to track during training
+        ImageClassification.metrics = init_metrics(cfg)
 
         # aggregation utilities
         self.gather_on_step = gather_on_step
@@ -62,6 +74,17 @@ class ImageClassification(pl.LightningModule):
                 metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc", "lr"], 
                 step_label = "iteration",
             )
+
+        # hook functions
+        ImageClassification._training_step = training_step__ImageClassification
+        ImageClassification._training_step_end = training_step_end__ImageClassification
+        ImageClassification._training_epoch_end = training_epoch_end__ImageClassification
+        ImageClassification._validation_step = validation_step__ImageClassification
+        ImageClassification._validation_step_end = validation_step_end__ImageClassification
+        ImageClassification._validation_epoch_end = validation_epoch_end__ImageClassification
+        #ImageClassification._test_step = test_step__ImageClassification
+        #ImageClassification._test_step_end = test_step_end__ImageClassification
+        #ImageClassification._test_epoch_end = test_epoch_end__ImageClassification
 
 
     def forward(self, x: Tensor) -> Tensor:
@@ -105,24 +128,10 @@ class ImageClassification(pl.LightningModule):
             datasets this is a dictionary with keys ["paths", "images", "labels"].
             For torchvision datasets, the function `dictionarify_batch()` is used
             to convert the native format to dictionary format
-        
         batch_idx : index of batch
+
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-
-        # forward pass
-        logits = self(batch["images"])
-
-        # compute metrics
-        train_loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-
-        # `training_step()` expects one output with 
-        # key 'loss'. This will be logged as 'train_loss' 
-        # in `training_step_end()`.
-        return {"loss": train_loss, 
-                "train_acc": acc,}
+        return self._training_step(batch, batch_idx)
 
 
     def training_step_end(self, training_step_outputs):
@@ -134,31 +143,9 @@ class ImageClassification(pl.LightningModule):
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `training_step()`.
+
         """
-        if self.global_step % self.cfg.logger.log_every_n_steps == 0:
-
-            # aggregate metrics across all devices
-            metrics = self.gather_on_step(
-                step_outputs = training_step_outputs, 
-                metrics = ["loss", "train_acc"], 
-                average = False)
-
-            # chenge key from 'loss' to 'train_loss' (see `training_step()` for why)
-            metrics['train_loss']  = metrics.pop('loss')
-
-            # log learning rate
-            metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
-            #print('self.optimizers', self.optimizers())
-            #print('self.lr_schedulers', self.lr_schedulers())
-            
-            # log training metrics
-            if self.cfg.logger.log_to_wandb:
-                metrics[self.step_label] = self.global_step
-                wandb.log(metrics)
-            else:
-                self.logger.log_metrics(
-                    metrics = metrics, 
-                    step = self.global_step)
+        self._training_step_end(training_step_outputs)
 
 
     def training_epoch_end(self, training_step_outputs):
@@ -172,17 +159,7 @@ class ImageClassification(pl.LightningModule):
             element per device). The output from `training_step()`.
 
         """
-
-        # log training metrics on the last batch only
-        if self.cfg.logger.log_to_wandb:
-            metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
-            metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
-        else:
-            self.logger.log_metrics(
-                metrics = {
-                    "train_acc": training_step_outputs[-1]["train_acc"].item()}, 
-                step = self.global_step)
+        self._training_epoch_end(training_step_outputs)
     
 
     def validation_step(self, batch, batch_idx):
@@ -194,25 +171,10 @@ class ImageClassification(pl.LightningModule):
             datasets this is a dictionary with keys ["paths", "images", "labels"].
             For torchvision datasets, the function `dictionarify_batch()` is used
             to convert the native format to dictionary format
-
         batch_idx : index of batch
 
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-        
-        # forward pass
-        logits = self(batch["images"])
-        preds = torch.argmax(logits, dim=1)
-        
-        # compute metrics
-        loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds=preds, target=batch["labels"])
-        self.precision_recall.update(preds=logits, target=batch["labels"])
-        
-        return {"val_loss": loss, 
-                "val_acc": acc}
+        return self._validation_step(batch, batch_idx)
 
 
     def validation_step_end(self, validation_step_outputs):
@@ -226,14 +188,7 @@ class ImageClassification(pl.LightningModule):
             element per device). The output from `validation_step()`.
 
         """
-
-        # aggregate metrics across all devices.
-        metrics = self.gather_on_step(
-            step_outputs = validation_step_outputs, 
-            metrics = ["val_loss", "val_acc"], 
-            average = False)
-
-        return metrics
+        return self._validation_step_end(validation_step_outputs)
 
 
     def validation_epoch_end(self, validation_epoch_outputs):
@@ -248,41 +203,7 @@ class ImageClassification(pl.LightningModule):
             The output from `validation_step_end()`.
 
         """
-
-        # aggregate losses across all steps and average
-        metrics = self.gather_on_epoch(
-            epoch_outputs = validation_epoch_outputs, 
-            metrics = ["val_loss", "val_acc"], 
-            average = True)
-        
-        # confusion matrix
-        cm = self.confusion_matrix.compute()
-        figure = self.confusion_matrix.draw(cm, subset="val", epoch=self.current_epoch+1)
-        metrics["val_confusion_matrix"] = wandb.Image(figure, caption=f"Confusion Matrix [val, epoch {self.current_epoch+1}]")
-        self.confusion_matrix.reset()
-        
-        # precision-recall
-        precision, recall, thresholds = self.precision_recall.compute()
-        figure = self.precision_recall.draw(precision=precision, recall=recall, thresholds=thresholds, subset="val", epoch=self.current_epoch+1)
-        metrics["val_precision_recall"] = wandb.Image(figure, caption=f"Precision-Recall Curve [val, epoch {self.current_epoch+1}]")
-        self.precision_recall.reset()
-
-        # log validation metrics
-        if self.cfg.logger.log_to_wandb:
-            metrics[self.step_label] = self.global_step
-            if not self.sanity_check:
-                wandb.log(metrics)
-            self.sanity_check = False
-        else:
-            self.logger.log_metrics(metrics, step = self.global_step)
-
-        # EarlyStopping callback reads from `self.log()` but 
-        # not from `self.logger.log()` thus this line. The key 
-        # `m = self.cfg.train.early_stop_metric` must exist
-        # in `validation_epoch_outputs`.
-        if self.cfg.train.early_stop_metric is not None:
-            m = self.cfg.train.early_stop_metric
-            self.log(m, metrics[m])
+        self._validation_epoch_end(validation_epoch_outputs)
 
 
     def test_step(self, batch, batch_idx):
