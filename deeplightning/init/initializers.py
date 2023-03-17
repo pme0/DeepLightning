@@ -45,7 +45,8 @@ def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModul
     model = init_model(cfg)
     data = init_dataset(cfg)
     trainer = init_trainer(cfg)
-    return model, data, trainer
+    cfg = trainer.cfg
+    return cfg, model, data, trainer
 
 
 def init_metrics(cfg: OmegaConf) -> dict:

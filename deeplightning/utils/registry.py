@@ -1,6 +1,6 @@
 #from deeplightning.utils.metrics import metric_accuracy
 from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
-
+from deeplightning.logger.wandb import wandbLogger
 
 __TaskRegistry__ = [
     # Image
@@ -36,6 +36,6 @@ __MetricsRegistry__ = {
     },
 }
 
-__LoggerRegistry__ = [
-    "wandb",
-]
+__LoggerRegistry__ = {
+    "wandb": wandbLogger,
+}
