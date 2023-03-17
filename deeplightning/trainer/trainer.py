@@ -2,16 +2,18 @@ from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
 import os
 from omegaconf import OmegaConf
-
 from pytorch_lightning import Trainer
-from deeplightning.config.defaults import __ConfigGroups__
-from deeplightning.logger import logging, logwandb
-from deeplightning.init.imports import init_obj_from_config
 from pytorch_lightning.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
                                          ModelCheckpoint,
                                          EarlyStopping)
+
 from deeplightning.utils.messages import info_message
+from deeplightning.config.defaults import __ConfigGroups__
+from deeplightning.logger import logging, logwandb
+from deeplightning.init.imports import init_obj_from_config
+from deeplightning.utils.registry import __LoggerRegistry__
+
 
 
 class DLTrainer(Trainer):
@@ -20,25 +22,30 @@ class DLTrainer(Trainer):
     Inherits from `pytorch_lightning.Trainer`
     """
     def __init__(self, cfg: OmegaConf, args: dict) -> None:
-        self.cfg = cfg
 
-        # pass logger to trainer unless using wandb.
-        # by default `Trainer`` has an attribute `logger` so name 
-        # this one `logger_` to avoid conflicts
+        # Logger
+        # by default `pytorch_lightning.Trainer()` has an attribute 
+        # `logger` so name this custom one `logger_` to avoid conflicts
         self.logger_ = self.init_logger(cfg)
-        if not cfg.logger.log_to_wandb:
-            args = {**args, "logger": self.logger_}
+        # get updated config
+        self.cfg = self.logger_.cfg
+        # ensure all required attributes have been initialised
+        attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
+        for attribute in attributes:
+            if not hasattr(self.logger_, attribute):
+                raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
 
-        # pass callbacks to trainer
+        # Pass callbacks to trainer
         callbacks = self.init_callbacks(cfg, self.logger_.artifact_path)
         args = {**args, "callbacks": callbacks,}
-
         super().__init__(**args)
 
 
     def init_logger(self, cfg: OmegaConf) -> None:
         """ Initialize logger
         """
+        return __LoggerRegistry__[cfg.logger.name](cfg)
+
         if cfg.logger.log_to_wandb:
             return logwandb.wandbLogger(cfg)
 
@@ -47,7 +54,7 @@ class DLTrainer(Trainer):
         # BUG? without this line, the logger doesn't define 
         # `_experiment_id` and `_run_id`, which are needed
         # to create `artifact_path`
-        logger.log_hyperparams(cfg) 
+        logger.log_hyperparams(cfg)
 
         # `artifact_path` is used to save model checkpoints, revised 
         # config file (after config checks/mods), and artifacts.
