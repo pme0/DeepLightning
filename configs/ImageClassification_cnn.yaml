@@ -1,6 +1,6 @@
 modes: 
   train: true
-  test: false
+  test: true
   
 task: ImageClassification
 data:

@@ -1,4 +1,7 @@
 name: deeplightning
+channels:
+  - defaults
+  - conda-forge
 dependencies:
   - pip==21.2.4
   - python==3.8.2 # numpy==1.22 not working with python==3.9

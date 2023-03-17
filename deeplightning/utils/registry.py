@@ -16,8 +16,11 @@ __MetricsRegistry__ = {
 	"ImageClassification": {
         "Accuracy_train": Metric_Accuracy,
         "Accuracy_val": Metric_Accuracy,
-        "ConfusionMatrix": Metric_ConfusionMatrix,
-		"PrecisionRecallCurve": Metric_PrecisionRecallCurve,
+        "Accuracy_test": Metric_Accuracy,
+        "ConfusionMatrix_val": Metric_ConfusionMatrix,
+        "ConfusionMatrix_test": Metric_ConfusionMatrix,
+		"PrecisionRecallCurve_val": Metric_PrecisionRecallCurve,
+		"PrecisionRecallCurve_test": Metric_PrecisionRecallCurve,
 	},
     "ImageReconstruction": {
         "_": None,

@@ -17,9 +17,9 @@ from deeplightning.trainer.hooks.ImageClassification_hooks import (
     validation_step__ImageClassification,
     validation_step_end__ImageClassification,
     validation_epoch_end__ImageClassification,
-    #test_step__ImageClassification,
-    #test_step_end__ImageClassification,
-    #test_epoch_end__ImageClassification,
+    test_step__ImageClassification,
+    test_step_end__ImageClassification,
+    test_epoch_end__ImageClassification,
 )
 from deeplightning.utils.messages import info_message
 from deeplightning.utils.registry import __MetricsRegistry__
@@ -58,6 +58,19 @@ class ImageClassification(pl.LightningModule):
         # initialise metrics to track during training
         ImageClassification.metrics = init_metrics(cfg)
 
+        # Hook functions - to make the hooks bound to the class (so that they can access 
+        # class attributes using `self.something`), the assignment must specify the class name:
+        # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
+        ImageClassification._training_step = training_step__ImageClassification
+        ImageClassification._training_step_end = training_step_end__ImageClassification
+        ImageClassification._training_epoch_end = training_epoch_end__ImageClassification
+        ImageClassification._validation_step = validation_step__ImageClassification
+        ImageClassification._validation_step_end = validation_step_end__ImageClassification
+        ImageClassification._validation_epoch_end = validation_epoch_end__ImageClassification
+        ImageClassification._test_step = test_step__ImageClassification
+        ImageClassification._test_step_end = test_step_end__ImageClassification
+        ImageClassification._test_epoch_end = test_epoch_end__ImageClassification
+
         # aggregation utilities
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
@@ -74,17 +87,6 @@ class ImageClassification(pl.LightningModule):
                 metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc", "lr"], 
                 step_label = "iteration",
             )
-
-        # hook functions
-        ImageClassification._training_step = training_step__ImageClassification
-        ImageClassification._training_step_end = training_step_end__ImageClassification
-        ImageClassification._training_epoch_end = training_epoch_end__ImageClassification
-        ImageClassification._validation_step = validation_step__ImageClassification
-        ImageClassification._validation_step_end = validation_step_end__ImageClassification
-        ImageClassification._validation_epoch_end = validation_epoch_end__ImageClassification
-        #ImageClassification._test_step = test_step__ImageClassification
-        #ImageClassification._test_step_end = test_step_end__ImageClassification
-        #ImageClassification._test_epoch_end = test_epoch_end__ImageClassification
 
 
     def forward(self, x: Tensor) -> Tensor:
@@ -120,7 +122,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        """ Hook for training step.
+        """ Hook for `training_step`.
 
         Parameters
         ----------
@@ -135,7 +137,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def training_step_end(self, training_step_outputs):
-        """ Hook for training step_end.
+        """ Hook for `training_step_end`.
 
         Parameters
         ----------
@@ -149,7 +151,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def training_epoch_end(self, training_step_outputs):
-        """ Hook for training epoch_end.
+        """ Hook for `training_epoch_end`.
         
         Parameters
         ----------
@@ -163,7 +165,7 @@ class ImageClassification(pl.LightningModule):
     
 
     def validation_step(self, batch, batch_idx):
-        """ Hook for validation step.
+        """ Hook for `validation_step`.
 
         Parameters
         ----------
@@ -178,7 +180,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def validation_step_end(self, validation_step_outputs):
-        """ Hook for validation step_end.
+        """ Hook for `validation_step_end`.
 
         Parameters
         ----------
@@ -192,7 +194,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def validation_epoch_end(self, validation_epoch_outputs):
-        """ Hook for validation epoch_end.
+        """ Hook for `validation_epoch_end`.
 
         Parameters
         ----------
@@ -207,7 +209,7 @@ class ImageClassification(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx):
-        """ Hook for test step.
+        """ Hook for `test_step`.
 
         Parameters
         ----------
@@ -219,25 +221,11 @@ class ImageClassification(pl.LightningModule):
         batch_idx: index of batch.
         
         """
-
-        batch = dictionarify_batch(batch, self.dataset)
-
-        # forward pass
-        logits = self(batch["images"])
-        preds = torch.argmax(logits, dim=1)
-        
-        # compute metrics
-        loss = self.loss(logits, batch["labels"])
-        acc = self.accuracy(logits=logits, target=batch["labels"], task=self.classif_task, num_classes=self.num_classes)
-        self.confusion_matrix.update(preds=preds, target=batch["labels"])
-        self.precision_recall.update(preds=logits, target=batch["labels"])
-
-        return {"test_loss": loss, 
-                "test_acc": acc}
+        return self._test_step(batch, batch_idx)
 
 
     def test_step_end(self, test_step_outputs):
-        """ Hook for test step_end.
+        """ Hook for `test_step_end`.
 
         Parameters
         ----------
@@ -247,18 +235,11 @@ class ImageClassification(pl.LightningModule):
             element per device). The output from `test_step()`.
 
         """
-
-        # aggregate metrics across all devices.
-        metrics = self.gather_on_step(
-            step_outputs = test_step_outputs, 
-            metrics = ["test_loss", "test_acc"], 
-            average = False)
-
-        return metrics
+        return self._test_step_end(test_step_outputs)
 
 
     def test_epoch_end(self, test_epoch_outputs):
-        """ Hook for test epoch_end.
+        """ Hook for `test_epoch_end`.
 
         Parameters
         ----------
@@ -268,29 +249,4 @@ class ImageClassification(pl.LightningModule):
             element per device). The output from `test_step_end()`.
             
         """
-
-        # aggregate losses across all steps and average
-        metrics = self.gather_on_epoch(
-            epoch_outputs = test_epoch_outputs, 
-            metrics = ["test_loss", "test_acc"], 
-            average = True)
-
-        # confusion matrix
-        cm = self.confusion_matrix.compute()
-        figure = self.confusion_matrix.draw(cm, subset="test", epoch=self.current_epoch+1)
-        metrics["test_confusion_matrix"] =  wandb.Image(figure, caption=f"Confusion Matrix [test]")
-        self.confusion_matrix.reset()
-
-        # precision-recall
-        precision, recall, thresholds = self.precision_recall.compute()
-        figure = self.precision_recall.draw(precision, recall, thresholds, subset="test", epoch=self.current_epoch+1)
-        metrics["test_precision_recall"] = wandb.Image(figure, caption=f"Precision-Recall Curve [test, epoch {self.current_epoch+1}]")
-        self.precision_recall.reset()
-
-        # log test metrics
-        if self.cfg.logger.log_to_wandb:
-            metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
-        else:
-            self.logger.log_metrics(metrics, step = self.global_step)
-        
+        self._test_epoch_end(test_epoch_outputs)
