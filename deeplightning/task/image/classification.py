@@ -9,20 +9,8 @@ from deeplightning.init.imports import init_obj_from_config
 from deeplightning.init.initializers import init_metrics
 from deeplightning.logger.logwandb import initilise_wandb_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.trainer.batch import dictionarify_batch
-from deeplightning.trainer.hooks.ImageClassification_hooks import (
-    training_step__ImageClassification,
-    training_step_end__ImageClassification,
-    training_epoch_end__ImageClassification,
-    validation_step__ImageClassification,
-    validation_step_end__ImageClassification,
-    validation_epoch_end__ImageClassification,
-    test_step__ImageClassification,
-    test_step_end__ImageClassification,
-    test_epoch_end__ImageClassification,
-)
 from deeplightning.utils.messages import info_message
-from deeplightning.utils.registry import __MetricsRegistry__
+from deeplightning.utils.registry import __MetricsRegistry__, __HooksRegistry__
 
 
 
@@ -55,23 +43,24 @@ class ImageClassification(pl.LightningModule):
         # everything is correct. Use this to avoid logging metrics to W&B for that 
         self.sanity_check = True
 
-        # initialise metrics to track during training
+        # Initialise metrics to track during training
         ImageClassification.metrics = init_metrics(cfg)
 
-        # Hook functions - to make the hooks bound to the class (so that they can access 
-        # class attributes using `self.something`), the assignment must specify the class name:
+        # Define hook functions.
+        # to make the hooks bound to the class (so that they can access class attributes 
+        #  using `self.something`), the assignment must specify the class name as follows:
         # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
-        ImageClassification._training_step = training_step__ImageClassification
-        ImageClassification._training_step_end = training_step_end__ImageClassification
-        ImageClassification._training_epoch_end = training_epoch_end__ImageClassification
-        ImageClassification._validation_step = validation_step__ImageClassification
-        ImageClassification._validation_step_end = validation_step_end__ImageClassification
-        ImageClassification._validation_epoch_end = validation_epoch_end__ImageClassification
-        ImageClassification._test_step = test_step__ImageClassification
-        ImageClassification._test_step_end = test_step_end__ImageClassification
-        ImageClassification._test_epoch_end = test_epoch_end__ImageClassification
+        ImageClassification._training_step = __HooksRegistry__[cfg.task]["training_step"]
+        ImageClassification._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
+        ImageClassification._training_epoch_end = __HooksRegistry__[cfg.task]["training_epoch_end"]
+        ImageClassification._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
+        ImageClassification._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
+        ImageClassification._validation_epoch_end = __HooksRegistry__[cfg.task]["validation_epoch_end"]
+        ImageClassification._test_step = __HooksRegistry__[cfg.task]["test_step"]
+        ImageClassification._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
+        ImageClassification._test_epoch_end = __HooksRegistry__[cfg.task]["test_epoch_end"]
 
-        # aggregation utilities
+        # Aggregation utilities
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
 
