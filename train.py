@@ -22,13 +22,13 @@ if __name__ == "__main__":
 
     # Load config
     cfg = load_config(config_file = args.cfg)
+    # [!] this config is incomplete; the complete one, which includes
+    #     logger runtime parameters like artifact path is inside the
+    #     LightningModule and it gets printed & logged from there
+    #TODO find a better way to do this
 
-    # Initialise model, dataset, trainer
+    # Initialise: model, dataset, trainer
     model, data, trainer = init_everything(cfg)
-    
-    # Update config - it is updated in `init_logger` inside `DLTrainer`
-    cfg = trainer.cfg
-    config_print(OmegaConf.to_yaml(cfg))
 
     try:
 
@@ -63,11 +63,5 @@ if __name__ == "__main__":
 
     finally:
         
-        if cfg.logger.log_to_wandb:
-            # wandb logger
-            info_message("Artifact storage path: {}".format(trainer.logger_.artifact_path))
-            wandb.finish()
-        else:
-            # mlflow logger
-            info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
-            
+        wandb.finish()
+

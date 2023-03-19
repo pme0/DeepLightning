@@ -1,5 +1,6 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
+import os
 from omegaconf import OmegaConf
 import torch
 
@@ -23,7 +24,7 @@ def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
     cfg = check_consistency(cfg)
     cfg = runtime_compute(cfg)
     OmegaConf.resolve(cfg)
-    config_print(OmegaConf.to_yaml(cfg))
+    #config_print(OmegaConf.to_yaml(cfg))
     return cfg
 
 
@@ -90,3 +91,16 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
             )
 
     return cfg
+
+
+def log_config(cfg: OmegaConf, path: str) -> None:
+    """ Save configuration (.yaml)
+    """
+    if not OmegaConf.is_config(cfg):
+        error_message(
+            "Attempting to save a config artifact but the object "
+            "provided is not of type omegaconf.dictconfig.DictConfig.")
+    
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
+    OmegaConf.save(cfg, f = os.path.join(path, "cfg.yaml"))
