@@ -12,7 +12,8 @@ from deeplightning.utils.messages import info_message
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.logger import logging, logwandb
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.utils.registry import __LoggerRegistry__
+from deeplightning.utils.registry import (__LoggerRegistry__, 
+                                          __HooksRegistry__)
 
 
 
@@ -24,58 +25,35 @@ class DLTrainer(Trainer):
     def __init__(self, cfg: OmegaConf, args: dict) -> None:
 
         # Logger
-        # by default `pytorch_lightning.Trainer()` has an attribute 
-        # `logger` so name this custom one `logger_` to avoid conflicts
-        self.logger_ = self.init_logger(cfg)
-        # get updated config
-        self.cfg = self.logger_.cfg
-        # ensure all required attributes have been initialised
-        attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
-        for attribute in attributes:
-            if not hasattr(self.logger_, attribute):
-                raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
+        # by default `pl.Trainer()` has an attribute `logger` so name 
+        # this custom one `logger_` to avoid conflicts.
+        #
+        # [!] logger is being initialised twice: here (to get `artifact_path`) and 
+        # in LightningModule to log TODO avoid this duplication
+        artifact_path = self.init_logger(cfg).artifact_path
 
         # Pass callbacks to trainer
-        callbacks = self.init_callbacks(cfg, self.logger_.artifact_path)
-        args = {**args, "callbacks": callbacks,}
+        callbacks = self.init_callbacks(cfg, artifact_path)
+        args = {**args, "callbacks": callbacks}
         super().__init__(**args)
 
 
     def init_logger(self, cfg: OmegaConf) -> None:
         """ Initialize logger
         """
-        return __LoggerRegistry__[cfg.logger.name](cfg)
 
-        if cfg.logger.log_to_wandb:
-            return logwandb.wandbLogger(cfg)
-
-        logger = init_obj_from_config(cfg.logger)
-
-        # BUG? without this line, the logger doesn't define 
-        # `_experiment_id` and `_run_id`, which are needed
-        # to create `artifact_path`
-        logger.log_hyperparams(cfg)
-
-        # `artifact_path` is used to save model checkpoints, revised 
-        # config file (after config checks/mods), and artifacts.
-        # Add this path to the logger so it can be used anywhere.
-        logger.artifact_path = os.path.join(
-            logger._tracking_uri,
-            logger._experiment_id,
-            logger._run_id,
-            "artifacts"
+        # load logger
+        logger = __LoggerRegistry__[cfg.logger.name](
+            cfg = cfg,
+            logged_metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"]
         )
-        info_message("Artifact storage path: {}".format(logger.artifact_path))
 
-        # add logging methods to the logger
-        logger.log_config = logging.log_config
-        logger.log_image = logging.log_image
-        logger.log_figure = logging.log_figure
-        logger.log_histogram = logging.log_histogram
-
-        # log config file
-        logger.log_config(cfg, logger.artifact_path)
-
+        # ensure all required attributes have been initialised
+        attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
+        for attribute in attributes:
+            if not hasattr(logger, attribute):
+                raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
+            
         return logger
 
 

@@ -69,9 +69,8 @@ def training_step_end__ImageClassification(self, training_step_outputs):
         metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
             
         # log training metrics
-        if self.cfg.logger.log_to_wandb:
-            metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
+        metrics[self.step_label] = self.global_step
+        self.logger_.log_metrics(metrics)
 
 
 def training_epoch_end__ImageClassification(self, training_step_outputs):
@@ -87,11 +86,10 @@ def training_epoch_end__ImageClassification(self, training_step_outputs):
     """
 
     # log training metrics on the last batch only
-    if self.cfg.logger.log_to_wandb:
-        #metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
-        metrics = {}
-        metrics[self.step_label] = self.global_step
-        wandb.log(metrics)
+    #metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
+    metrics = {}
+    metrics[self.step_label] = self.global_step
+    self.logger_.log_metrics(metrics)
 
 
 def validation_step__ImageClassification(self, batch, batch_idx):
@@ -186,11 +184,10 @@ def validation_epoch_end__ImageClassification(self, validation_epoch_outputs):
     self.metrics["PrecisionRecallCurve_val"].reset()
 
     # log validation metrics
-    if self.cfg.logger.log_to_wandb:
-        metrics[self.step_label] = self.global_step
-        if not self.sanity_check:
-            wandb.log(metrics)
-        self.sanity_check = False
+    metrics[self.step_label] = self.global_step
+    if not self.sanity_check:
+        self.logger_.log_metrics(metrics)
+    self.sanity_check = False
 
     # EarlyStopping callback reads from `self.log()` but not from `self.logger.log()` 
     # thus this line. The key `m = self.cfg.train.early_stop_metric` must exist
@@ -290,4 +287,4 @@ def test_epoch_end__ImageClassification(self, test_epoch_outputs):
     # log test metrics
     if self.cfg.logger.log_to_wandb:
         metrics[self.step_label] = self.global_step
-        wandb.log(metrics)
+        self.logger_.log_metrics(metrics)
