@@ -3,11 +3,10 @@ from omegaconf import OmegaConf
 from torch import Tensor
 import pytorch_lightning as pl
 
-from deeplightning.config.load import log_config
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.init.initializers import init_metrics, init_logger
+from deeplightning.init.initializers import init_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.utils.messages import info_message, config_print
+from deeplightning.utils.messages import info_message
 from deeplightning.utils.registry import __MetricsRegistry__, __HooksRegistry__
 
 
@@ -28,6 +27,7 @@ class TaskModule(pl.LightningModule):
 
     def __init__(self, cfg: OmegaConf):
         super().__init__()
+        self.cfg = cfg  #TODO check if this contains logger runtime params
         self.num_classes = cfg.model.network.params.num_classes
         self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
 
@@ -38,14 +38,14 @@ class TaskModule(pl.LightningModule):
         
         # by default `pl.Trainer()` has an attribute `logger` so name 
         # this custom one `logger_` to avoid conflicts
-        self.logger_ = init_logger(cfg)
-        print('logger_', self.logger_)
-        print('vars(logger_)', vars(self.logger_))
+        #self.logger_ = init_logger(cfg)
+        #print('logger_', self.logger_)
+        #print('vars(logger_)', vars(self.logger_))
         
         # update config with logger runtime parameters, and print
-        self.cfg = self.logger_.cfg
-        config_print(OmegaConf.to_yaml(cfg))
-        log_config(cfg=cfg, path=self.logger_.artifact_path)
+        #self.cfg = self.logger_.cfg
+        #config_print(OmegaConf.to_yaml(cfg))
+        #log_config(cfg=cfg, path=self.logger_.artifact_path)
 
 
         # PyTorch-Lightning performs a partial validation epoch to ensure that

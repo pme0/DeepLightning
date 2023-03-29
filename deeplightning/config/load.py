@@ -63,26 +63,26 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
         )
         raise ValueError
 
-    if cfg.engine.gpus is not None:
+    if cfg.engine.devices is not None:
         if not torch.cuda.is_available():
             warning_message(
                 "GPUs {} selected but not available in this " 
                 "machine. Will overwrite `engine.gpus` to use "
-                "'None' (CPU backend).".format(cfg.engine.gpus)
+                "'auto' (CPU backend).".format(cfg.engine.devices)
             )
-            cfg.engine.gpus = None
+            cfg.engine.devices = "auto"
     else:
-        if cfg.engine.gpus is None and cfg.engine.backend is not None:
+        if cfg.engine.devices is None and cfg.engine.strategy is not None:
             warning_message(
                 "No GPUs selected, therefore will overwrite "
-                "cfg.engine.backend to use 'None' (CPU backend) "
-                "(currently using backend '{}').".format(cfg.engine.backend)
+                "cfg.engine.strategy to use 'None' (CPU backend) "
+                "(currently using backend '{}').".format(cfg.engine.strategy)
             )
-            cfg.engine.backend = None
+            cfg.engine.strategy = None
 
 
-    if cfg.engine.backend is not None:
-        if "deepspeed" in cfg.engine.backend and \
+    if cfg.engine.strategy is not None:
+        if "deepspeed" in cfg.engine.strategy and \
             cfg.model.optimizer.target != "deepspeed.ops.adam.FusedAdam":
             warning_message(
                 "PytorchLightning recommends FusedAdam optimizer "

@@ -4,8 +4,8 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningModule, LightningDataModule
 
 from deeplightning.config.defaults import __ConfigGroups__
-from deeplightning.trainer.trainer import DLTrainer
 from deeplightning.init.imports import init_module
+from deeplightning.trainer.trainer import DLTrainer
 from deeplightning.utils.registry import (__MetricsRegistry__, 
                                           __LoggerRegistry__, 
                                           __HooksRegistry__)
@@ -31,16 +31,17 @@ def init_trainer(cfg: OmegaConf) -> DLTrainer:
     """
     args = {
         "max_epochs": cfg.train.num_epochs,
-        "gpus": cfg.engine.gpus,
         "num_nodes": cfg.engine.num_nodes,
-        "strategy": cfg.engine.backend,
+        "accelerator": cfg.engine.accelerator,
+        "strategy": cfg.engine.strategy,
+        "devices": cfg.engine.devices,
         "precision": cfg.engine.precision,
         "check_val_every_n_epoch": cfg.train.val_every_n_epoch,
         "log_every_n_steps": cfg.logger.log_every_n_steps,
         }
     return DLTrainer(cfg, args)
 
-
+'''
 def init_logger(cfg: OmegaConf) -> None:
         """ Initialize Logger
         """
@@ -58,7 +59,7 @@ def init_logger(cfg: OmegaConf) -> None:
                 raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
             
         return logger
-
+'''
 
 def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
     """ Initialize main modules
