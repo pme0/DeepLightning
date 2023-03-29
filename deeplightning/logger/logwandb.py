@@ -33,13 +33,14 @@ class wandbLogger():
         self.cfg = cfg
         self.artifact_path = os.path.join(wandb.run.dir)
         logging.log_config(cfg, self.artifact_path)
-
+            
 
 def initilise_wandb_metrics(metrics: list, step_label: str) -> None:
     """ Defines a custom x-axis metric `step_label` which is 
         synchronised with PyTprch-Lightning's `global_step`; and
         defines all other `metrics` to be plotted agains `step_label`
     """
+
     # define custom x-axis metric `step_label` (synchronised with PL `global_step`)
     wandb.define_metric(step_label)
 

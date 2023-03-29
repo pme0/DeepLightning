@@ -30,6 +30,9 @@ if __name__ == "__main__":
     # Initialise: model, dataset, trainer
     model, data, trainer = init_everything(cfg)
 
+    # Load config augmented with logger runtime parameters
+    cfg = trainer.cfg
+
     try:
 
         if cfg.modes.train:
@@ -40,7 +43,7 @@ if __name__ == "__main__":
                 ckpt_path = cfg.train.ckpt_resume_path,
             )
             if cfg.modes.test:
-                info_message(f"Performing testing with last trained model '{trainer.logger_.artifact_path}/last.ckpt'.")
+                info_message(f"Performing testing with last trained model.")
                 trainer.test(
                     model = model,
                     #ckpt_path = "best",

@@ -1,6 +1,6 @@
-#from deeplightning.utils.metrics import metric_accuracy
-from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
-from deeplightning.logger.wandb import wandbLogger
+from pytorch_lightning.loggers import WandbLogger
+
+#from deeplightning.logger.wandb import wandbLogger
 from deeplightning.trainer.hooks.ImageClassification_hooks import (
     training_step__ImageClassification,
     training_step_end__ImageClassification,
@@ -23,6 +23,7 @@ from deeplightning.trainer.hooks.AudioClassification_hooks import (
     test_step_end__AudioClassification,
     test_epoch_end__AudioClassification)
 """
+from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
 
 
 __TaskRegistry__ = [
@@ -54,7 +55,11 @@ __HooksRegistry__ = {
     },
     # Audio
     "AudioClassification": {
-        "_": None,
+        "LOGGED_METRICS_NAMES": [
+            "train_loss", "train_acc", 
+            "val_loss", "val_acc", "val_confusion_matrix", "val_precision_recall",
+            "test_loss", "test_acc", "test_confusion_matrix", "test_precision_recall",
+            "lr"],
     },
 }
 
@@ -86,5 +91,5 @@ __MetricsRegistry__ = {
 
 
 __LoggerRegistry__ = {
-    "wandb": wandbLogger,
+    "wandb": WandbLogger,
 }
