@@ -1,0 +1,71 @@
+modes: 
+  train: true
+  test: true
+  
+task: ImageClassification
+data:
+  dataset: MNIST
+  root: ~/data/MNIST
+  num_workers: 4
+  batch_size: 256
+  module: 
+    target: deeplightning.data.dataloaders.image.mnist.MNIST
+  image_size: 28
+  num_channels: 1
+  num_classes: 10
+
+model:
+  module: 
+    target: deeplightning.task.image.classification.TaskModule
+  network:
+    target: deeplightning.model.cnn.SymbolCNN
+    params: 
+      num_classes: 10
+      num_channels: 1
+  optimizer:
+    target: torch.optim.Adadelta
+    params:
+  scheduler:
+    target: torch.optim.lr_scheduler.ExponentialLR
+    params:
+      gamma: 0.99
+    call:
+      interval: "epoch"
+      frequency: 1
+  loss:
+    target: torch.nn.CrossEntropyLoss
+    params:
+
+engine:
+  accelerator: cpu
+  strategy: ddp
+  devices: [0]
+  num_nodes: 1
+  precision: 32
+
+train:
+  num_epochs: 5
+  val_every_n_epoch: 1
+  grad_accum_from_epoch: 0
+  grad_accum_every_n_batches: 1
+  ckpt_resume_path: null
+  ckpt_every_n_epochs: 1
+  ckpt_save_top_k: 1
+  early_stop_metric: null
+  early_stop_delta: 0.001
+  early_stop_patience: 3
+
+test:
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
+  
+logger:
+  name: wandb
+  log_to_wandb: true
+  project_name: trial
+  tags: ["image", "classification", "cnn"] # cannot be empty
+  notes: null
+  type: pytorch_lightning.loggers.MLFlowLogger
+  params:
+    experiment_name: Default
+    tracking_uri: mlruns
+  log_every_n_steps: 10

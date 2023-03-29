@@ -20,7 +20,7 @@ def dictionarify_batch(batch: Any, dataset: str):
                 return batch
             
             elif isinstance(batch, dict):
-                if "paths" in batch and "inputs" in batch and "labels" in batch and len(batch.keys()) == 3:
+                if "inputs" in batch and "labels" in batch and len(batch.keys()):
                     return batch
                 raise ValueError(f"batch dictionary keys unrecognised ({batch.keys()}).")
 
