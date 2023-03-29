@@ -37,18 +37,20 @@ model:
     params:
 
 engine:
-  backend: ddp
-  gpus: [0]
+  accelerator: cpu
+  strategy: ddp
+  devices: [0]
   num_nodes: 1
   precision: 32
 
 train:
-  num_epochs: 2
+  num_epochs: 5
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
   ckpt_every_n_epochs: 1
+  ckpt_save_top_k: 1
   early_stop_metric: null
   early_stop_delta: 0.001
   early_stop_patience: 3

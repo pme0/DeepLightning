@@ -6,6 +6,10 @@ from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 
 
+# TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+# use `outputs` instead of `preds` in `validation_step__ImageClassification`
+# TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+
 
 def training_step__ImageClassification(self, batch, batch_idx):
     """ Hook for `training_step`.
@@ -70,7 +74,7 @@ def training_step_end__ImageClassification(self, training_step_outputs):
             
         # log training metrics
         metrics[self.step_label] = self.global_step
-        self.logger_.log_metrics(metrics)
+        self.logger.log_metrics(metrics)
 
 
 def training_epoch_end__ImageClassification(self, training_step_outputs):
@@ -89,7 +93,7 @@ def training_epoch_end__ImageClassification(self, training_step_outputs):
     #metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
     metrics = {}
     metrics[self.step_label] = self.global_step
-    self.logger_.log_metrics(metrics)
+    self.logger.log_metrics(metrics)
 
 
 def validation_step__ImageClassification(self, batch, batch_idx):
@@ -186,7 +190,7 @@ def validation_epoch_end__ImageClassification(self, validation_epoch_outputs):
     # log validation metrics
     metrics[self.step_label] = self.global_step
     if not self.sanity_check:
-        self.logger_.log_metrics(metrics)
+        self.logger.log_metrics(metrics)
     self.sanity_check = False
 
     # EarlyStopping callback reads from `self.log()` but not from `self.logger.log()` 
@@ -287,4 +291,4 @@ def test_epoch_end__ImageClassification(self, test_epoch_outputs):
     # log test metrics
     if self.cfg.logger.log_to_wandb:
         metrics[self.step_label] = self.global_step
-        self.logger_.log_metrics(metrics)
+        self.logger.log_metrics(metrics)

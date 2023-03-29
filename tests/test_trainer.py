@@ -46,9 +46,9 @@ def test_trainer(kwargs):
 
     cfg = load_config(config_file = "helpers/dummy_config.yaml")
     
-    cfg.engine.backend = kwargs["strategy"]
+    cfg.engine.strategy = kwargs["strategy"]
     cfg.engine.precision = kwargs["precision"]
-    cfg.engine.gpus = kwargs["gpus"]
+    cfg.engine.devices = kwargs["gpus"]
     # TODO extra params for quick testing
     '''
     cfg.test_params.limit_train_batches = 2

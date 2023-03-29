@@ -1,11 +1,23 @@
-from typing import Any, Union, Tuple, Optional, List
-from omegaconf import OmegaConf
 import wandb
 
-from deeplightning.logger.helpers import add_logger_params_to_config
+
+def init_wandb_metrics(metric_names: list, step_label: str) -> None:
+        """ Define a custom x-axis metric `step_label` which is 
+            synchronised with PyTprch-Lightning's `global_step`; and
+            defines all other `metrics` to be plotted agains `step_label`
+        """
+
+        # define custom x-axis metric `step_label` (synchronised with PL `global_step`)
+        wandb.define_metric(step_label)
+        
+        # initialise metrics to be plotted against `step_label`
+        for m in metric_names:
+            wandb.define_metric(m, step_metric=step_label)
+
+        return step_label
 
 
-
+'''
 class wandbLogger():
     """ Deep Lightning Logger.
     """
@@ -62,3 +74,4 @@ class wandbLogger():
 
     def log_metrics(self, metrics: dict) -> None:
         wandb.log(metrics)
+'''
