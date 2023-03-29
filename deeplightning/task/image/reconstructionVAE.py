@@ -3,7 +3,7 @@ from omegaconf import OmegaConf
 import torch
 from torch import Tensor
 from torchvision import transforms
-import pytorch_lightning as pl
+import lightning as pl
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.utils.messages import info_message

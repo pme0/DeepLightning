@@ -11,7 +11,7 @@ from flask import Flask, jsonify, request
 from torch import Tensor
 import torch.nn.functional as F
 from torchvision import transforms
-from pytorch_lightning import LightningModule
+from lightning import LightningModule
 
 from deeplightning.init.imports import get_reference 
 
