@@ -19,33 +19,21 @@ def parse_command_line_arguments():
 if __name__ == "__main__":
 
     args = parse_command_line_arguments()
-    cfg = load_config(config_file = args.cfg)
-    
-    # Initialise logger
-    # TODO put the following inside init_everything()
-    if cfg.logger.log_to_wandb:
-        wandb.init(
-            project = cfg.logger.project_name,
-            notes = cfg.logger.notes,
-            tags = cfg.logger.tags,
-        )
-        logger_run_id = wandb.run.id
-        logger_run_name = wandb.run.name
-        logger_run_dir = wandb.run.dir
-    # add logger params to config
-    cfg.logger.runtime = {}  # TODO find better way to create nested keys without create each level in sequence
-    cfg.logger.runtime.run_id = logger_run_id
-    cfg.logger.runtime.run_name = logger_run_name
-    cfg.logger.runtime.run_dir = logger_run_dir
-    #cfg = add_logger_params(config_file = args.cfg) TODO encapsulate the above in a function
 
-    # Initialise model, dataset, trainer
+    # Load config
+    cfg = load_config(config_file = args.cfg)
+    # [!] this config is incomplete; the complete one, which includes
+    #     logger runtime parameters like artifact path is inside the
+    #     LightningModule and it gets printed & logged from there
+    #TODO find a better way to do this
+
+    # Initialise: model, dataset, trainer
     model, data, trainer = init_everything(cfg)
-    cfg.logger.runtime.artifact_path = trainer.logger_.artifact_path
-    config_print(OmegaConf.to_yaml(cfg))
+
+    # Load config augmented with logger runtime parameters
+    cfg = trainer.cfg
 
     try:
-        model, data, trainer = init_everything(cfg)
 
         if cfg.modes.train:
             info_message("Performing training and validation.")
@@ -55,7 +43,7 @@ if __name__ == "__main__":
                 ckpt_path = cfg.train.ckpt_resume_path,
             )
             if cfg.modes.test:
-                info_message(f"Performing testing with last trained model '{trainer.logger_.artifact_path}/last.ckpt'.")
+                info_message(f"Performing testing with last trained model.")
                 trainer.test(
                     model = model,
                     #ckpt_path = "best",
@@ -78,11 +66,5 @@ if __name__ == "__main__":
 
     finally:
         
-        if cfg.logger.log_to_wandb:
-            # wandb logger
-            info_message("Artifact storage path: {}".format(trainer.logger_.artifact_path))
-            wandb.finish()
-        else:
-            # mlflow logger
-            info_message("Artifact storage path: {}".format(trainer.logger.artifact_path))
-            
+        wandb.finish()
+

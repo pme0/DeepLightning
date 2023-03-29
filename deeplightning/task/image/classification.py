@@ -1,32 +1,17 @@
 from typing import Tuple
 from omegaconf import OmegaConf
-import torch
 from torch import Tensor
 import pytorch_lightning as pl
-import wandb
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.init.initializers import init_metrics
-from deeplightning.logger.logwandb import initilise_wandb_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.trainer.batch import dictionarify_batch
-from deeplightning.trainer.hooks.ImageClassification_hooks import (
-    training_step__ImageClassification,
-    training_step_end__ImageClassification,
-    training_epoch_end__ImageClassification,
-    validation_step__ImageClassification,
-    validation_step_end__ImageClassification,
-    validation_epoch_end__ImageClassification,
-    test_step__ImageClassification,
-    test_step_end__ImageClassification,
-    test_epoch_end__ImageClassification,
-)
 from deeplightning.utils.messages import info_message
-from deeplightning.utils.registry import __MetricsRegistry__
+from deeplightning.utils.registry import __MetricsRegistry__, __HooksRegistry__
 
 
 
-class ImageClassification(pl.LightningModule):
+class TaskModule(pl.LightningModule):
     """ Task module for Image Classification. 
 
     LOGGING: manual logging `self.logger.log()` is used. This
@@ -42,7 +27,7 @@ class ImageClassification(pl.LightningModule):
 
     def __init__(self, cfg: OmegaConf):
         super().__init__()
-        self.cfg = cfg
+        self.cfg = cfg  #TODO check if this contains logger runtime params
         self.num_classes = cfg.model.network.params.num_classes
         self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
 
@@ -50,28 +35,44 @@ class ImageClassification(pl.LightningModule):
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
+        
+        # by default `pl.Trainer()` has an attribute `logger` so name 
+        # this custom one `logger_` to avoid conflicts
+        #self.logger_ = init_logger(cfg)
+        #print('logger_', self.logger_)
+        #print('vars(logger_)', vars(self.logger_))
+        
+        # update config with logger runtime parameters, and print
+        #self.cfg = self.logger_.cfg
+        #config_print(OmegaConf.to_yaml(cfg))
+        #log_config(cfg=cfg, path=self.logger_.artifact_path)
+
 
         # PyTorch-Lightning performs a partial validation epoch to ensure that
         # everything is correct. Use this to avoid logging metrics to W&B for that 
         self.sanity_check = True
 
-        # initialise metrics to track during training
-        ImageClassification.metrics = init_metrics(cfg)
+        # Initialise metrics to track during training
+        self.metrics = init_metrics(cfg)
 
-        # Hook functions - to make the hooks bound to the class (so that they can access 
-        # class attributes using `self.something`), the assignment must specify the class name:
+        # Initialise label to track metrics against
+        self.step_label = "iteration"
+
+        # Define hook functions
+        # to make the hooks bound to the class (so that they can access class attributes 
+        #  using `self.something`), the assignment must specify the class name as follows:
         # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
-        ImageClassification._training_step = training_step__ImageClassification
-        ImageClassification._training_step_end = training_step_end__ImageClassification
-        ImageClassification._training_epoch_end = training_epoch_end__ImageClassification
-        ImageClassification._validation_step = validation_step__ImageClassification
-        ImageClassification._validation_step_end = validation_step_end__ImageClassification
-        ImageClassification._validation_epoch_end = validation_epoch_end__ImageClassification
-        ImageClassification._test_step = test_step__ImageClassification
-        ImageClassification._test_step_end = test_step_end__ImageClassification
-        ImageClassification._test_epoch_end = test_epoch_end__ImageClassification
+        TaskModule._training_step = __HooksRegistry__[cfg.task]["training_step"]
+        TaskModule._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
+        TaskModule._training_epoch_end = __HooksRegistry__[cfg.task]["training_epoch_end"]
+        TaskModule._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
+        TaskModule._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
+        TaskModule._validation_epoch_end = __HooksRegistry__[cfg.task]["validation_epoch_end"]
+        TaskModule._test_step = __HooksRegistry__[cfg.task]["test_step"]
+        TaskModule._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
+        TaskModule._test_epoch_end = __HooksRegistry__[cfg.task]["test_epoch_end"]
 
-        # aggregation utilities
+        # Aggregation utilities
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
 
@@ -81,13 +82,6 @@ class ImageClassification(pl.LightningModule):
         self.trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         info_message("Trainable parameters: {:,d}".format(self.trainable_params))
        
-        # WandB logging:
-        if self.cfg.logger.log_to_wandb:
-            self.step_label = initilise_wandb_metrics(
-                metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc", "lr"], 
-                step_label = "iteration",
-            )
-
 
     def forward(self, x: Tensor) -> Tensor:
         """ Model forward pass.
