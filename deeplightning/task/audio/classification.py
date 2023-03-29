@@ -168,15 +168,10 @@ class AudioClassification(pl.LightningModule):
         """
 
         # log training metrics on the last batch only
-        if self.cfg.logger.log_to_wandb:
-            metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
-            metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
-        else:
-            self.logger.log_metrics(
-                metrics = {
-                    "train_acc": training_step_outputs[-1]["train_acc"].item()}, 
-                step = self.global_step)
+        metrics = {"train_acc": training_step_outputs[-1]["train_acc"].item()}
+        metrics[self.step_label] = self.global_step
+        self.logger_.log_metrics(metrics)
+        #wandb.log(metrics)
     
 
     def validation_step(self, batch, batch_idx):
@@ -255,13 +250,11 @@ class AudioClassification(pl.LightningModule):
         self.confusion_matrix.reset()
 
         # log validation metrics
-        if self.cfg.logger.log_to_wandb:
-            metrics[self.step_label] = self.global_step
-            if not self.sanity_check:
-                wandb.log(metrics)
-            self.sanity_check = False
-        else:
-            self.logger.log_metrics(metrics, step = self.global_step)
+        metrics[self.step_label] = self.global_step
+        if not self.sanity_check:
+            self.logger_.log_metrics(metrics)
+            #wandb.log(metrics)
+        self.sanity_check = False
 
         # EarlyStopping callback reads from `self.log()` but 
         # not from `self.logger.log()` thus this line. The key 
@@ -347,9 +340,7 @@ class AudioClassification(pl.LightningModule):
         self.confusion_matrix.reset()
         
         # log test metrics
-        if self.cfg.logger.log_to_wandb:
-            metrics[self.step_label] = self.global_step
-            wandb.log(metrics)
-        else:
-            self.logger.log_metrics(metrics, step = self.global_step)
+        metrics[self.step_label] = self.global_step
+        self.logger_.log_metrics(metrics)
+        #wandb.log(metrics)
         
