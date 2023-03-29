@@ -1,7 +1,7 @@
 from typing import Tuple
 from omegaconf import OmegaConf
 from torch import Tensor
-import pytorch_lightning as pl
+import lightning as pl
 
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.init.initializers import init_metrics
@@ -36,17 +36,10 @@ class TaskModule(pl.LightningModule):
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
         
-        # by default `pl.Trainer()` has an attribute `logger` so name 
-        # this custom one `logger_` to avoid conflicts
-        #self.logger_ = init_logger(cfg)
-        #print('logger_', self.logger_)
-        #print('vars(logger_)', vars(self.logger_))
-        
-        # update config with logger runtime parameters, and print
-        #self.cfg = self.logger_.cfg
-        #config_print(OmegaConf.to_yaml(cfg))
-        #log_config(cfg=cfg, path=self.logger_.artifact_path)
-
+        # migration from `pytorch_lightning==1.5.10` to `lightning==2.0.0`
+        self.training_step_outputs = {"train_loss": []}
+        self.validation_step_outputs = {"val_loss": []}
+        self.test_step_outputs = {"test_loss": []}
 
         # PyTorch-Lightning performs a partial validation epoch to ensure that
         # everything is correct. Use this to avoid logging metrics to W&B for that 
@@ -64,13 +57,13 @@ class TaskModule(pl.LightningModule):
         # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
         TaskModule._training_step = __HooksRegistry__[cfg.task]["training_step"]
         TaskModule._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
-        TaskModule._training_epoch_end = __HooksRegistry__[cfg.task]["training_epoch_end"]
+        TaskModule._on_training_epoch_end = __HooksRegistry__[cfg.task]["on_training_epoch_end"]
         TaskModule._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
         TaskModule._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
-        TaskModule._validation_epoch_end = __HooksRegistry__[cfg.task]["validation_epoch_end"]
+        TaskModule._on_validation_epoch_end = __HooksRegistry__[cfg.task]["on_validation_epoch_end"]
         TaskModule._test_step = __HooksRegistry__[cfg.task]["test_step"]
         TaskModule._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
-        TaskModule._test_epoch_end = __HooksRegistry__[cfg.task]["test_epoch_end"]
+        TaskModule._on_test_epoch_end = __HooksRegistry__[cfg.task]["on_test_epoch_end"]
 
         # Aggregation utilities
         self.gather_on_step = gather_on_step
@@ -120,42 +113,22 @@ class TaskModule(pl.LightningModule):
 
         Parameters
         ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
+        batch : object containing the data output by the dataloader.
         batch_idx : index of batch
-
         """
         return self._training_step(batch, batch_idx)
 
 
-    def training_step_end(self, training_step_outputs):
+    def training_step_end(self):
         """ Hook for `training_step_end`.
-
-        Parameters
-        ----------
-        training_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `training_step()`.
-
         """
-        self._training_step_end(training_step_outputs)
+        self._training_step_end()
 
 
-    def training_epoch_end(self, training_step_outputs):
-        """ Hook for `training_epoch_end`.
-        
-        Parameters
-        ----------
-        training_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `training_step()`.
-
+    def on_training_epoch_end(self):
+        """ Hook for `on_training_epoch_end`.
         """
-        self._training_epoch_end(training_step_outputs)
+        self._on_training_epoch_end()
     
 
     def validation_step(self, batch, batch_idx):
@@ -163,43 +136,23 @@ class TaskModule(pl.LightningModule):
 
         Parameters
         ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-        batch_idx : index of batch
+        batch : object containing the data output by the dataloader.
+        batch_idx : index of batch.
 
         """
         return self._validation_step(batch, batch_idx)
 
 
-    def validation_step_end(self, validation_step_outputs):
+    def validation_step_end(self):
         """ Hook for `validation_step_end`.
-
-        Parameters
-        ----------
-        validation_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `validation_step()`.
-
         """
-        return self._validation_step_end(validation_step_outputs)
+        return self._validation_step_end()
 
 
-    def validation_epoch_end(self, validation_epoch_outputs):
+    def on_validation_epoch_end(self):
         """ Hook for `validation_epoch_end`.
-
-        Parameters
-        ----------
-        validation_epoch_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). 
-            The output from `validation_step_end()`.
-
         """
-        self._validation_epoch_end(validation_epoch_outputs)
+        self._on_validation_epoch_end()
 
 
     def test_step(self, batch, batch_idx):
@@ -207,40 +160,19 @@ class TaskModule(pl.LightningModule):
 
         Parameters
         ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-        
+        batch : object containing the data output by the dataloader. 
         batch_idx: index of batch.
-        
         """
         return self._test_step(batch, batch_idx)
 
 
-    def test_step_end(self, test_step_outputs):
+    def test_step_end(self):
         """ Hook for `test_step_end`.
-
-        Parameters
-        ----------
-        test_step_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `test_step()`.
-
         """
-        return self._test_step_end(test_step_outputs)
+        return self._test_step_end()
 
 
-    def test_epoch_end(self, test_epoch_outputs):
-        """ Hook for `test_epoch_end`.
-
-        Parameters
-        ----------
-        test_epoch_outputs : (dict, list[dict]) metrics 
-            dictionary in single-device training, or list of 
-            metrics dictionaries in multi-device training (one 
-            element per device). The output from `test_step_end()`.
-            
+    def on_test_epoch_end(self):
+        """ Hook for `on_test_epoch_end`.
         """
-        self._test_epoch_end(test_epoch_outputs)
+        self._on_test_epoch_end()

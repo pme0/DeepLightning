@@ -2,7 +2,7 @@ from typing import Tuple
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
-import pytorch_lightning as pl
+import lightning as pl
 import wandb
 
 from deeplightning.init.imports import init_obj_from_config

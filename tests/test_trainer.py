@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, "..")
 from omegaconf import OmegaConf
 import torch
-import pytorch_lightning as pl
+import lightning as pl
 import pytest
 
 from deeplightning.config.load import load_config

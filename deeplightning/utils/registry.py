@@ -1,16 +1,16 @@
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 
 #from deeplightning.logger.wandb import wandbLogger
 from deeplightning.trainer.hooks.ImageClassification_hooks import (
     training_step__ImageClassification,
     training_step_end__ImageClassification,
-    training_epoch_end__ImageClassification,
+    on_training_epoch_end__ImageClassification,
     validation_step__ImageClassification,
     validation_step_end__ImageClassification,
-    validation_epoch_end__ImageClassification,
+    on_validation_epoch_end__ImageClassification,
     test_step__ImageClassification,
     test_step_end__ImageClassification,
-    test_epoch_end__ImageClassification)
+    on_test_epoch_end__ImageClassification)
 """
 from deeplightning.trainer.hooks.AudioClassification_hooks import (
     training_step__AudioClassification,
@@ -40,13 +40,13 @@ __HooksRegistry__ = {
     "ImageClassification": {
         "training_step": training_step__ImageClassification,
         "training_step_end": training_step_end__ImageClassification,
-        "training_epoch_end": training_epoch_end__ImageClassification,
+        "on_training_epoch_end": on_training_epoch_end__ImageClassification,
         "validation_step": validation_step__ImageClassification,
         "validation_step_end": validation_step_end__ImageClassification,
-        "validation_epoch_end": validation_epoch_end__ImageClassification,
+        "on_validation_epoch_end": on_validation_epoch_end__ImageClassification,
         "test_step": test_step__ImageClassification,
         "test_step_end": test_step_end__ImageClassification,
-        "test_epoch_end": test_epoch_end__ImageClassification,
+        "on_test_epoch_end": on_test_epoch_end__ImageClassification,
         "LOGGED_METRICS_NAMES": [
             "train_loss", "train_acc", 
             "val_loss", "val_acc", "val_confusion_matrix", "val_precision_recall",

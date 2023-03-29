@@ -44,14 +44,14 @@ engine:
   precision: 32
 
 train:
-  num_epochs: 5
+  num_epochs: 1
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
   ckpt_every_n_epochs: 1
   ckpt_save_top_k: 1
-  early_stop_metric: null
+  early_stop_metric: val_acc
   early_stop_delta: 0.001
   early_stop_patience: 3
 
