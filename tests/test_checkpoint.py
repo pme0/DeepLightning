@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.insert(0, "..")
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning.utilities import rank_zero_only
+import lightning as pl
+from lightning.utilities import rank_zero_only
 import pytest
 
 from tests.helpers.tools import compare_model_params
