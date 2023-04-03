@@ -131,14 +131,25 @@ For example, `model.optimizer.target` could be existing `deepspeed.ops.adam.Fuse
         - `params`, parameters for that class with matching keywords; include an empty `params` field if no parameters are required; 
         - note: `scheduler` requires additional `call` field with subfields `interval` (equal to `step` or `epoch`) and `frequency` (no. steps or epochs) for when to make a scheduler update;
 - `engine` requires computational engine parameters:
-    - `backend`, parallel backend {`deepspeed_stage_1`, `deepspeed_stage_2`, `deepspeed_stage_3`} for [DeepSpeed](https://pytorch-lightning.readthedocs.io/en/latest/advanced/advanced_gpu.html#deepspeed) backend or `ddp` for [DataParallel](https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.strategies.DDPStrategy.html#pytorch_lightning.strategies.DDPStrategy) backend;
-    - `gpus` is `null` for CPU-training or a list of gpu ids `[0,1]` for GPU-training;
+    - `accelerator`, CPU (`cpu`) or GPU (`gpu`);
+    - `strategy`, parallel backend {`deepspeed_stage_1`, `deepspeed_stage_2`, `deepspeed_stage_3`} for [DeepSpeed](https://pytorch-lightning.readthedocs.io/en/latest/advanced/advanced_gpu.html#deepspeed) backend or `ddp` for [DataParallel](https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.strategies.DDPStrategy.html#pytorch_lightning.strategies.DDPStrategy) backend;
+    - `devices` is number of cores int (`2`) for `cpu`-accelerated training, or gpu ids list (`[0,1]`) for `gpu`-accelerated training;
     - `num_nodes`, the number of computational nodes;
     - `precision`, floating-point precision {`16`, `32`};
 - `train` training parameters;
-  - num_epochs: 10
+    - `num_epochs`, number of training epochs;
+    - `val_every_n_epoch` how often to perform validation;
+    - `grad_accum_every_n_batches` gradient accumulation;
+    - `ckpt_resume_path` resume training from checkpoint;
+    - `ckpt_monitor_metric` e.g. `val_acc`, used in `ModelCheckpoint` callback;
+    - `ckpt_every_n_epochs` how often to perform checkpointing;
+    - `ckpt_save_top_k` how many checkpoints to store;
+    - `early_stop_metric` e.g. `val_acc`, used in `EarlyStopping` callback;
 
-- `logger` requires {`type`,`params`}, format similar to `model`; and other parameters related to logging;
+- `logger` logger parameters;
+    - `name` logger name;
+    - `project_name` project name;
+    - `log_every_n_steps` logging frequency;
  
 ### Example
 ```python
