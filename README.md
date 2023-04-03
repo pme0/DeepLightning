@@ -49,9 +49,8 @@ trainer.fit(model, data)
 
 ### Features
 - Simplified trainer with **PyTorch-Lightning**
-- Memory-efficinet parallel training with **DeepSpeed**
-- Cross-platform reproducibility and project management with **MLflow**
 - Experiment tracking and logging with **Weights and Biases**
+- Memory-efficinet parallel training with **DeepSpeed**
 - Deployment (prediction API) with **Flask**
 - Implementations of popular tasks/models with [**Examples**](https://github.com/pme0/DeepLightning/tree/master/examples)
 
@@ -61,12 +60,13 @@ trainer.fit(model, data)
 
 Pre-requirement: Anaconda (installation instructions [here](https://docs.anaconda.com/anaconda/install)).
 
-All dependencies in the environment `conda_env.yaml` will be installed automatically when running the `MLproject` file via MLflow (see [Usage](#usage)). Only basic requirements are needed to run the project:
+Clone repo:
 ```bash
-./install.sh
+git clone https://github.com/pme0/DeepLightning.git
+cd DeepLightning
 ```
 
-Optionally, creating the environment manually makes it available also for development:
+Create conda environment:
 ```bash
 conda env create -f conda_env.yaml
 conda activate deeplightning
@@ -76,24 +76,12 @@ conda activate deeplightning
 
 ## Run
 
-The syntax for running a project is 
+for model **training** use
 ```bash
-./run.sh <mode> <cfg>
+python train.py --cfg configs/base.yaml
 ```
-- `mode` is the run modality: 'train' for projects involving training and testing; 'infer' for projects involving only inference;
-- `cfg` is the configuration YAML file;
-
-This command will run the appropriate entry point from the MLflow project file `MLproject` under the conda enviroment secified there.
+where `cfg` is the configuration YAML file;
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
-
-For example, for model **training** use
-```bash
-./run.sh train configs/ObjectRecognition_vit.yaml
-```
-or for model **inference** use
-```bash
-./run.sh infer configs/PedestrianDetecton_yolo.yaml
-```
 
 **2. Monitor the training progress:**
 
@@ -126,8 +114,6 @@ When a training run has been initiated, a link will be displayed in the terminal
 All config fields labelled `type` correspond to target classes. The format is `MODULE.CLASS` and the code will load class `CLASS` from `MODULE.py` (relative path). Note that `MODULE` can itself be composite, `X.Y.Z`, in which case the class `CLASS` will be loaded from `X/Y/Z.py`. 
 For example, `model.optimizer.target` could be existing `deepspeed.ops.adam.FusedAdam` or user-defined in `losses.custom.MyLoss`.
 
-<!--It's possible to drop some of the parameters to obtain a light config file, see `deeplightning/defaults.py`. 
-For reproducibility and transparancy, parameters that affect training are not granted defaults.-->
 
 ### Details
 - `data` requires 
@@ -156,8 +142,12 @@ For reproducibility and transparancy, parameters that affect training are not gr
  
 ### Example
 ```python
-#@filename: cfg.yaml
-
+modes: 
+  train: true
+  test: false
+  
+task: ImageClassification
+  
 data:
   root: /data
   dataset: MNIST
@@ -192,23 +182,33 @@ model:
     params:
 
 engine:
-  backend: deepspeed_stage_3
-  gpus: [0,1]
+  accelerator: gpu
+  strategy: deepspeed_stage_3
+  devices: [0,1]
   num_nodes: 1
   precision: 32
-
+  
 train:
   num_epochs: 10
   val_every_n_epoch: 1
-  accumulator_epoch: 0
-  accumulator_factor: 1
-  resume_ckpt: null
+  grad_accum_from_epoch: 0
+  grad_accum_every_n_batches: 32
+  ckpt_resume_path: null
+  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
+  ckpt_every_n_epochs: 1
+  ckpt_save_top_k: 1
+  early_stop_metric: null  # used in `EarlyStopping` callback
+  early_stop_delta: 0.001
+  early_stop_patience: 3
 
+test:
+  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
+  
 logger:
-  type: pytorch_lightning.loggers.MLFlowLogger
-  params:
-    experiment_name: Default
-    tracking_uri: mlruns
+  name: wandb
+  project_name: testproject
+  tags: ["_"] # cannot be empty
+  notes: null
   log_every_n_steps: 10
 ```
 
