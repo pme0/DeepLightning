@@ -1,8 +1,7 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
-import os
+import time
 from omegaconf import OmegaConf
-import wandb
 from lightning import Trainer
 from lightning.pytorch.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
@@ -30,7 +29,7 @@ class DLTrainer(Trainer):
         self.cfg, logger = self.init_logger(cfg)
 
         # Initialise callbacks
-        callbacks = self.init_callbacks(cfg, logger.artifact_path)
+        callbacks = self.init_callbacks(self.cfg, logger.artifact_path)
 
         # Initialise parent class
         args = {
@@ -53,10 +52,21 @@ class DLTrainer(Trainer):
                 tags = cfg.logger.tags,
                 log_model = "all",
             )
+            
+            # Sometimes `logger.experiment.dir` returns a function instead of the
+            # expected string; this time timeout loop attempts to fix this issue
+            timeout = 0
+            while not isinstance(logger.experiment.dir, str):
+                if timeout > 5:
+                    print("\n`logger.experiment.dir` is function instead of string: {}\n\n".format(logger.experiment.dir))
+                    raise AttributeError
+                time.sleep(1)
+                timeout += 1
+
             logger.run_id = logger.experiment.id
             logger.run_name = logger.experiment.name
-            logger.run_dir = logger.experiment.dir.replace("/files", "")
             logger.artifact_path = logger.experiment.dir
+            logger.run_dir = logger.experiment.dir.replace("/files", "")
 
             # add logger params to config - so that it can be stored with the runtime parameters
             cfg = add_logger_params_to_config(
@@ -68,7 +78,7 @@ class DLTrainer(Trainer):
             )
 
             logger.step_label = init_wandb_metrics(
-                metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"], #["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
+                metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
                 step_label = "iteration",
             )
 

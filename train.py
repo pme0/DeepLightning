@@ -4,7 +4,6 @@ import wandb
 from omegaconf import OmegaConf
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from deeplightning.utils.cleanup import clean_phantom_folder
 from deeplightning.utils.messages import info_message, warning_message, error_message, config_print
 from deeplightning.config.load import load_config
 from deeplightning.init.initializers import init_everything
