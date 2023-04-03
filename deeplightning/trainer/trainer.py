@@ -1,14 +1,13 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
-import os
+import time
 from omegaconf import OmegaConf
-import wandb
-from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import (GradientAccumulationScheduler,
+from lightning import Trainer
+from lightning.pytorch.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
                                          ModelCheckpoint,
                                          EarlyStopping)
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.config.load import log_config
@@ -22,7 +21,7 @@ from deeplightning.utils.registry import (__LoggerRegistry__,
 class DLTrainer(Trainer):
     """ Deep Lightning Trainer.
 
-    Inherits from `pytorch_lightning.Trainer`
+    Inherits from `lightning.Trainer`
     """
     def __init__(self, cfg: OmegaConf, args: dict) -> None:
 
@@ -30,7 +29,7 @@ class DLTrainer(Trainer):
         self.cfg, logger = self.init_logger(cfg)
 
         # Initialise callbacks
-        callbacks = self.init_callbacks(cfg, logger.artifact_path)
+        callbacks = self.init_callbacks(self.cfg, logger.artifact_path)
 
         # Initialise parent class
         args = {
@@ -53,10 +52,21 @@ class DLTrainer(Trainer):
                 tags = cfg.logger.tags,
                 log_model = "all",
             )
+            
+            # Sometimes `logger.experiment.dir` returns a function instead of the
+            # expected string; this time timeout loop attempts to fix this issue
+            timeout = 0
+            while not isinstance(logger.experiment.dir, str):
+                if timeout > 5:
+                    print("\n`logger.experiment.dir` is function instead of string: {}\n\n".format(logger.experiment.dir))
+                    raise AttributeError
+                time.sleep(1)
+                timeout += 1
+
             logger.run_id = logger.experiment.id
             logger.run_name = logger.experiment.name
-            logger.run_dir = logger.experiment.dir.replace("/files", "")
             logger.artifact_path = logger.experiment.dir
+            logger.run_dir = logger.experiment.dir.replace("/files", "")
 
             # add logger params to config - so that it can be stored with the runtime parameters
             cfg = add_logger_params_to_config(
@@ -68,7 +78,7 @@ class DLTrainer(Trainer):
             )
 
             logger.step_label = init_wandb_metrics(
-                metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"], #["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
+                metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
                 step_label = "iteration",
             )
 
@@ -88,7 +98,7 @@ class DLTrainer(Trainer):
     def init_callbacks(self, cfg: OmegaConf, artifact_path: str) -> List[Any]:
         """ Initialize callback functions
         """
-        callbacks = []
+        self.callbacks_dict = {}
 
         # ACCUMULATE GRADIENTS: scheduling={X: Y} means start 
         # accumulating from epoch X (0-indexed) and accumulate 
@@ -98,16 +108,16 @@ class DLTrainer(Trainer):
                 cfg.train.grad_accum_from_epoch: 
                 cfg.train.grad_accum_every_n_batches}
         )
-        callbacks += [accumulator]
+        self.callbacks_dict["accumulator"] = accumulator
 
         # TRACK LEARNING RATE: logged at the same frequency 
         # as `log_every_n_steps` in Trainer()
         lr_monitor = LearningRateMonitor(
             logging_interval="step",
         )
-        callbacks += [lr_monitor]
+        self.callbacks_dict["lr_monitor"] = lr_monitor
 
-        # MODEL CHECKPOINTING: save model 'every_n_epochs'
+        # MODEL CHECKPOINTING: save model `every_n_epochs`
         filename_metric = "" #TODO make this user-configurable OR set automatically from task
         checkpoint = ModelCheckpoint(
             dirpath = artifact_path,
@@ -119,7 +129,7 @@ class DLTrainer(Trainer):
             filename = "{epoch}-{step}-{val_acc:.4f}",  #TODO put filename_metric here
             save_on_train_epoch_end = False # False: save at validation_epoch_end
         )
-        callbacks += [checkpoint]
+        self.callbacks_dict["checkpoint"] = checkpoint
 
         # EARLY STOPPING: stop training when 'monitor' metric asymptotes
         if cfg.train.early_stop_metric is not None:
@@ -129,6 +139,6 @@ class DLTrainer(Trainer):
                 patience = cfg.train.early_stop_patience,
                 check_on_train_epoch_end = False # False: check at validation_epoch_end
             )
-            callbacks += [earlystopping]
+            self.callbacks_dict["earlystopping"] = earlystopping
 
-        return callbacks
+        return list(self.callbacks_dict.values())  # Trainer takes a list

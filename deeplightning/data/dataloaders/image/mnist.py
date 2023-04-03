@@ -2,7 +2,7 @@ from omegaconf import OmegaConf
 from torchvision import transforms as T
 from torchvision import datasets
 from torch.utils.data import DataLoader, random_split
-import pytorch_lightning as pl
+import lightning as pl
 
 from deeplightning.utils.messages import info_message
 from deeplightning.data.transforms.transforms import load_transforms

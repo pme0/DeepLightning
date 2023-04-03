@@ -1,7 +1,7 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningModule, LightningDataModule
+from lightning import LightningModule, LightningDataModule
 
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.init.imports import init_module

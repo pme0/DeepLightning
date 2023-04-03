@@ -2,8 +2,8 @@ import sys
 import argparse
 import wandb
 from omegaconf import OmegaConf
+from lightning.pytorch.callbacks import ModelCheckpoint
 
-from deeplightning.utils.cleanup import clean_phantom_folder
 from deeplightning.utils.messages import info_message, warning_message, error_message, config_print
 from deeplightning.config.load import load_config
 from deeplightning.init.initializers import init_everything
@@ -36,28 +36,34 @@ if __name__ == "__main__":
     try:
 
         if cfg.modes.train:
+            
             info_message("Performing training and validation.")
             trainer.fit(
                 model = model,
                 datamodule = data,
-                ckpt_path = cfg.train.ckpt_resume_path,
-            )
+                ckpt_path = cfg.train.ckpt_resume_path,)
+            
             if cfg.modes.test:
-                info_message(f"Performing testing with last trained model.")
+
+                which_ckpt = None
+                if "checkpoint" in trainer.callbacks_dict:
+                    if isinstance(trainer.callbacks_dict["checkpoint"], ModelCheckpoint):
+                        which_ckpt = "best"
+
+                info_message("Performing testing with {} model".format("best" if which_ckpt == "best" else "last"))
                 trainer.test(
                     model = model,
-                    #ckpt_path = "best",
-                    datamodule = data,
-                )
+                    ckpt_path = which_ckpt,
+                    datamodule = data,)
         else:
             if cfg.modes.test:
+
                 info_message(f"Performing testing with pretrained model '{cfg.test.ckpt_test_path}'.")
                 #https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html#testing
                 trainer.test(
                     model = model,
                     ckpt_path = cfg.test.ckpt_test_path,
-                    datamodule = data,
-                )
+                    datamodule = data,)
 
     except KeyboardInterrupt as e:
 
