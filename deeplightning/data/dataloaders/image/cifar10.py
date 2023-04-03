@@ -1,7 +1,7 @@
 from omegaconf import OmegaConf
 from torchvision.datasets import CIFAR10 as torchvisionCIFAR10
 from torch.utils.data import DataLoader, random_split
-import pytorch_lightning as pl
+import lightning as pl
 
 from deeplightning.utils.messages import info_message
 from deeplightning.data.transforms.transforms import load_transforms

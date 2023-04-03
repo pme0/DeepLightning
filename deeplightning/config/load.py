@@ -62,7 +62,7 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
             f"(__LoggerRegistry__={__LoggerRegistry__})."
         )
         raise ValueError
-
+    '''
     if cfg.engine.devices is not None:
         if not torch.cuda.is_available():
             warning_message(
@@ -79,7 +79,7 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
                 "(currently using backend '{}').".format(cfg.engine.strategy)
             )
             cfg.engine.strategy = None
-
+    '''
 
     if cfg.engine.strategy is not None:
         if "deepspeed" in cfg.engine.strategy and \

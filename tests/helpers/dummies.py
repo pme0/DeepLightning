@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader, Dataset
-import pytorch_lightning as pl
+import lightning as pl
 
 
 class DummyDataset(Dataset):

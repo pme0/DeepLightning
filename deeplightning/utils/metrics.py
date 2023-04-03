@@ -28,6 +28,17 @@ class Metric_PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 
 
 	def draw(self, precision: Tensor, recall: Tensor, thresholds: Tensor, subset: str,  epoch: int) -> pltFigure:
+		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
+
+		Parameters
+		----------
+		precision : precisions.
+		recall : recalls.
+		thresholds: threshold
+		subset : data subset (e.g. 'train' or 'val), to be used
+			as a label in the figure.
+		epoch : current epoch, to be used as a label in the figure.
+		"""
 		assert self.num_classes == len(precision) and self.num_classes == len(recall)
 		
 		fig = plt.figure()
@@ -56,13 +67,15 @@ class Metric_ConfusionMatrix(MulticlassConfusionMatrix):
 		super().__init__(**args)
 
 
-	def draw(self, cm: Tensor, subset: str,  epoch: int) -> pltFigure:
-		assert self.num_classes == cm.shape[0] and self.num_classes == cm.shape[1]
-		cm = np.round(100*cm.numpy()).astype(int)
+	def draw(self, confusion_matrix: Tensor, subset: str,  epoch: int) -> pltFigure:
+		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
+		"""
+		assert self.num_classes == confusion_matrix.shape[0] and self.num_classes == confusion_matrix.shape[1]
+		confusion_matrix = np.round(100*confusion_matrix.numpy()).astype(int)
 		
 		fig = plt.subplot()
 		cbar_args = {"label": "Correct predictions (%), normalized by true class"}
-		sn.heatmap(data = cm, annot = True, fmt = "g", square = True, 
+		sn.heatmap(data = confusion_matrix, annot = True, fmt = "g", square = True, 
 			cmap = "Blues", vmin=0, vmax=100, cbar_kws=cbar_args)
 		plt.title(f"Confusion Matrix [{subset}, epoch {epoch}]")
 		plt.xlabel("Predicted class")
