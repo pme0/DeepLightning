@@ -2,11 +2,10 @@
   <b>Deep Lightning</b><br>
 </h1>
 <p align="center">
-    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.8-ff69b4" /></a>
-    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-1.10-orange" /></a>
-    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/PyTorchLightning-1.5-yellow" /></a>
+    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.10-ff69b4" /></a>
+    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.0-orange" /></a>
+    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/PyTorchLightning-2.0-yellow" /></a>
     <a href= "https://www.deepspeed.ai"><img src="https://img.shields.io/badge/DeepSpeed-0.5-blue" /></a>
-    <a href= "https://mlflow.org"><img src="https://img.shields.io/badge/MLflow-1.24-brightgreen" /></a>
 </p>
 
 **Deep Lightning** is a configuration-based wrapper for training Deep Learning models with focus on parallel training, cross-platform compatibility and reproducibility. The philosophy is simple: from configuration to trackable and reproducible deep learning.
@@ -265,15 +264,15 @@ See [`examples`](https://github.com/pme0/DeepLightning/tree/master/examples) for
 
 # Further Reading
 
+- **Pytorch-Lightning**
+  - Lightning organises modules as hardware-agnostic and loop-less code; separated model and backend engine for scalable deep learning
+  - :information_source: [website](https://lightning.ai/)  :floppy_disk: [github](https://github.com/Lightning-AI/lightning)
+- **W&B** 
+  - W&B tracks machine learning experiments.
+  -  :information_source: [website](https://wandb.ai/site)  :floppy_disk: [github](https://github.com/wandb/wandb)
 - **DeepSpeed** 
   - DeepSpeed is a distributed backend which reduces the training memory footprint with a Zero Redundancy Optimizer (ZeRO). It partitions model states and gradients to save memory, unlike traditional data parallelism where memory states are replicated across data-parallel processes. This allows training of large models with large batch sizes.
   - :information_source: [website](https://www.deepspeed.ai)  :floppy_disk: [github](https://github.com/microsoft/DeepSpeed)  :page_with_curl: [ZeRO-3](https://arxiv.org/abs/1910.02054)
-- **Pytorch-Lightning**
-  - PyTorch-Lightning organizes PyTorch code into hardware-agnostic, loop-less modules to make development quicker and less error-prone. It separates model from backend engine, making deep learning scalable to any distributed hardware, seemlessly.
-  - :information_source: [website](https://www.pytorchlightning.ai)  :floppy_disk: [github](https://github.com/PyTorchLightning/pytorch-lightning)
-- **MLflow** 
-  - MLflow machine learning experimentation cycle manager. Manage project environments and dependencies, reproduce experiments on any platform, track and visualize metrics during training, record and query experiment results.
-  -  :information_source: [website](https://mlflow.org)  :floppy_disk: [github](https://github.com/mlflow/mlflow)
 - **Flask**
   - Flask is a server-side web framework that supports building and deploying web applications such as ML prediction APIs.
   - :information_source: [website](https://flask.palletsprojects.com)  :floppy_disk: [github](https://github.com/pallets/flask)
