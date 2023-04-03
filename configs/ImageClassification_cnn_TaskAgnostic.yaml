@@ -39,7 +39,7 @@ model:
 engine:
   accelerator: cpu
   strategy: ddp
-  devices: [0]
+  devices: 1
   num_nodes: 1
   precision: 32
 
@@ -47,11 +47,12 @@ train:
   num_epochs: 1
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
-  grad_accum_every_n_batches: 1
+  grad_accum_every_n_batches: 32
   ckpt_resume_path: null
+  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
   ckpt_every_n_epochs: 1
   ckpt_save_top_k: 1
-  early_stop_metric: val_acc
+  early_stop_metric: null
   early_stop_delta: 0.001
   early_stop_patience: 3
 
@@ -60,12 +61,7 @@ test:
   
 logger:
   name: wandb
-  log_to_wandb: true
   project_name: trial
   tags: ["image", "classification", "cnn"] # cannot be empty
   notes: null
-  type: pytorch_lightning.loggers.MLFlowLogger
-  params:
-    experiment_name: Default
-    tracking_uri: mlruns
-  log_every_n_steps: 10
+  log_every_n_steps: 20

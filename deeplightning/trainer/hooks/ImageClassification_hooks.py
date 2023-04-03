@@ -41,12 +41,11 @@ def training_step__ImageClassification(self, batch, batch_idx):
 def training_step_end__ImageClassification(self):
     """ Hook for `training_step_end`.
     """
-     
     if self.global_step % self.cfg.logger.log_every_n_steps == 0:
 
         metrics = {}
 
-        metrics["train_loss"] = torch.stack(self.training_step_outputs["loss"]).mean()
+        metrics["train_loss"] = torch.stack(self.training_step_outputs["train_loss"]).mean()
         self.training_step_outputs.clear()  # free memory
 
         # accuracy (batch only)
@@ -54,7 +53,7 @@ def training_step_end__ImageClassification(self):
         self.metrics["Accuracy_train"].reset()
 
         # log learning rate
-        metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
+        #metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
             
         # log training metrics
         metrics[self.step_label] = self.global_step
@@ -140,11 +139,17 @@ def on_validation_epoch_end__ImageClassification(self):
         self.logger.log_metrics(metrics)
     self.sanity_check = False
 
-    # EarlyStopping callback reads from `self.log()`, not from `self.logger.log()`, 
-    # thus this line. The key `m = self.cfg.train.early_stop_metric` must exist in `metrics`.
+    # The following is required for EarlyStopping and ModelCheckpoint callbacks to work properly. 
+    # Callbacks read from `self.log()`, not from `self.logger.log()`, so need to log there.
+    # [EarlyStopping] key `m = self.cfg.train.early_stop_metric` must exist in `metrics`
     if self.cfg.train.early_stop_metric is not None:
-        m = self.cfg.train.early_stop_metric
-        self.log(m, metrics[m], sync_dist=True)
+        m_earlystop = self.cfg.train.early_stop_metric
+        self.log(m_earlystop, metrics[m_earlystop], sync_dist=True)
+    # [ModelCheckpoint] key `m = self.cfg.train.ckpt_monitor_metric` must exist in `metrics`
+    if self.cfg.train.ckpt_monitor_metric is not None:
+        m_checkpoint = self.cfg.train.early_stop_metric
+        if m_checkpoint != m_earlystop:
+            self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
 
 
 def test_step__ImageClassification(self, batch, batch_idx):
