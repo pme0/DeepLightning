@@ -3,8 +3,8 @@
 </h1>
 <p align="center">
     <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.10-brightgreen" /></a>
-    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.0-orange" /></a>
-    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/PyTorchLightning-2.0-yellow" /></a>
+    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.0-yellow" /></a>
+    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/PyTorchLightning-2.0-orange" /></a>
     <a href= "https://www.deepspeed.ai"><img src="https://img.shields.io/badge/DeepSpeed-0.5-blue" /></a>
 </p>
 
