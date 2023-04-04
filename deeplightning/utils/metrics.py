@@ -43,7 +43,7 @@ class Metric_PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		
 		fig = plt.figure()
 		for i in range(self.num_classes):
-			plt.plot(recall[i], precision[i], label=i)
+			plt.plot(recall[i].cpu(), precision[i].cpu(), label=i)
 		plt.title(f"Precision-Recall Curve [{subset}, epoch {epoch}]")
 		plt.xlabel("Recall")
 		plt.ylabel("Precision")
@@ -71,7 +71,7 @@ class Metric_ConfusionMatrix(MulticlassConfusionMatrix):
 		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
 		"""
 		assert self.num_classes == confusion_matrix.shape[0] and self.num_classes == confusion_matrix.shape[1]
-		confusion_matrix = np.round(100*confusion_matrix.numpy()).astype(int)
+		confusion_matrix = np.round(100*confusion_matrix.cpu().numpy()).astype(int)
 		
 		fig = plt.subplot()
 		cbar_args = {"label": "Correct predictions (%), normalized by true class"}
