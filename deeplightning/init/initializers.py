@@ -1,6 +1,7 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
 from omegaconf import OmegaConf
+import torch
 from lightning import LightningModule, LightningDataModule
 
 from deeplightning.config.defaults import __ConfigGroups__
@@ -70,7 +71,7 @@ def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModul
     return model, data, trainer
 
 
-def init_metrics(cfg: OmegaConf) -> dict:
+def init_metrics(cfg: OmegaConf, device: torch.device) -> dict:
     """ Initialize performance metrics
     """
-    return {k: v(cfg) for k, v in __MetricsRegistry__[cfg.task].items()}
+    return {k: v(cfg).to(device) for k, v in __MetricsRegistry__[cfg.task].items()}
