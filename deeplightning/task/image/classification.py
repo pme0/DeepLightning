@@ -1,5 +1,6 @@
 from typing import Tuple
 from omegaconf import OmegaConf
+import torch
 from torch import Tensor
 import lightning as pl
 
@@ -46,7 +47,8 @@ class TaskModule(pl.LightningModule):
         self.sanity_check = True
 
         # Initialise metrics to track during training
-        self.metrics = init_metrics(cfg)
+        torch_device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
+        self.metrics = init_metrics(cfg, device=torch_device)
 
         # Initialise label to track metrics against
         self.step_label = "iteration"
