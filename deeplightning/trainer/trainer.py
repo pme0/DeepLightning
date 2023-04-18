@@ -16,6 +16,7 @@ from deeplightning.logger.wandb import init_wandb_metrics
 from deeplightning.utils.messages import config_print
 from deeplightning.utils.registry import (__LoggerRegistry__, 
                                           __HooksRegistry__)
+from deeplightning.utils.python_utils import flatten_dict
 
 
 class DLTrainer(Trainer):
@@ -77,6 +78,13 @@ class DLTrainer(Trainer):
                 artifact_path = logger.artifact_path,
             )
 
+            # store config parameters - used in W&B for
+            #logger.experiment.config.update(cfg)
+            print(flatten_dict(cfg))
+            print(type(cfg))
+            logger.experiment.config.update(flatten_dict(cfg))
+
+            # intialize step label for each metrics
             logger.step_label = init_wandb_metrics(
                 metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
                 step_label = "iteration",
@@ -85,6 +93,10 @@ class DLTrainer(Trainer):
             log_config(cfg=cfg, path=logger.artifact_path)
             config_print(OmegaConf.to_yaml(cfg))
 
+        elif cfg.logger.name == "neptune":
+            raise NotImplementedError
+        else:
+            raise NotImplementedError(f"Logger not supported (cfg.logger.name='{cfg.logger.name}' )")
 
         # ensure all required attributes have been initialised
         attributes = ["run_id", "run_name", "run_dir", "artifact_path"]

@@ -1,17 +1,25 @@
-task: classification
+modes: 
+  train: true
+  test: false
+  
+task: ImageClassification
+
 data:
-  root: /Users/pme12/data/
+  root: /Users/pme/data/
   dataset: MNIST
+  image_size: 28
+  num_channels: 1
+  num_classes: 10
   num_workers: 4
   batch_size: 256
   module:
-    target: deeplightning.data.dataloaders.mnist.MNIST
+    target: deeplightning.data.dataloaders.image.mnist.MNIST
 
 model:
   module:
-    target: deeplightning.task.img_classif.ImageClassification
+    target: deeplightning.task.image.classification.TaskModule
   network:
-    target: deeplightning.model.cnn.SimpleCNN
+    target: deeplightning.model.cnn.SymbolCNN
     params: 
       num_classes: 10
       num_channels: 1
@@ -33,8 +41,9 @@ model:
     params:
   
 engine:
-  backend: deepspeed_stage_3
-  gpus: null
+  accelerator: cpu  # {cpu,gpu}
+  strategy: auto    # {auto, ddp, deepspeed}
+  devices: 1        # {1, [0,1]}
   num_nodes: 1
   precision: 32
 
@@ -44,14 +53,16 @@ train:
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
+  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
   ckpt_every_n_epochs: 1
-  early_stop_metric: null
+  ckpt_save_top_k: 1
+  early_stop_metric: null  # used in `EarlyStopping` callback
   early_stop_delta: 0.001
   early_stop_patience: 3
 
 logger:
-  type: pytorch_lightning.loggers.MLFlowLogger
-  params:
-    experiment_name: Default
-    tracking_uri: mlruns
-  log_every_n_steps: 10
+  name: wandb
+  project_name: trial
+  tags: ["_"] # cannot be empty
+  notes: null
+  log_every_n_steps: 20
