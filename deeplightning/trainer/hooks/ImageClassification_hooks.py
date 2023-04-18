@@ -147,9 +147,8 @@ def on_validation_epoch_end__ImageClassification(self):
         self.log(m_earlystop, metrics[m_earlystop], sync_dist=True)
     # [ModelCheckpoint] key `m = self.cfg.train.ckpt_monitor_metric` must exist in `metrics`
     if self.cfg.train.ckpt_monitor_metric is not None:
-        m_checkpoint = self.cfg.train.early_stop_metric
-        if m_checkpoint != m_earlystop:
-            self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
+        m_checkpoint = self.cfg.train.ckpt_monitor_metric
+        self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
 
 
 def test_step__ImageClassification(self, batch, batch_idx):
