@@ -1,11 +1,10 @@
 from omegaconf import OmegaConf
-from torchvision import transforms as T
-from torchvision import datasets
+from torchvision.datasets import mnist
 from torch.utils.data import DataLoader, random_split
 import lightning as pl
 
-from deeplightning.utils.messages import info_message
 from deeplightning.data.transforms.transforms import load_transforms
+from deeplightning.utils.messages import info_message
 
 
 class MNIST(pl.LightningDataModule):
@@ -44,24 +43,24 @@ class MNIST(pl.LightningDataModule):
 
 
     def prepare_data(self) -> None:
-        datasets.MNIST(
+        mnist.MNIST(
             root = self.cfg.data.root, 
             train = True, 
             download = True)
-        datasets.MNIST(
+        mnist.MNIST(
             root = self.cfg.data.root, 
             train = False, 
             download = True)
 
 
     def setup(self, stage) -> None:
-        self.test_ds = datasets.MNIST(
+        self.test_ds = mnist.MNIST(
             root = self.cfg.data.root, 
             train = False, 
             download = False, 
             transform = self.test_transforms
         )
-        mnist_full = datasets.MNIST(
+        mnist_full = mnist.MNIST(
             root = self.cfg.data.root,
             train = True,
             download = False,

@@ -7,9 +7,7 @@ from lightning import LightningModule, LightningDataModule
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.init.imports import init_module
 from deeplightning.trainer.trainer import DLTrainer
-from deeplightning.utils.registry import (__MetricsRegistry__, 
-                                          __LoggerRegistry__, 
-                                          __HooksRegistry__)
+from deeplightning.task.registry import __MetricsRegistry__
 
 
 
@@ -42,25 +40,6 @@ def init_trainer(cfg: OmegaConf) -> DLTrainer:
         }
     return DLTrainer(cfg, args)
 
-'''
-def init_logger(cfg: OmegaConf) -> None:
-        """ Initialize Logger
-        """
-
-        # load logger
-        logger = __LoggerRegistry__[cfg.logger.name](
-            cfg = cfg,
-            logged_metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"]
-        )
-
-        # ensure all required attributes have been initialised
-        attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
-        for attribute in attributes:
-            if not hasattr(logger, attribute):
-                raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
-            
-        return logger
-'''
 
 def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
     """ Initialize main modules
