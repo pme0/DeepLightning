@@ -14,7 +14,7 @@ from deeplightning.config.load import log_config
 from deeplightning.logger.helpers import add_logger_params_to_config
 from deeplightning.logger.wandb import init_wandb_metrics
 from deeplightning.utils.messages import config_print
-from deeplightning.utils.registry import (__LoggerRegistry__, 
+from deeplightning.task.registry import (__LoggerRegistry__, 
                                           __HooksRegistry__)
 from deeplightning.utils.python_utils import flatten_dict
 
@@ -45,7 +45,6 @@ class DLTrainer(Trainer):
         """ Initialize logger
         """
 
-        #logger = __LoggerRegistry__[cfg.logger.name](cfg = cfg, logged_metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"])
         if cfg.logger.name == "wandb":
             logger = WandbLogger(
                 project = cfg.logger.project_name,
@@ -55,7 +54,7 @@ class DLTrainer(Trainer):
             )
             
             # Sometimes `logger.experiment.dir` returns a function instead of the
-            # expected string; this time timeout loop attempts to fix this issue
+            # expected string; this timeout loop attempts to fix this issue
             timeout = 0
             while not isinstance(logger.experiment.dir, str):
                 if timeout > 5:
@@ -78,10 +77,7 @@ class DLTrainer(Trainer):
                 artifact_path = logger.artifact_path,
             )
 
-            # store config parameters - used in W&B for
-            #logger.experiment.config.update(cfg)
-            print(flatten_dict(cfg))
-            print(type(cfg))
+            # store config parameters - used in W&B for filtering experiments
             logger.experiment.config.update(flatten_dict(cfg))
 
             # intialize step label for each metrics
