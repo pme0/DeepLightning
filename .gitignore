@@ -5,6 +5,10 @@ mlruns/
 logs/
 wandb/
 lightning_logs/
+tests/mlruns/
+tests/logs/
+tests/wandb/
+tests/lightning_logs/
 
 # model weights
 *.pt
