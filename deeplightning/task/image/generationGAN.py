@@ -22,16 +22,17 @@ class ImageReconstructionGAN(pl.LightningModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.device = ""
+        #self.device = 
 
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
-        self.d_optimizer = init_obj_from_config(cfg.model.optimizer, self.model.discriminator.parameters())
-        self.g_optimizer = init_obj_from_config(cfg.model.optimizer, self.model.generator.parameters())
+        self.d_optimizer = init_obj_from_config(cfg.model.optimizer.discriminator, self.model.discriminator.parameters())
+        self.g_optimizer = init_obj_from_config(cfg.model.optimizer.generator, self.model.generator.parameters())
         self.d_scheduler = init_obj_from_config(cfg.model.scheduler, self.d_optimizer)
         self.g_scheduler = init_obj_from_config(cfg.model.scheduler, self.g_optimizer)
        
-        self.maxlen = len(str(self.cfg.train.num_epochs))
+        #self.maxlen = len(str(self.cfg.train.num_epochs))
+        self.train_what == "discriminator"
 
         trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         info_message("Trainable parameters: {:,d}".format(trainable_params))
@@ -83,6 +84,27 @@ class ImageReconstructionGAN(pl.LightningModule):
                 run_id = self.logger.run_id
             )
 
+
+    def _find_what_to_train(self, step: int, optim_steps_d: int, optim_steps_g: int) -> str:
+        """
+        Find which subnetwork to optimize (discriminator or generator) given the 
+        current step. This assumes that we start by optimizing the discriminator 
+        and then alternate between discriminator and generator according to the 
+        schedule implied by the number of optimization steps taken by each.
+
+        Parameters
+        ----------
+        step : the current training step, it should be `self.global_step`
+        optim_steps_d : number of consecutive steps to optimize the discriminator
+        optim_steps_g : number of consecutive steps to optimize the generator
+        """
+        r = step % (optim_steps_d + optim_steps_g)
+        if r < optim_steps_d:
+            return "discriminator"
+        else:
+            return "generator"
+
+
     def discriminator_step(self, x):
         """Training step for discriminator network.
 
@@ -100,20 +122,20 @@ class ImageReconstructionGAN(pl.LightningModule):
         # the targets are computed on-the-fly because the last batch may
         # have a different number of images. This is computationally
         # inefficient, alternatively we can drop the last batch in the
-        # dataloader(*) and reuse the pre-computed targets.
-        #   (*) `torch.utils.data.DataLoader(..., drop_last=True)`
-        self.real_targets = torch.ones(x.shape[0], 1, device=self.device)
-        self.fake_targets = torch.zeros(x.shape[0], 1, device=self.device)
+        # dataloader (`torch.utils.data.DataLoader(..., drop_last=True)`)
+        # and reuse the pre-computed targets.
+        self.real_targets = torch.ones(x.shape[0], device=self.device)
+        self.fake_targets = torch.zeros(x.shape[0], device=self.device)
         
         # real images
         d_probs = torch.squeeze(self.model.discriminator(x))
-        loss_real = self.loss(d_probs, torch.ones(x.shape[0], device=self.device))
+        loss_real = self.loss(d_probs, self.real_targets)
 
         # fake images
-        z = torch.randn(x.shape[0], 1, 100, device=self.device)
+        z = torch.randn(x.shape[0], 100, device=self.device)
         generated_imgs = self.model.generator(z)
         d_probs = torch.squeeze(self.model.discriminator(generated_imgs))
-        loss_fake = self.loss(d_probs, torch.zeros(x.shape[0], device=self.device))
+        loss_fake = self.loss(d_probs, self.fake_targets)
 
         return loss_real + loss_fake
 
@@ -123,26 +145,24 @@ class ImageReconstructionGAN(pl.LightningModule):
         pass
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        #x, y = batch
-        #x_recon, logits = self(x)
-        #train_loss = self.loss(x, x_recon, logits)
         
+        train_this = self._find_what_to_train(
+            step = self.global_step, 
+            optim_steps_d = self.cfg.model.optimizer.discriminator.steps, 
+            optim_steps_g = self.cfg.model.optimizer.generator.steps,
+        )
+
         # train discriminator
-        if optimizer_idx == 0:
-            d_loss = self.generator_step(batch["images"])
-            # .... log
-            return d_loss
+        #if optimizer_idx == 0:
+        if train_this == "discriminator":
+            loss = self.discriminator_step(batch["images"])
     
         # train generator
-        if optimizer_idx == 1:
-            g_loss = self.discriminator_step(batch["images"])
-            # .... log
-            return g_loss
+        #if optimizer_idx == 1:
+        if train_this == "generator":
+            loss = self.generator_step(batch["images"])
 
-        return {"loss": train_loss, 
-                "train_original": x,
-                "train_reconstruction": x_recon.detach()
-                }
+        return {"loss": loss}
 
     def training_step_end(self, training_step_outputs: dict):
         """ At step_end, aggregate losses across all devices.

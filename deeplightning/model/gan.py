@@ -20,9 +20,6 @@ class SimpleGAN(nn.Module):
             latent_dim = latent_dim,
         )
 
-        
-
-
     def forward(self, images):
         return self.discriminator(images)
     
