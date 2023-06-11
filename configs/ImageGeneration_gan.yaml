@@ -26,8 +26,14 @@ model:
       kl_div_loss_weight: 0.0
       normalization: null
   optimizer:
-    target: torch.optim.Adadelta
-    params:
+    discriminator:
+      target: torch.optim.Adam
+      params:
+      steps: 1
+    generator:
+      target: torch.optim.Adam
+      params:
+      steps: 1
   scheduler:
     target: torch.optim.lr_scheduler.ExponentialLR
     params:
