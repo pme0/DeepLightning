@@ -28,8 +28,8 @@ class ImageReconstructionGAN(pl.LightningModule):
         self.model = init_obj_from_config(cfg.model.network)
         self.d_optimizer = init_obj_from_config(cfg.model.optimizer.discriminator, self.model.discriminator.parameters())
         self.g_optimizer = init_obj_from_config(cfg.model.optimizer.generator, self.model.generator.parameters())
-        self.d_scheduler = init_obj_from_config(cfg.model.scheduler, self.d_optimizer)
-        self.g_scheduler = init_obj_from_config(cfg.model.scheduler, self.g_optimizer)
+        self.d_scheduler = init_obj_from_config(cfg.model.scheduler.discriminator, self.d_optimizer)
+        self.g_scheduler = init_obj_from_config(cfg.model.scheduler.generator, self.g_optimizer)
        
         #self.maxlen = len(str(self.cfg.train.num_epochs))
         self.train_what == "discriminator"
@@ -46,16 +46,16 @@ class ImageReconstructionGAN(pl.LightningModule):
                 "optimizer": self.d_optimizer,
                 "lr_scheduler": {
                     "scheduler": self.d_scheduler,
-                    "interval": self.cfg.model.scheduler.call.interval,
-                    "frequency": self.cfg.model.scheduler.call.frequency
+                    "interval": self.cfg.model.scheduler.discriminator.call.interval,
+                    "frequency": self.cfg.model.scheduler.discriminator.call.frequency
                 }
             },
             {
                 "optimizer": self.g_optimizer,
                 "lr_scheduler": {
                     "scheduler": self.g_scheduler,
-                    "interval": self.cfg.model.scheduler.call.interval,
-                    "frequency": self.cfg.model.scheduler.call.frequency
+                    "interval": self.cfg.model.scheduler.generator.call.interval,
+                    "frequency": self.cfg.model.scheduler.generator.call.frequency
                 }
             }
         )

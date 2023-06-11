@@ -12,35 +12,37 @@ model:
   module:
     target: deeplightning.task.image.reconstructionVAE.ImageReconstructionGAN
   network:
-    target: deeplightning.model.gan.SimpleGAN
+    target: deeplightning.model.dcgan.DCGAN
     params: 
-      image_size: 32
-      num_tokens: 8 #512
-      codebook_dim: 32 #256
-      num_layers: 1 #2
-      num_resnet_blocks: 1 #2
-      hidden_dim: 32 #128
+      image_size: 28
       channels: 1
-      temperature: 0.9
-      straight_through: False
-      kl_div_loss_weight: 0.0
-      normalization: null
+      latent_dim: 100
   optimizer:
     discriminator:
       target: torch.optim.Adam
       params:
+        lr: 0.001
       steps: 1
     generator:
       target: torch.optim.Adam
       params:
+        lr: 0.001
       steps: 1
   scheduler:
-    target: torch.optim.lr_scheduler.ExponentialLR
-    params:
-      gamma: 0.99
-    call:
-      interval: "epoch"
-      frequency: 1
+    discriminator:
+      target: torch.optim.lr_scheduler.ExponentialLR
+      params:
+        gamma: 0.99
+      call:
+        interval: "epoch"
+        frequency: 1
+    generator:
+      target: torch.optim.lr_scheduler.ExponentialLR
+      params:
+        gamma: 0.99
+      call:
+        interval: "epoch"
+        frequency: 1
   loss:
     target: torch.nn.BCELoss  # BCEWithLogitsLoss
     params:
