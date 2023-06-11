@@ -1,6 +1,9 @@
 import torch.nn as nn
 
+from deeplightning.registry.utils import register_model
 
+
+@register_model()
 class SymbolCNN(nn.Module):
     
     def __init__(self, num_classes, num_channels):

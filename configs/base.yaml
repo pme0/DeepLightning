@@ -19,8 +19,11 @@ model:
   module:
     target: deeplightning.task.image.classification.TaskModule
   network:
-    target: deeplightning.model.cnn.SymbolCNN
+    #target: deeplightning.model.cnn.SymbolCNN
+    target: deeplightning.model.mobilenetv3.mobilenet_v3_small 
     params: 
+      #num_classes: 10
+      #num_channels: 1
       num_classes: 10
       num_channels: 1
   optimizer:

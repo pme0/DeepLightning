@@ -229,6 +229,7 @@ See [`examples`](https://github.com/pme0/DeepLightning/tree/master/examples) for
 - [x] reproducible examples
   - [x] image classification
   - [x] image reconstruction
+- [ ] model registry
 
 
 ### Notes
