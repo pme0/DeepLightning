@@ -35,7 +35,7 @@ def waveplot(
 
     # plot
     plt.figure(figsize=figsize)
-    waveshow(signal, sr=sample_rate, x_axis=x_axis)
+    waveshow(signal, sr=sample_rate, axis=x_axis)
     plt.ylabel("Amplitude")
     if title:
         plt.title(title)
