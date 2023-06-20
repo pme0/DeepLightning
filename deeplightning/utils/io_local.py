@@ -100,7 +100,7 @@ def read_image(
     image = Image.open(image_path)
     image = image.convert('RGB')
     if resize:
-        image = T.Resize((resize, resize))(image)
+        image = T.Resize(resize)(image)
     if transform:
         image = transform(image)
     image = T.ToTensor()(image)
