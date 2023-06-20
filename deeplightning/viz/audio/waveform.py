@@ -12,7 +12,8 @@ def waveplot(
     show_plot: bool = True, 
     figsize: Tuple[int,int] = (8,3),
     title: Union[str,None] = None,
-
+    alpha: float = 1.0,
+    color = "darkblue"
 ):
     """Display waveform in the time domain.
 
@@ -35,7 +36,7 @@ def waveplot(
 
     # plot
     plt.figure(figsize=figsize)
-    waveshow(signal, sr=sample_rate, axis=x_axis)
+    waveshow(signal, sr=sample_rate, axis=x_axis, alpha=alpha, color=color)
     plt.ylabel("Amplitude")
     if title:
         plt.title(title)
