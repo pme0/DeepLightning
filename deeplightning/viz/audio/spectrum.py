@@ -135,7 +135,7 @@ def spectrogram(
         scale_type if scale_type is not None else '',
     ))
 
-    if save_plot is not None: 
+    if save_plot is not None:
         plt.savefig(save_plot, bbox_inches='tight')
     if show_plot:
         plt.show()
