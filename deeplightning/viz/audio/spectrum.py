@@ -64,7 +64,7 @@ def power_spectrum(path: str):
     plt.title("Power spectrum")
 
 
-def specplot(
+def spectrogram(
     path: str,
     mode: str, 
     scale: str = None, 
