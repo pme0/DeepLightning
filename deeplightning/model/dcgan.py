@@ -44,6 +44,15 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(in_channels=32, out_channels=num_channels, kernel_size=4, stride=2, padding=1, bias=False),
             nn.Tanh(),
         )
+        """ Parametrize layer creation:
+        last_channels = 32
+        channels = [latent_dim] + [last_channels * (2 ** i) for i in range(num_layers-1)][::-1] + [num_channels]
+        layers = []
+        for i in range(num_layers):
+            layers.append(nn.ConvTranspose2d(in_channels=channels[i], out_channels=channels[i+1], kernel_size=4, stride=2, padding=0, bias=False))
+            layers.append(nn.BatchNorm2d(channels[i+1]))
+            layers.append(nn.ReLU() if i < num_layers-1 else nn.Tanh())
+        """
 
     def forward(self, x):
         return self.generator(x)
@@ -89,7 +98,16 @@ class Discriminator(nn.Module):
 
 class DCGAN(nn.Module):
     def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
-        """
+        """DCGAN: Deep Convolutional Generative Adversarial Network.
+
+        Parameters
+        ----------
+        ???
+
+        References
+        ----------
+        >   A Radford, L Metz, S Chintala (2015) "Unsupervised representation learning with 
+            deep convolutional generative adversarial networks", arXiv:1511.06434
         """
         super(DCGAN, self).__init__()
         

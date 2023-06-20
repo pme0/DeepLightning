@@ -70,30 +70,26 @@ def spectrogram(
     scale: str = None, 
     n_fft: int = 2048, 
     hop_length: int = 512, 
-    figsize: tuple = (5,5), 
+    figsize: tuple = (8,3), 
     save_plot: str = None,
     show_plot: bool = True,
+    x_axis: str = "time",
 ):
     """Display Mel Frequency Cepstral Coefficients.
 
     Parameters
     ----------
     path : path to the audio file.
-    
     mode : the type of features to be shown in the spectrogram. 
         Can be Short Time Fourier Transform (STFT) amplitude 
-        (`stft_ampl`) or decibels (`stft_db`); or Mel Frequency 
-        Cepstral Coefficients (MFCC)
-    
+        (`stft_ampl`) or decibels (`stft_db`); Log Mel spectrogram 
+        (logmel); Mel Frequency Cepstral Coefficients (`mfcc`)
     scale : the y-axis scale. Can be `linear` or `log`. For 
         `mode == "mfcc"` the scale is chosen automatically
-     
     n_fft : 
-    
     hop_length :
-    
     figsize : the figure size
-
+    x_axis : 
     """
     
     assert scale is None or scale in ["linear", "log"]
@@ -121,12 +117,19 @@ def spectrogram(
         frequency_type = 'MFCC'
         colorbar_label = 'coefficients'  
         scale_type = ''
+    elif mode == "logmel":
+        S = librosa.feature.melspectrogram(y=signal, sr=sample_rate, n_fft=n_fft, hop_length=hop_length)
+        S = librosa.power_to_db(S, ref=np.max)
+        specshow(data = S, x_axis = x_axis, y_axis = 'mel', sr = sample_rate, hop_length=hop_length)
+        frequency_type = 'Log Mel'
+        colorbar_label = 'decibel (dB)'  
+        scale_type = ''
     else:
         raise NotImplementedError
         
     plt.xlabel("Time")
     plt.ylabel(f"Frequency (Hz)")
-    plt.colorbar(label=colorbar_label, orientation="horizontal")
+    plt.colorbar(label=colorbar_label, orientation="vertical", pad=0.02)
     plt.title("Spectrogram ({}{})".format(
         frequency_type if frequency_type is not None else '',
         scale_type if scale_type is not None else '',

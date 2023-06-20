@@ -1,3 +1,4 @@
+from typing import Union, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import librosa
@@ -9,7 +10,9 @@ def waveplot(
     x_axis: str = "time", 
     save_plot: str = None, 
     show_plot: bool = True, 
-    figsize=(8,4)
+    figsize: Tuple[int,int] = (8,3),
+    title: Union[str,None] = None,
+
 ):
     """Display waveform in the time domain.
 
@@ -33,7 +36,9 @@ def waveplot(
     # plot
     plt.figure(figsize=figsize)
     waveshow(signal, sr=sample_rate, x_axis=x_axis)
-    plt.title("Audio waveplot")
+    plt.ylabel("Amplitude")
+    if title:
+        plt.title(title)
     
     if save_plot is not None:
         plt.savefig(save_plot, bbox_inches='tight')
