@@ -100,20 +100,20 @@ def spectrogram(
 
     if mode == "stft_ampl":
         stft_amplitude = np.abs(librosa.stft(signal, n_fft = n_fft))
-        specshow(data = stft_amplitude, x_axis = 'time', y_axis = scale, sr = sample_rate, hop_length=hop_length)
+        specshow(data = stft_amplitude, x_axis = x_axis, y_axis = scale, sr = sample_rate, hop_length=hop_length)
         frequency_type = 'STFT'
         colorbar_label = 'amplitude'
         scale_type = ', log'
     elif mode == "stft_db":
         stft_amplitude = np.abs(librosa.stft(signal, n_fft = n_fft))
         stft_decibel = librosa.amplitude_to_db(stft_amplitude)
-        specshow(data = stft_decibel, x_axis = 'time', y_axis = scale, sr = sample_rate, hop_length=hop_length)
+        specshow(data = stft_decibel, x_axis = x_axis, y_axis = scale, sr = sample_rate, hop_length=hop_length)
         frequency_type = 'STFT'
         colorbar_label = 'decibel (dB)'
         scale_type = ', decibel'
     elif mode == "mfcc":
         mfccs = librosa.feature.mfcc(y=signal, sr=sample_rate, n_fft=n_fft, hop_length=hop_length)
-        specshow(data = mfccs, x_axis = 'time', y_axis = 'mel', sr = sample_rate, hop_length=hop_length)
+        specshow(data = mfccs, x_axis = x_axis, y_axis = 'mel', sr = sample_rate, hop_length=hop_length)
         frequency_type = 'MFCC'
         colorbar_label = 'coefficients'  
         scale_type = ''
