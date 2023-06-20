@@ -81,7 +81,7 @@ def write_video_frames_to_images(
 
 def read_image(
     image_path: str,
-    device: torch.device,
+    device: torch.device = torch.device("cpu"),
     resize: int = None,
     transform: str = None,
 ) -> torch.Tensor:
@@ -94,11 +94,12 @@ def read_image(
     Returns:
         :torch.Tensor: the image tensor
     """
+    if resize is not None and isinstance(resize, int):
+        resize = (resize, resize)
 
     image = Image.open(image_path)
     image = image.convert('RGB')
     if resize:
-        assert isinstance(resize, int)
         image = T.Resize((resize, resize))(image)
     if transform:
         image = transform(image)
