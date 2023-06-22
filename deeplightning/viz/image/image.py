@@ -13,6 +13,8 @@ def plot_resized_image(
     resize: Tuple[int,int] = None,
     display_image: bool = True,
     display_size: Tuple[int,int] = None,
+    channel: int = None,
+    channel_cmap: str = None,
     save_fp : str = None,
 ):
     """Plot resized image & saves with new exact pixel size.
@@ -26,8 +28,10 @@ def plot_resized_image(
     display_size : size of displayed image, in inches (width, height)
     save_fp : output image save filepath
     """
-    assert isinstance(resize, tuple) and len(resize) == 2
-    
+    assert resize is None or isinstance(resize, tuple) and len(resize) == 2
+    if resize is None:
+        resize = imagesize.get(image_fp)  #(w,h)
+
     image = Image.open(image_fp)
     image = image.convert('RGB')
     image = image.resize(resize)
@@ -40,7 +44,12 @@ def plot_resized_image(
     
     if display_image:
         fig = plt.figure(figsize=display_size)
-        plt.imshow(new_image)
+        if channel is not None:
+            new_image = np.array(new_image)
+            #new_image[:,:,(channel!=0, channel!=1, channel!=2)] *= 0
+            new_image = new_image[:,:,channel]
+            new_image = Image.fromarray(new_image)
+        plt.imshow(new_image, cmap=channel_cmap)
         plt.axis("off")
         plt.show()
         
