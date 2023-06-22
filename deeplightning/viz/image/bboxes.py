@@ -27,7 +27,7 @@ def plot_image_and_bboxes(
     resize: int = None, 
     save_path: str = None, 
     show_image: bool = True
-    ):
+):
     """Plot an image together with a set of bounding boxes and class labels
 
     Example:
