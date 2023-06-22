@@ -13,7 +13,7 @@ parent2 = os.path.dirname(parent1)
 sys.path.append(parent2)
 print(f"Added to system path: '{parent2}'")
 
-from deeplightning.viz.audio.wave import waveplot
+from deeplightning.viz.audio.waveform import waveplot
 from deeplightning.viz.audio.spectrum import spectrogram
 
 

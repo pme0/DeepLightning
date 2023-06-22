@@ -128,7 +128,7 @@ def specplot(
     else:
         raise NotImplementedError
         
-    plt.xlabel("Time")
+    #plt.xlabel("Time")
     plt.ylabel(f"Frequency (Hz)")
     plt.colorbar(label=colorbar_label, orientation="vertical", pad=0.02)
     plt.title("Spectrogram ({}{})".format(
