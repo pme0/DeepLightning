@@ -1,4 +1,4 @@
-"""https://github.com/pytorch/vision/blob/55799959046fe38e5bd324631e33238a6f8f08a7/torchvision/models/mobilenetv3.py"""
+#https://github.com/pytorch/vision/blob/main/torchvision/models/mobilenetv3.py
 import warnings
 from functools import partial
 import collections
@@ -498,8 +498,6 @@ def mobilenet_v3_large(
     .. autoclass:: torchvision.models.MobileNet_V3_Large_Weights
         :members:
     """
-    #weights = MobileNet_V3_Large_Weights.verify(weights)
-
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_large", **kwargs)
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, num_channels, num_classes, **kwargs)
 
@@ -528,7 +526,5 @@ def mobilenet_v3_small(
     .. autoclass:: torchvision.models.MobileNet_V3_Small_Weights
         :members:
     """
-    #weights = MobileNet_V3_Small_Weights.verify(weights)
-
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_small", **kwargs)
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, num_channels, num_classes, **kwargs)
