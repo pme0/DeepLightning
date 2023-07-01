@@ -65,13 +65,14 @@ class UpsampleConvBlock(nn.Module):
         """ x : the input feature map from the expansive path
             y : the corresponding feature map from the contracting path
         """
+        cropped_y = self.crop(y, x)
         x = self.upsample(x)
         # The following padding is not clear from the paper how it should be 
         # implemented but it is necessary in order to get to right feature map 
         # shapes. Should we pad from right or left, top or bottom?
         x = F.pad(x, (0, 1, 0, 1))
         x = self.upconv(x)
-        x = torch.cat((self.crop(y, x), x), dim=1)
+        x = torch.cat((cropped_y, x), dim=1)
         x = self.conv(x)
         return x
 
