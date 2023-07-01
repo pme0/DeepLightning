@@ -72,6 +72,7 @@ class UpsampleConvBlock(nn.Module):
         # shapes. Should we pad from right or left, top or bottom?
         x = F.pad(x, (0, 1, 0, 1))
         x = self.upconv(x)
+        cropped_y = self.crop(y, x)
         x = torch.cat((cropped_y, x), dim=1)
         x = self.conv(x)
         return x
