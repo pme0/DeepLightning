@@ -4,6 +4,7 @@ from torchvision import transforms as T
 from deeplightning.utils.messages import info_message, warning_message
 from deeplightning.data.transforms._affine import Affine
 from deeplightning.data.transforms._crop import RandomCrop, RandomResizedCrop
+from deeplightning.data.transforms._centercrop import CenterCrop
 from deeplightning.data.transforms._colorjitter import ColorJitter
 from deeplightning.data.transforms._flip import HorizontalFlip, VerticalFlip
 from deeplightning.data.transforms._normalize import Normalize
@@ -24,6 +25,7 @@ __TransformsDict__ = {
     "padsquare": PadSquare,
     "perspective": Perspective,
     "resize": Resize,
+    "centercrop": CenterCrop,
     "resizedcrop": RandomResizedCrop,
     "rotation": Rotation,
     "totensor": ToTensor,
