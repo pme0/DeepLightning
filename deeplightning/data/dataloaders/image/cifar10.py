@@ -8,7 +8,7 @@ from deeplightning.data.transforms.transforms import load_transforms
 
 
 class CIFAR10(pl.LightningDataModule):
-    """ CIFAR10 dataset. The dataset contains a training subset and a 
+    """CIFAR10 dataset. The dataset contains a training subset and a 
     testing subset. We split training subset into train and val samples
     
     - image size: 32x32
@@ -34,7 +34,6 @@ class CIFAR10(pl.LightningDataModule):
         # load data transformations/augmentations
         self.train_transforms = load_transforms(cfg=cfg, subset="train")
         self.test_transforms = load_transforms(cfg=cfg, subset="test")
-        
 
     def prepare_data(self) -> None:
         torchvisionCIFAR10(
@@ -88,6 +87,3 @@ class CIFAR10(pl.LightningDataModule):
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
         )
-
-    #def predict_dataloader(self) -> DataLoader:
-    #    pass

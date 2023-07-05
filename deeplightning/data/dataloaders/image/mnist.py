@@ -8,7 +8,7 @@ from deeplightning.utils.messages import info_message
 
 
 class MNIST(pl.LightningDataModule):
-    """ MNIST dataset. The dataset contains a training subset and a 
+    """MNIST dataset. The dataset contains a training subset and a 
     testing subset. We split training subset into train and val samples
 
     - image size: 28x28
@@ -41,7 +41,6 @@ class MNIST(pl.LightningDataModule):
         #   self.test_transforms = T.Compose([T.Normalize((0.1307,), (0.3081,))])
         # ```
 
-
     def prepare_data(self) -> None:
         mnist.MNIST(
             root = self.cfg.data.root, 
@@ -51,7 +50,6 @@ class MNIST(pl.LightningDataModule):
             root = self.cfg.data.root, 
             train = False, 
             download = True)
-
 
     def setup(self, stage) -> None:
         self.test_ds = mnist.MNIST(
@@ -72,7 +70,6 @@ class MNIST(pl.LightningDataModule):
         info_message("Validation set size: {:,d}".format(len(self.val_ds)))
         info_message("Testing set size: {:,d}".format(len(self.test_ds)))
 
-
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
             dataset = self.train_ds, 
@@ -80,7 +77,6 @@ class MNIST(pl.LightningDataModule):
             shuffle = True,
             num_workers = self.cfg.data.num_workers,
         )
-
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -90,7 +86,6 @@ class MNIST(pl.LightningDataModule):
             num_workers = self.cfg.data.num_workers,
         )
 
-
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
             dataset = self.test_ds, 
@@ -98,7 +93,3 @@ class MNIST(pl.LightningDataModule):
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
         )
-
-
-    #def predict_dataloader(self) -> DataLoader:
-    #    pass
