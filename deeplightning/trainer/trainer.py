@@ -6,7 +6,9 @@ from lightning import Trainer
 from lightning.pytorch.callbacks import (GradientAccumulationScheduler,
                                          LearningRateMonitor,
                                          ModelCheckpoint,
-                                         EarlyStopping)
+                                         EarlyStopping,
+                                         RichProgressBar)
+from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBarTheme
 from lightning.pytorch.loggers import WandbLogger
 
 from deeplightning.config.defaults import __ConfigGroups__
@@ -14,8 +16,8 @@ from deeplightning.config.load import log_config
 from deeplightning.logger.helpers import add_logger_params_to_config
 from deeplightning.logger.wandb import init_wandb_metrics
 from deeplightning.utils.messages import config_print
-from deeplightning.registry.registry import (__LoggerRegistry__, 
-                                          __HooksRegistry__)
+from deeplightning.registry import (__LoggerRegistry__, 
+                                    __HooksRegistry__)
 from deeplightning.utils.python_utils import flatten_dict
 
 
@@ -148,5 +150,23 @@ class DLTrainer(Trainer):
                 check_on_train_epoch_end = False # False: check at validation_epoch_end
             )
             self.callbacks_dict["earlystopping"] = earlystopping
+
+        # PROGRESS BAR: customize progress bar
+        # to customize use:
+        # ```
+        # RichProgressBar(
+        #   theme=RichProgressBarTheme(
+        #       description = "green_yellow",
+        #       progress_bar = "green1",
+        #       progress_bar_finished = "green1",
+        #       progress_bar_pulse = "green1",
+        #       batch_progress = "green_yellow",
+        #       time = "grey82",
+        #       processing_speed = "grey82",
+        #       metrics = "grey82"))
+        # ````
+        progressbar = RichProgressBar()
+        self.callbacks_dict["progressbar"] = progressbar
+        
 
         return list(self.callbacks_dict.values())  # Trainer takes a list
