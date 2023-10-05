@@ -11,6 +11,16 @@ from deeplightning.trainer.hooks.ImageClassification_hooks import (
     test_step__ImageClassification,
     test_step_end__ImageClassification,
     on_test_epoch_end__ImageClassification)
+from deeplightning.trainer.hooks.SemanticSegmentation_hooks import (
+    training_step__SemanticSegmentation,
+    training_step_end__SemanticSegmentation,
+    on_training_epoch_end__SemanticSegmentation,
+    validation_step__SemanticSegmentation,
+    validation_step_end__SemanticSegmentation,
+    on_validation_epoch_end__SemanticSegmentation,
+    test_step__SemanticSegmentation,
+    test_step_end__SemanticSegmentation,
+    on_test_epoch_end__SemanticSegmentation)
 """
 from deeplightning.trainer.hooks.AudioClassification_hooks import (
     training_step__AudioClassification,
@@ -26,11 +36,54 @@ from deeplightning.trainer.hooks.AudioClassification_hooks import (
 from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
 
 
+from typing import Any, Callable
+
+
+class ModelRegistry:
+    """Registers all models and prevents multiple models with the same name.
+    """
+    def __init__(self):
+        self.models = {}
+
+    def register_model(self, name: str = None):
+        """Register a model.
+        """
+        def decorator(fn: Callable) -> Callable:
+            key = name if name is not None else fn.__name__
+            if key in self.models:
+                raise ValueError(
+                    f"An entry is already registered under the name '{key}': "
+                    f"{self.models[key]}"
+                )
+            self.models[key] = fn
+            return fn
+        return decorator
+
+    def get_model_reference(self, name: str):
+        """Get a model reference from its name.
+        """
+        return self.models[name]
+    
+    def get_model_instance(self, name: str, **params: Any):
+        """Get a model instance from its name and parameters.
+        """
+        return self.get_model_object(name)(**params)
+    
+    def get_model_names(self):
+        """Get the names of all registered models.
+        """
+        return sorted(list(self.models.keys()))
+
+
+MODEL_REGISTRY = ModelRegistry()
+
+
 __TaskRegistry__ = [
     # Image
     "ImageClassification",
     "ImageReconstruction",
     "ObjectDetection",
+    "SemanticSegmentation",
     # Audio
     "AudioClassification",
 ]
@@ -47,6 +100,22 @@ __HooksRegistry__ = {
         "test_step": test_step__ImageClassification,
         "test_step_end": test_step_end__ImageClassification,
         "on_test_epoch_end": on_test_epoch_end__ImageClassification,
+        "LOGGED_METRICS_NAMES": [
+            "train_loss", "train_acc", 
+            "val_loss", "val_acc", "val_confusion_matrix", "val_precision_recall",
+            "test_loss", "test_acc", "test_confusion_matrix", "test_precision_recall",
+            "lr"],
+    },
+    "SemanticSegmentation": {
+        "training_step": training_step__SemanticSegmentation,
+        "training_step_end": training_step_end__SemanticSegmentation,
+        "on_training_epoch_end": on_training_epoch_end__SemanticSegmentation,
+        "validation_step": validation_step__SemanticSegmentation,
+        "validation_step_end": validation_step_end__SemanticSegmentation,
+        "on_validation_epoch_end": on_validation_epoch_end__SemanticSegmentation,
+        "test_step": test_step__SemanticSegmentation,
+        "test_step_end": test_step_end__SemanticSegmentation,
+        "on_test_epoch_end": on_test_epoch_end__SemanticSegmentation,
         "LOGGED_METRICS_NAMES": [
             "train_loss", "train_acc", 
             "val_loss", "val_acc", "val_confusion_matrix", "val_precision_recall",
@@ -80,6 +149,11 @@ __MetricsRegistry__ = {
     },
     "ObjectDetection": {
         "_": None,
+    },
+    "SemanticSegmentation": {
+        "Accuracy_train": Metric_Accuracy,
+        "Accuracy_val": Metric_Accuracy,
+        "Accuracy_test": Metric_Accuracy,
     },
     # Audio
     "AudioClassification":{

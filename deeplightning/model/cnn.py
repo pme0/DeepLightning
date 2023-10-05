@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from deeplightning.registry.utils import register_model
+from deeplightning.registry import register_model
 
 
 @register_model()
@@ -30,7 +30,7 @@ class SymbolCNN(nn.Module):
         return x
 
 
-
+@register_model()
 class SpectrogramCNN(nn.Module):
     
     def __init__(self, num_classes, num_channels):

@@ -1,7 +1,8 @@
 import sys
 import argparse
 import wandb
-from omegaconf import OmegaConf
+#import hydra
+from omegaconf import DictConfig, OmegaConf
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 from deeplightning.utils.messages import info_message, warning_message, error_message, config_print
@@ -12,11 +13,15 @@ from deeplightning.init.initializers import init_everything
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg", type=str, default="configs/base.yaml", help="")
+    #parser.add_argument("--config-path", type=str, default="configs", help="Path to config yaml file. Overwrites `config_path` in hydra.main().")
+    #parser.add_argument("--config-name", type=str, help="Filename of config yaml file. Overwrites `config_name` in hydra.main().")
     args = parser.parse_args()
     return args
 
 
-if __name__ == "__main__":
+#@hydra.main(version_base=None, config_path="", config_name="")
+#def main(cfg: DictConfig):
+def main():
 
     args = parse_command_line_arguments()
 
@@ -74,3 +79,7 @@ if __name__ == "__main__":
         
         wandb.finish()
 
+
+
+if __name__ == "__main__":
+    main()

@@ -73,7 +73,7 @@ def load_transforms(
                 else:
                     trfs.append(transform)
             else:
-                warning_message(f"Transform '{key}' present in .cfg.data.{transforms_field}' but unused due to unsuitable parameters ({cfg.data[transforms_field][key]})")
+                warning_message(f"Transform '{key}' present in cfg.data.{transforms_field}' but unused due to unsuitable parameters ({cfg.data[transforms_field][key]})")
         
         print_transforms(transforms_field, trfs)
         return T.Compose(trfs)

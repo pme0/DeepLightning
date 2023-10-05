@@ -164,7 +164,7 @@ class DLTrainer(Trainer):
         #       time = "grey82",
         #       processing_speed = "grey82",
         #       metrics = "grey82"))
-        # ````
+        # ```
         progressbar = RichProgressBar()
         self.callbacks_dict["progressbar"] = progressbar
         

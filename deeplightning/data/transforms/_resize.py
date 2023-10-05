@@ -32,5 +32,5 @@ def Resize(s: Union[int, Tuple[int, int]]):
     assert isinstance(s[0], int), "`s[0]` must be int"
     assert isinstance(s[1], int), "`s[1]` must be int"
 
-    return T.Resize(s)
+    return T.Resize(s, antialias=True)
 

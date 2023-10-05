@@ -65,13 +65,14 @@ class UpsampleConvBlock(nn.Module):
         return source[:, :, left:left+w_new, top:top+h_new]
 
     def forward(self, x, y):
-        """ x : the input feature map from the expansive path
-            y : the corresponding feature map from the contracting path
+        """
+        x : the input feature map from the expansive path
+        y : the corresponding feature map from the contracting path
         """
         cropped_y = self.crop(y, x)
         x = self.upsample(x)
         # The following padding is not clear from the paper how it should be 
-        # implemented but it is necessary in order to get to right feature map 
+        # implemented but it is necessary in order to get the right feature map 
         # shapes. Should we pad from right or left, top or bottom?
         x = F.pad(x, (0, 1, 0, 1))
         x = self.upconv(x)
@@ -82,9 +83,11 @@ class UpsampleConvBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    """UNet Architecture
+    """Implementation of the original UNet Architecture from
+    'U-Net: Convolutional Networks for Biomedical Image Segmentation'
+    https://arxiv.org/abs/1505.04597
     
-    The authors explain the architecture: ' It consists of a contracting
+    The authors explain the architecture: 'It consists of a contracting
     path (left side) and an expansive path (right side). The contracting path follows
     the typical architecture of a convolutional network. It consists of the repeated
     application of two 3x3 convolutions (unpadded convolutions), each followed by
@@ -97,13 +100,14 @@ class UNet(nn.Module):
     by a ReLU. The cropping is necessary due to the loss of border pixels in
     every convolution. At the final layer a 1x1 convolution is used to map each 
     64-component feature vector to the desired number of classes.'
-        
-    References
+
+    Parameters
     ----------
-    'U-Net: Convolutional Networks for Biomedical Image Segmentation', https://arxiv.org/abs/1505.04597
-    
+    in_channels : number of input channels, i.e. image channels.
+    out_channels : number of output channels, i.e. number of classes.
+    use_batchnorm : whether to use batch normalization.
     """
-    def __init__(self, in_channels, out_channels, use_batchnorm=False):
+    def __init__(self, in_channels: int, out_channels: int, use_batchnorm: bool=False):
         super(UNet, self).__init__()
         self.first_conv = nn.Conv2d(in_channels, 64, kernel_size=3, stride=1, padding=0)
         self.down1 = DownSampleConvBlock(64, 128, use_batchnorm)

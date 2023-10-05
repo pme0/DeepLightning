@@ -5,8 +5,8 @@ from omegaconf import OmegaConf
 import torch
 
 from deeplightning.config.compute import runtime_compute
-from deeplightning.registry.registry import (__TaskRegistry__, 
-                                          __LoggerRegistry__,)
+from deeplightning.registry import (__TaskRegistry__, 
+                                    __LoggerRegistry__,)
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.utils.messages import (info_message, 
                                           warning_message,
