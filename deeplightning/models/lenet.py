@@ -1,15 +1,23 @@
+from typing import Any
+import torch
 import torch.nn as nn
 
+from deeplightning.registry import MODEL_REGISTRY
 
+
+all = [
+    "LeNet5",
+    "lenet5",
+]
+
+    
 class LeNet5(nn.Module):
-    """LeNet-5
-
-    Parameters
-    ----------
-    num_classes : number of classes
     """
-    def __init__(self, num_classes):
-        super(LeNet5, self).__init__()
+    Args
+        num_classes: number of classes
+    """
+    def __init__(self, num_classes: int):
+        super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0),
             nn.MaxPool2d(kernel_size = 2, stride = 2))
@@ -29,3 +37,18 @@ class LeNet5(nn.Module):
         x = self.linear1(x)
         x = self.linear2(x)
         return x
+    
+
+@MODEL_REGISTRY.register_model()
+def lenet5(**kwargs: Any) -> LeNet5:
+    """LeNet5 architecture
+
+    Reference
+        Lecun et al (1998) `Gradient-based learning applied to document
+        recognition`.
+        <https://ieeexplore.ieee.org/abstract/document/726791>
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return LeNet5(**kwargs)

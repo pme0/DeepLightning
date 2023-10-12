@@ -19,10 +19,11 @@ from torchvision import transforms as T
 #from ._meta import _IMAGENET_CATEGORIES
 #from ._utils import _make_divisible, _ovewrite_named_param, handle_legacy_interface
 
+from deeplightning.registry import MODEL_REGISTRY
+
+
 __all__ = [
     "MobileNetV3",
-    "MobileNet_V3_Large_Weights",
-    "MobileNet_V3_Small_Weights",
     "mobilenet_v3_large",
     "mobilenet_v3_small",
 ]
@@ -474,7 +475,7 @@ def _mobilenet_v3(
 
 
 
-#@handle_legacy_interface(weights=("pretrained", MobileNet_V3_Large_Weights.IMAGENET1K_V1))
+@MODEL_REGISTRY.register_model()
 def mobilenet_v3_large(
     *, weights: Optional[Any] = None, progress: bool = True, num_channels, num_classes, **kwargs: Any
 ) -> MobileNetV3:
@@ -502,7 +503,7 @@ def mobilenet_v3_large(
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, num_channels, num_classes, **kwargs)
 
 
-#@handle_legacy_interface(weights=("pretrained", MobileNet_V3_Small_Weights.IMAGENET1K_V1))
+@MODEL_REGISTRY.register_model()
 def mobilenet_v3_small(
     *, weights: Optional[Any] = None, progress: bool = True, num_channels: int, num_classes: int, **kwargs: Any
 ) -> MobileNetV3:

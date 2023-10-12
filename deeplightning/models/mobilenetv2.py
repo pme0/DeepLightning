@@ -15,8 +15,13 @@ from torch import nn, Tensor
 #from ._meta import _IMAGENET_CATEGORIES
 #from ._utils import _make_divisible, _ovewrite_named_param, handle_legacy_interface
 
+from deeplightning.registry import MODEL_REGISTRY
 
-__all__ = ["MobileNetV2", "MobileNet_V2_Weights", "mobilenet_v2"]
+
+__all__ = [
+    "MobileNetV2", 
+    "mobilenet_v2",
+]
 
 
 def _make_ntuple(x: Any, n: int) -> Tuple[Any, ...]:
@@ -317,8 +322,7 @@ class MobileNetV2(nn.Module):
         return self._forward_impl(x)
 
 
-#@register_model()
-#@handle_legacy_interface(weights=("pretrained", MobileNet_V2_Weights.IMAGENET1K_V1))
+@MODEL_REGISTRY.register_model()
 def mobilenet_v2(
     *, weights: Optional[Any] = None, progress: bool = True, **kwargs: Any
 ) -> MobileNetV2:

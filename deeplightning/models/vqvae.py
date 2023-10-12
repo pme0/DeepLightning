@@ -1,11 +1,19 @@
+from typing import Any, Union
 from math import log2, sqrt
 import numpy as np
 from einops import rearrange
-
 import torch
 import torch.nn as nn
 from torch import nn, einsum
 import torch.nn.functional as F
+
+from deeplightning.registry import MODEL_REGISTRY
+
+
+all = [
+    "DiscreteVAE",
+    "discrete_vae",
+]
 
 
 def exists(val):
@@ -41,21 +49,37 @@ class ResidualBlock(nn.Module):
         return self.net(x) + x
 
 
+@MODEL_REGISTRY.register_model()
 class DiscreteVAE(nn.Module):
+    """
+    Args
+        image_size: 
+        num_tokens: 
+        codebook_dim: 
+        num_layers: 
+        num_resnet_blocks: 
+        hidden_dim: 
+        channels: 
+        smooth_l1_loss: 
+        temperature: 
+        straight_through: 
+        kl_div_loss_weight: 
+        normalization: 
+    """
     def __init__(
         self,
-        image_size = 256,
-        num_tokens = 512,
-        codebook_dim = 512,
-        num_layers = 3,
-        num_resnet_blocks = 0,
-        hidden_dim = 64,
-        channels = 3,
-        smooth_l1_loss = False,
-        temperature = 0.9,
-        straight_through = False,
-        kl_div_loss_weight = 0.0,
-        normalization = None # TODO adapt to allow factor 1 (bw images) or 3 (color) images
+        image_size: int = 256,
+        num_tokens: int = 512,
+        codebook_dim: int = 512,
+        num_layers: int = 3,
+        num_resnet_blocks: int = 0,
+        hidden_dim: int = 64,
+        channels: int = 3,
+        smooth_l1_loss: bool = False,
+        temperature: float = 0.9,
+        straight_through: bool = False,
+        kl_div_loss_weight: float = 0.0,
+        normalization = None #|TODO adapt to allow factor 1 (bw images) or 3 (color) images
     ):
         super().__init__()
         assert log2(image_size).is_integer(), 'image size must be a power of 2'
@@ -147,4 +171,19 @@ class DiscreteVAE(nn.Module):
         sampled = einsum('b n h w, n d -> b d h w', soft_one_hot, self.codebook.weight)
         recon = self.decoder(sampled)
 
-        return recon, logits
+        return recon, 
+
+
+@MODEL_REGISTRY.register_model()
+def lenet5(**kwargs: Any) -> DiscreteVAE:
+    """Discrete (a.k.a. Vector-Quantized) VAE architecture
+
+    Reference
+        Lecun et al (1998) `Gradient-based learning applied to document
+        recognition`.
+        <https://ieeexplore.ieee.org/abstract/document/726791>
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return DiscreteVAE(**kwargs)

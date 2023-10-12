@@ -1,47 +1,29 @@
+from typing import Any
 import torch
 import torch.nn as nn
 
-
-class SimpleGAN(nn.Module):
-    def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
-        """
-        """
-        super(SimpleGAN, self).__init__()
-        
-        self.generator = Generator(
-            batch_size = batch_size, 
-            sample_size = sample_size, 
-            image_size = image_size,
-            latent_dim = latent_dim,
-        )
-        
-        self.discriminator = Discriminator(
-            image_size = image_size, 
-            latent_dim = latent_dim,
-        )
-
-    def forward(self, images):
-        return self.discriminator(images)
+from deeplightning.registry import MODEL_REGISTRY
     
 
-class Generator(nn.Module):
-    def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
-        """
-        """
-        super(Generator, self).__init__()
+__all__ = [
+    "GAN",
+    "gan",
+]
 
+
+class GANGenerator(nn.Module):
+    """
+    """
+    def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
+        super().__init__()
         self.batch_size = batch_size
         self.sample_size = sample_size
-        self.image_size = image_size
-        self.latent_dim = latent_dim
-
         self.generator = nn.Sequential([
             nn.Linear(sample_size, latent_dim),
             nn.LeakyReLU(0.01),
             nn.Linear(latent_dim, image_size ** 2),
             nn.Sigmoid()
         ])
-
 
     def forward(self):
         # generate noise
@@ -53,15 +35,12 @@ class Generator(nn.Module):
         return generated_images
 
 
-class Discriminator(nn.Module):
+class GANDiscriminator(nn.Module):
+    """
+    """
     def __init__(self, image_size: int, latent_dim: int):
-        """
-        """
-        super(Discriminator, self).__init__()
-
+        super().__init__()
         self.image_size = image_size
-        self.latent_dim = latent_dim
-
         self.discriminator = nn.Sequential([
             nn.Linear(image_size ** 2, latent_dim),
             nn.LeakyReLU(0.01),
@@ -69,8 +48,39 @@ class Discriminator(nn.Module):
             nn.Sigmoid(),
         ])
         
-
     def forward(self, images: torch.Tensor):
         predictions = self.discriminator(images.reshape(-1, self.image_size ** 2))
         return predictions
 
+
+class GAN(nn.Module):
+    """
+    """
+    def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
+        super().__init__()
+        self.generator = GANGenerator(
+            batch_size = batch_size, 
+            sample_size = sample_size, 
+            image_size = image_size,
+            latent_dim = latent_dim,
+        )
+        self.discriminator = GANDiscriminator(
+            image_size = image_size, 
+            latent_dim = latent_dim,
+        )
+
+    def forward(self, images):
+        return self.discriminator(images)
+
+
+@MODEL_REGISTRY.register_model()
+def gan(**kwargs: Any) -> GAN:
+    """Generative Adversarial Network architecture
+
+    Reference
+        ?
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return GAN(**kwargs)

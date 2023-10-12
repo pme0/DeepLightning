@@ -1,13 +1,21 @@
+from typing import Any
+import torch
 import torch.nn as nn
 
-from deeplightning.registry import register_model
+from deeplightning.registry import MODEL_REGISTRY
 
 
-@register_model()
+__all__ = [
+    "SymbolCNN",
+    "symbol_cnn",
+    "SpectrogramCNN",
+    "spectrogram_cnn",
+]
+
 class SymbolCNN(nn.Module):
     
-    def __init__(self, num_classes, num_channels):
-        super(SymbolCNN, self).__init__()
+    def __init__(self, num_classes: int, num_channels: int):
+        super().__init__()
         self.num_classes = num_classes
         self.num_channels = num_channels
         self.conv1 = nn.Sequential(
@@ -30,11 +38,10 @@ class SymbolCNN(nn.Module):
         return x
 
 
-@register_model()
 class SpectrogramCNN(nn.Module):
     
-    def __init__(self, num_classes, num_channels):
-        super(SpectrogramCNN, self).__init__()
+    def __init__(self, num_classes: int, num_channels: int):
+        super().__init__()
         self.num_classes = num_classes
         self.num_channels = num_channels
         self.conv1 = nn.Sequential(
@@ -69,3 +76,13 @@ class SpectrogramCNN(nn.Module):
         x = self.fc(x)
         #x = self.dropout(x)
         return x
+    
+
+@MODEL_REGISTRY.register_model()
+def symbol_cnn(**kwargs: Any) -> SymbolCNN:
+    return SymbolCNN(**kwargs)
+
+
+@MODEL_REGISTRY.register_model()
+def spectrogram_cnn(**kwargs: Any) -> SpectrogramCNN:
+    return SpectrogramCNN(**kwargs)

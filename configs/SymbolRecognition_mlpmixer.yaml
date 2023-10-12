@@ -19,7 +19,7 @@ model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.mlpmixer.MLPMixer
+    target: deeplightning.models.mlpmixer.MLPMixer
     params: 
       image_size: ${data.image_size}
       num_channels: ${data.num_channels}
