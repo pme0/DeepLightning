@@ -12,7 +12,7 @@ model:
   module:
     target: deeplightning.task.image.reconstructionVAE.ImageReconstructionVAE
   network:
-    target: deeplightning.model.vqvae.DiscreteVAE
+    target: deeplightning.models.vqvae.DiscreteVAE
     params: 
       image_size: 32
       num_tokens: 8 #512

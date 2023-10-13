@@ -12,7 +12,7 @@ model:
   module:
     target: deeplightning.task.image.reconstructionVAE.ImageReconstructionGAN
   network:
-    target: deeplightning.model.dcgan.DCGAN
+    target: deeplightning.models.dcgan.DCGAN
     params: 
       image_size: 28
       channels: 1

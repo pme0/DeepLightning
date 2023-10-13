@@ -33,7 +33,7 @@ model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.vit.VisionTransformer
+    target: deeplightning.models.vit.VisionTransformer
     params: 
       image_size: "${data.image_size}"
       num_classes: "${data.num_classes}"

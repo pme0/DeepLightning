@@ -15,7 +15,7 @@ model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.resnet.resnet18
+    target: deeplightning.models.resnet.resnet18
     params: 
       num_classes: 10
       num_channels: 1

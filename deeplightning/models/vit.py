@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 import math
 import torch
 import torch.nn as nn
@@ -7,6 +7,14 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure as pltFigure
 import omegaconf
+
+from deeplightning.registry import MODEL_REGISTRY
+
+
+all = [
+    "VisionTransformer",
+    "vision_transformer",
+]
 
 
 pair = lambda x: x if isinstance(x, tuple) or isinstance(x, omegaconf.listconfig.ListConfig) else (x, x)
@@ -188,32 +196,23 @@ class AttentionBlock(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    """Vision Transformer (ViT) architecture.
-
-    References
-    ----------
-    (paper) https://arxiv.org/abs/2010.11929, "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
-    (tips) https://arxiv.org/abs/2106.10270, "How to train your ViT? Data, Augmentation, and  Regularization in Vision Transformers"
-    (tips) https://arxiv.org/abs/2106.01548, "When Vision Transformers Outperform ResNets without Pre-training or Strong Data Augmentations"
-
-    Parameters
-    ----------
-    IMAGE
-        num_channels : number of channels of the input (3 for RGB)
-        image_size : image size `dim` for square images `(dim, dim)`, 
-            or `(width, height)` for rectangular images
-    PATCHING & EMBEDDING
-        embed_dim : size of the patch embeddings
-        patch_size : number of pixels per dimension in each patch; 
-            patches are assumed square (`patch_size * patch_size`)
-    TRANSFORMER
-        mlp_dim : size of the hidden layer in the Transformer MLP
-        num_heads : number of heads in the Multi-Head Attention block
-        num_layers : number of layers in the Transformer
-        dropout - probability of dropout in the MLP
-    CLASSIFIER
-        num_classes : number of classes in the MLP classifier
-
+    """
+    Args
+        [input]
+            num_channels: number of channels of the input (3 for RGB)
+            image_size: image size `dim` for square images `(dim, dim)`, 
+                or `(width, height)` for rectangular images
+        [patching & embedding]
+            embed_dim: size of the patch embeddings
+            patch_size: number of pixels per dimension in each patch; 
+                patches are assumed square (`patch_size * patch_size`)
+        [transformer]
+            mlp_dim: size of the hidden layer in the Transformer MLP
+            num_heads: number of heads in the Multi-Head Attention block
+            num_layers: number of layers in the Transformer
+            dropout: probability of dropout in the MLP
+        [classifier]
+            num_classes: number of classes in the MLP classifier
     """
     def __init__(self,
         image_size: Union[int, Tuple[int,int]],
@@ -251,3 +250,18 @@ class VisionTransformer(nn.Module):
         cls = x[0]
         x = self.mlp_head(cls)
         return x
+
+
+@MODEL_REGISTRY.register_model()
+def vision_transformer(**kwargs: Any) -> VisionTransformer:
+    """Vision Transformer (ViT) architecture
+
+    Reference
+        Dosovitskiy et al (2020) `An Image is Worth 16x16 Words: Transformers 
+        for Image Recognition at Scale`.
+        <https://arxiv.org/abs/2010.11929>
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return VisionTransformer(**kwargs)

@@ -1,6 +1,16 @@
+from typing import Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+from deeplightning.registry import MODEL_REGISTRY
+
+
+all = [
+    "UNet",
+    "lenet5",
+]
 
 
 class DoubleConv(nn.Module):
@@ -83,31 +93,13 @@ class UpsampleConvBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    """Implementation of the original UNet Architecture from
-    'U-Net: Convolutional Networks for Biomedical Image Segmentation'
-    https://arxiv.org/abs/1505.04597
-    
-    The authors explain the architecture: 'It consists of a contracting
-    path (left side) and an expansive path (right side). The contracting path follows
-    the typical architecture of a convolutional network. It consists of the repeated
-    application of two 3x3 convolutions (unpadded convolutions), each followed by
-    a rectified linear unit (ReLU) and a 2x2 max pooling operation with stride 2
-    for downsampling. At each downsampling step we double the number of feature
-    channels. Every step in the expansive path consists of an upsampling of the
-    feature map followed by a 2x2 convolution (“up-convolution”) that halves the
-    number of feature channels, a concatenation with the correspondingly cropped
-    feature map from the contracting path, and two 3x3 convolutions, each followed 
-    by a ReLU. The cropping is necessary due to the loss of border pixels in
-    every convolution. At the final layer a 1x1 convolution is used to map each 
-    64-component feature vector to the desired number of classes.'
-
-    Parameters
-    ----------
-    in_channels : number of input channels, i.e. image channels.
-    out_channels : number of output channels, i.e. number of classes.
-    use_batchnorm : whether to use batch normalization.
     """
-    def __init__(self, in_channels: int, out_channels: int, use_batchnorm: bool=False):
+    Args
+        in_channels: number of input channels (image channels)
+        out_channels: number of output channels (number of classes)
+        use_batchnorm: whether to use batch normalization
+    """
+    def __init__(self, in_channels: int, out_channels: int, use_batchnorm: bool = False):
         super(UNet, self).__init__()
         self.first_conv = nn.Conv2d(in_channels, 64, kernel_size=3, stride=1, padding=0)
         self.down1 = DownSampleConvBlock(64, 128, use_batchnorm)
@@ -134,3 +126,32 @@ class UNet(nn.Module):
         x = self.last_conv(x)
         x = self.activation(x)
         return x
+    
+
+@MODEL_REGISTRY.register_model()
+def unet(**kwargs: Any) -> UNet:
+    """UNet architecture
+
+    The authors explain the architecture: 'It consists of a contracting
+    path (left side) and an expansive path (right side). The contracting path follows
+    the typical architecture of a convolutional network. It consists of the repeated
+    application of two 3x3 convolutions (unpadded convolutions), each followed by
+    a rectified linear unit (ReLU) and a 2x2 max pooling operation with stride 2
+    for downsampling. At each downsampling step we double the number of feature
+    channels. Every step in the expansive path consists of an upsampling of the
+    feature map followed by a 2x2 convolution (“up-convolution”) that halves the
+    number of feature channels, a concatenation with the correspondingly cropped
+    feature map from the contracting path, and two 3x3 convolutions, each followed 
+    by a ReLU. The cropping is necessary due to the loss of border pixels in
+    every convolution. At the final layer a 1x1 convolution is used to map each 
+    64-component feature vector to the desired number of classes.'
+
+    Reference
+        Ronneberger et al (2015) `U-Net: Convolutional Networks for Biomedical
+        Image Segmentation`.
+        <https://arxiv.org/abs/1505.04597>
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return UNet(**kwargs)

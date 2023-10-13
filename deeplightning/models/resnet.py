@@ -2,6 +2,22 @@ import os
 import torch
 import torch.nn as nn
 
+from deeplightning.registry import MODEL_REGISTRY
+
+
+all = [
+    "ResNet",
+    "resnet18",
+    "resnet34",
+    "resnet50",
+    "resnet101",
+    "resnet152",
+    "resnext50_32x4d",
+    "resnext101_32x8d",
+    "wide_resnet50_2",
+    "wide_resnet101_2",
+]
+
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -123,6 +139,7 @@ class Bottleneck(nn.Module):
         return out
 
 
+@MODEL_REGISTRY.register_model()
 class ResNet(nn.Module):
     def __init__(
         self,
@@ -264,6 +281,7 @@ def _resnet(arch, block, layers, num_channels, num_classes, pretrained, progress
     return model
 
 
+@MODEL_REGISTRY.register_model()
 def resnet18(pretrained=False, progress=True, device="cpu", num_channels=3, num_classes=1000, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
@@ -275,6 +293,7 @@ def resnet18(pretrained=False, progress=True, device="cpu", num_channels=3, num_
     )
 
 
+@MODEL_REGISTRY.register_model()
 def resnet34(pretrained=False, progress=True, device="cpu", num_channels=3, num_classes=1000, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
@@ -287,6 +306,7 @@ def resnet34(pretrained=False, progress=True, device="cpu", num_channels=3, num_
     )
 
 
+@MODEL_REGISTRY.register_model()
 def resnet50(pretrained=False, progress=True, device="cpu", num_channels=3, num_classes=1000, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
@@ -299,6 +319,7 @@ def resnet50(pretrained=False, progress=True, device="cpu", num_channels=3, num_
     )
 
 
+@MODEL_REGISTRY.register_model()
 def resnet101(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """ResNet-101 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
@@ -312,6 +333,7 @@ def resnet101(pretrained = False, progress = True, num_channels=3, num_classes=1
         pretrained, progress,**kwargs)
 
 
+@MODEL_REGISTRY.register_model()
 def resnet152(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """ResNet-152 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
@@ -325,6 +347,7 @@ def resnet152(pretrained = False, progress = True, num_channels=3, num_classes=1
         pretrained, progress, **kwargs)
 
 
+@MODEL_REGISTRY.register_model()
 def resnext50_32x4d(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """ResNeXt-50 32x4d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_.
@@ -340,6 +363,7 @@ def resnext50_32x4d(pretrained = False, progress = True, num_channels=3, num_cla
         pretrained, progress, **kwargs)
 
 
+@MODEL_REGISTRY.register_model()
 def resnext101_32x8d(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """ResNeXt-101 32x8d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_.
@@ -355,6 +379,7 @@ def resnext101_32x8d(pretrained = False, progress = True, num_channels=3, num_cl
         pretrained, progress, **kwargs)
 
 
+@MODEL_REGISTRY.register_model()
 def wide_resnet50_2(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.
@@ -374,6 +399,7 @@ def wide_resnet50_2(pretrained = False, progress = True, num_channels=3, num_cla
         pretrained, progress, **kwargs)
 
 
+@MODEL_REGISTRY.register_model()
 def wide_resnet101_2(pretrained = False, progress = True, num_channels=3, num_classes=1000, **kwargs):
     """Wide ResNet-101-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.

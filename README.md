@@ -136,7 +136,7 @@ model:
   module:
     target: deeplightning.task.image.classification.TaskModule
   network:
-    target: deeplightning.model.cnn.SymbolCNN
+    target: deeplightning.models.cnn.SymbolCNN
     params: 
       num_classes: 10
       num_channels: 1

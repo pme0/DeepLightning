@@ -1,5 +1,16 @@
+from typing import Any
 import torch
 import torch.nn as nn
+
+from deeplightning.registry import MODEL_REGISTRY
+
+
+__all__ = [
+    "DCGAN",
+    "dcgan",
+    "CDCGAN",
+    "cdcgan",
+]
 
 
 def initialize_weights(self) -> None:
@@ -14,16 +25,15 @@ def initialize_weights(self) -> None:
                 nn.init.constant_(m.bias, 0)
     
 
-class Generator(nn.Module):
+class DCGAN_Generator(nn.Module):
     """DCGAN Generator
     
-    Parameters
-    ----------
-    num_channels : number of channels
-    latent_dim : size of z latent vector (i.e. size of generator input)
+    Args
+        num_channels: number of channels
+        latent_dim: size of z latent vector (i.e. size of generator input)
     """
-    def __init__(self, num_channels, latent_dim):
-        super(Generator, self).__init__()
+    def __init__(self, num_channels: int, latent_dim: int):
+        super().__init__()
         self.num_channels = num_channels
         self.latent_dim = latent_dim
         self.generator = nn.Sequential(
@@ -64,16 +74,15 @@ class Generator(nn.Module):
             print(m, x.shape)
 
 
-class Discriminator(nn.Module):
+class DCGAN_Discriminator(nn.Module):
     """DCGAN Discriminator
     
-    Parameters
-    ----------
-    num_channels : number of channels
-    num_features_d : size of feature maps in discriminator
+    Args
+        num_channels: number of channels
+        num_features_d: size of feature maps in discriminator
     """
-    def __init__(self, num_channels, alpha=0.2):
-        super(Discriminator, self).__init__()
+    def __init__(self, num_channels: int, alpha: float = 0.2):
+        super().__init__()
         self.main = nn.Sequential(
             # conv1
             nn.Conv2d(in_channels=num_channels, out_channels=32, kernel_size=4, stride=2, padding=1, bias=False),
@@ -95,34 +104,57 @@ class Discriminator(nn.Module):
             print(m, x.shape)
 
 
-
 class DCGAN(nn.Module):
     def __init__(self, batch_size: int, sample_size: int, image_size: int, latent_dim: int):
-        """DCGAN: Deep Convolutional Generative Adversarial Network.
-
-        Parameters
-        ----------
-        ???
-
-        References
-        ----------
-        >   A Radford, L Metz, S Chintala (2015) "Unsupervised representation learning with 
-            deep convolutional generative adversarial networks", arXiv:1511.06434
-        """
-        super(DCGAN, self).__init__()
-        
-        self.generator = Generator(
+        super().__init__()
+        self.generator = DCGAN_Generator(
             batch_size = batch_size, 
             sample_size = sample_size, 
             image_size = image_size,
             latent_dim = latent_dim,
         )
-        
-        self.discriminator = Discriminator(
+        self.discriminator = DCGAN_Discriminator(
             image_size = image_size, 
             latent_dim = latent_dim,
         )
 
-    def forward(self, images):
-        return self.discriminator(images)
+    def forward(self, x):
+        return None
     
+
+class CDCGAN(nn.Module):
+    def __init__(self, ):
+        super().__init__()
+        self.generator = None
+        self.discriminator = None
+
+    def forward(self, x):
+        return None
+    
+
+@MODEL_REGISTRY.register_model()
+def dcgan(**kwargs: Any) -> DCGAN:
+    """Deep Convolutional Generative Adversarial Network architecture
+
+    Reference
+        Radford et al (2015) `Unsupervised Representation Learning with 
+        Deep Convolutional Generative Adversarial Networks`.
+        <https://arxiv.org/abs/1511.06434>
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return DCGAN(**kwargs)
+
+
+@MODEL_REGISTRY.register_model()
+def cdcgan(**kwargs: Any) -> CDCGAN:
+    """Conditional Deep Convolutional Generative Adversarial Network architecture
+
+    Reference
+        ?
+
+    Args
+        **kwargs: parameters passed to the model class
+    """
+    return CDCGAN(**kwargs)

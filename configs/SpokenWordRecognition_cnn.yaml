@@ -28,7 +28,7 @@ model:
   module: 
     target: deeplightning.task.image.classification.ImageClassification
   network:
-    target: deeplightning.model.cnn.SpectrogramCNN
+    target: deeplightning.models.cnn.SpectrogramCNN
     params: 
       num_classes: 10
       num_channels: 1
