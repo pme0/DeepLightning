@@ -3,6 +3,7 @@ modes:
   test: false
   
 task: SemanticSegmentation
+
 data:
   dataset: HAM10000
   root: /Users/pme/research/data/HAM10000
@@ -51,6 +52,11 @@ engine:
   num_nodes: 1
   precision: 32
 
+metrics:
+  train: default
+  val: default
+  test: default
+  
 train:
   num_epochs: 10
   val_every_n_epoch: 1

@@ -9,93 +9,132 @@ from torchmetrics.classification.precision_recall_curve import MulticlassPrecisi
 from torchmetrics.functional.classification.accuracy import accuracy
 import seaborn as sn
 import numpy as np
-from matplotlib.figure import Figure as pltFigure
+from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
 
+from deeplightning.registry import METRICS_REGISTRY
 
 
-class Metric_PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
-	"""Precision-Recall metric class; inherits methods from 
-	torchmetrics parent class.
+__all__ = [
+	"ClassificationAccuracy", "classification_accuracy",
+	"PrecisionRecallCurve", "precision_recall_curve",
+	"ConfusionMatrix", "confusion_matrix",
+]
+
+
+class ClassificationAccuracy(MulticlassAccuracy):
+    """Classification Accuracy metric, inheriting from torchmetrics
+    """
+    def __init__(self, cfg: OmegaConf):
+        self.num_classes = cfg.model.network.params.num_classes
+        args = {
+            "num_classes": self.num_classes,
+        }
+        super().__init__(**args)
+
+
+@METRICS_REGISTRY.register_element()
+def classification_accuracy(cfg) -> ClassificationAccuracy:
+    return ClassificationAccuracy(cfg)
+
+
+class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
+	"""Precision-Recall metric class, inheriting from torchmetrics
 	"""
 	def __init__(self, cfg: OmegaConf):
 		self.num_classes = cfg.model.network.params.num_classes
 		args = {
-			"task": "binary" if self.num_classes == 2 else "multiclass",
 			"num_classes": self.num_classes,
-			}
+		}
 		super().__init__(**args)
 
+	def draw(self,
+		precision: Tensor,
+		recall: Tensor,
+		thresholds: Tensor,
+		stage: str,
+		epoch: int
+	) -> Figure:
+		"""Draw Precision-Recall Curve as a figure, to be logged as artifact media
 
-	def draw(self, precision: Tensor, recall: Tensor, thresholds: Tensor, subset: str,  epoch: int) -> pltFigure:
-		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
-
-		Parameters
-		----------
-		precision : precisions.
-		recall : recalls.
-		thresholds: threshold
-		subset : data subset (e.g. 'train' or 'val), to be used
-			as a label in the figure.
-		epoch : current epoch, to be used as a label in the figure.
+		Args:
+			precision: precisions values
+			recall: recalls values
+			thresholds: threshold values
+			stage: data subset {"train", "val", "test"}, for labelling
+			epoch: current epoch, for labelling
 		"""
-		assert self.num_classes == len(precision) and self.num_classes == len(recall)
+		assert self.num_classes == len(precision)
+		assert self.num_classes == len(recall)
 		
+		# draw figure
 		fig = plt.figure()
 		for i in range(self.num_classes):
 			plt.plot(recall[i].cpu(), precision[i].cpu(), label=i)
-		plt.title(f"Precision-Recall Curve [{subset}, epoch {epoch}]")
+		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch}]")
 		plt.xlabel("Recall")
 		plt.ylabel("Precision")
 		if self.num_classes <= 10:
 			plt.legend(loc="lower left", title="class", fontsize='small')
 		plt.close()
 		return fig
+	
 
-		
-class Metric_ConfusionMatrix(MulticlassConfusionMatrix):
-	"""Confusion Matrix metric class; inherits methods from 
-	torchmetrics parent class.
+@METRICS_REGISTRY.register_element()
+def precision_recall_curve(cfg) -> PrecisionRecallCurve:
+    return PrecisionRecallCurve(cfg)
+
+
+class ConfusionMatrix(MulticlassConfusionMatrix):
+	"""Confusion Matrix metric class, inheriting from torchmetrics
 	"""
 	def __init__(self, cfg: OmegaConf):
 		self.num_classes = cfg.model.network.params.num_classes
 		args = {
-			"task": "binary" if self.num_classes == 2 else "multiclass",
 			"num_classes": self.num_classes,
-			"normalize": "true",  # 'true' normalizes over the true labels (targets)
+			"normalize": "true",  # 'true' normalizes over true labels (targets)
 		}
 		super().__init__(**args)
 
 
-	def draw(self, confusion_matrix: Tensor, subset: str,  epoch: int) -> pltFigure:
-		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
+	def draw(self, 
+		confusion_matrix: Tensor, 
+		stage: str,
+		epoch: int,
+	) -> Figure:
+		"""Draw Confusion Matrix as a figure, to be logged as artifact media
+
+		Args:
+			confusion_matrix: confusion matrix values
+			stage: data subset {"train", "val", "test"}, for labelling
+			epoch: current epoch, for labelling
 		"""
-		assert self.num_classes == confusion_matrix.shape[0] and self.num_classes == confusion_matrix.shape[1]
+		assert self.num_classes == confusion_matrix.shape[0]
+		assert self.num_classes == confusion_matrix.shape[1]
+		
+		# round confusion matrix values
 		confusion_matrix = np.round(100*confusion_matrix.cpu().numpy()).astype(int)
 		
+		# draw figure
 		fig = plt.subplot()
-		cbar_args = {"label": "Correct predictions (%), normalized by true class"}
-		sn.heatmap(data = confusion_matrix, annot = True, fmt = "g", square = True, 
-			cmap = "Blues", vmin=0, vmax=100, cbar_kws=cbar_args)
-		plt.title(f"Confusion Matrix [{subset}, epoch {epoch}]")
+		cbar_args = {
+			"label": "Correct predictions (%), normalized by true class"}
+		sn.heatmap(
+			data = confusion_matrix, 
+			annot=True, fmt="g", square=True, cmap="Blues", 
+			vmin=0, vmax=100, cbar_kws=cbar_args)
+		plt.title(f"Confusion Matrix [{stage}, epoch {epoch}]")
 		plt.xlabel("Predicted class")
 		plt.ylabel("True class")
 		plt.close()
 		return fig
-		
 
-class Metric_Accuracy(MulticlassAccuracy):
-	"""Accuracy metric class; inherits methods from 
-	torchmetrics parent class.
-	"""
-	def __init__(self, cfg: OmegaConf):
-		self.num_classes = cfg.model.network.params.num_classes
-		args = {
-			"task": "binary" if self.num_classes == 2 else "multiclass",
-			"num_classes": self.num_classes,
-		}
-		super().__init__(**args)
-	
+
+@METRICS_REGISTRY.register_element()	
+def confusion_matrix(cfg) -> ConfusionMatrix:
+    return ConfusionMatrix(cfg)
+
+
 
 def metric_accuracy(logits: Tensor, target: Tensor, task: str, num_classes: int) -> Tensor:
 	preds = torch.argmax(logits, dim=1)
