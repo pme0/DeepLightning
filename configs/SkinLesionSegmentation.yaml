@@ -1,9 +1,9 @@
+task: SemanticSegmentation
+
 modes: 
   train: true
   test: false
   
-task: SemanticSegmentation
-
 data:
   dataset: HAM10000
   root: /Users/pme/research/data/HAM10000
