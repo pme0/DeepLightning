@@ -1,11 +1,12 @@
+<<< in active development >>>
+
 <h1 align="center">
   <b>Deep Lightning</b><br>
 </h1>
 <p align="center">
     <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.10-brightgreen" /></a>
     <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.0-yellow" /></a>
-    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/PyTorchLightning-2.0-orange" /></a>
-    <a href= "https://www.deepspeed.ai"><img src="https://img.shields.io/badge/DeepSpeed-0.5-blue" /></a>
+    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/Lightning-2.0-orange" /></a>
 </p>
 
 **Deep Lightning** is a configuration-based wrapper for training Deep Learning models with focus on parallel training, cross-platform compatibility and reproducibility. The philosophy is simple: from configuration to trackable and reproducible deep learning.
