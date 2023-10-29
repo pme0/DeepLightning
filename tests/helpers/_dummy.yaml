@@ -1,4 +1,9 @@
 task: classification
+
+modes: 
+  train: 
+  test: 
+
 data:
   root: /Users/pme12/data/
   dataset: MNIST
@@ -60,6 +65,9 @@ train:
   early_stop_delta: 0.001
   early_stop_patience: 3
 
+test:
+  ckpt_test_path:
+  
 logger:
   name: wandb
   project_name: unittests

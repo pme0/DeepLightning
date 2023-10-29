@@ -19,7 +19,6 @@ def check_all_keys_exist(cfg_base, cfg):
             check_all_keys_exist(cfg_base[key], cfg[key])
         else:
             if key not in cfg:
-                print(f"Key '{key}' not in config")
                 return False
     return True
 
@@ -34,7 +33,7 @@ def test_configs():
 
     for cfg_fp in configs:
         cfg = load_config(config_file=cfg_fp)
-        assert OmegaConf.is_config(cfg), f"Not a config '{cfg_fp}'"
-        assert check_all_keys_exist(cfg_base, cfg), f"Incorrect structure found in '{cfg_fp}'"
+        assert OmegaConf.is_config(cfg)
+        assert check_all_keys_exist(cfg_base, cfg)
 
    
