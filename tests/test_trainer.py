@@ -35,7 +35,7 @@ CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
 )
 def test_trainer(kwargs):
 
-    cfg = load_config(config_file = "configs/_dummy.yaml")
+    cfg = load_config(config_file = "tests/helpers/_dummy.yaml")
     
     cfg.engine.accelerator = kwargs["accelerator"]
     cfg.engine.strategy = kwargs["strategy"]
