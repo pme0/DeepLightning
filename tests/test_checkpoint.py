@@ -3,7 +3,6 @@ import sys
 sys.path.insert(0, "..")
 import torch
 import lightning as pl
-from lightning.utilities import rank_zero_only
 import pytest
 
 from tests.helpers.tools import compare_model_params
@@ -16,9 +15,9 @@ TMP_DIR = "tmp"
 CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
 
 
-def setup_trainer(strategy, precision, gpus):
-    
-    ckpt_callback = pl.callbacks.ModelCheckpoint(
+def setup_trainer(accelerator, strategy, devices, precision):
+
+    ckpt_callback = pl.pytorch.callbacks.ModelCheckpoint(
             dirpath = TMP_DIR, 
             save_last = True, 
             every_n_epochs = 1)
@@ -26,9 +25,10 @@ def setup_trainer(strategy, precision, gpus):
     trainer = pl.Trainer(
         max_epochs = 1,
         logger = False,
+        accelerator = accelerator,
         strategy = strategy, 
+        devices = devices,
         precision = precision, 
-        gpus = gpus,
         limit_train_batches = 2,
         limit_val_batches = 2,
         enable_model_summary = False,
@@ -43,14 +43,26 @@ def setup_trainer(strategy, precision, gpus):
     "kwargs",
     (
         pytest.param(
-            dict(strategy = None,  precision = 32, gpus = None)),
+            dict(accelerator="cpu", strategy="auto", devices="auto", precision=16)),
         pytest.param(
-            dict(strategy = "ddp", precision = 32, gpus = [0]), 
+            dict(accelerator="cpu", strategy="auto", devices="auto", precision=32)),
+        pytest.param(
+            dict(accelerator="gpu", strategy="auto", devices=[0], precision=16),
             marks = pytest.mark.skipif(
                 condition = not torch.cuda.is_available(), 
-                reason="single-gpu unavailable")),
+                reason="gpu unavailable")),
         pytest.param(
-            dict(strategy = "ddp", precision = 32, gpus = [0,1]), 
+            dict(accelerator="gpu", strategy="auto", devices=[0], precision=32),
+            marks = pytest.mark.skipif(
+                condition = not torch.cuda.is_available(), 
+                reason="gpu unavailable")),
+        pytest.param(
+            dict(accelerator="gpu", strategy="auto", devices=[0,1], precision=16),
+            marks = pytest.mark.skipif(
+                condition = torch.cuda.device_count() < 2, 
+                reason="multi-gpu unavailable")),
+        pytest.param(
+            dict(accelerator="gpu", strategy="auto", devices=[0,1], precision=32), 
             marks = pytest.mark.skipif(
                 condition = torch.cuda.device_count() < 2, 
                 reason="multi-gpu unavailable")),

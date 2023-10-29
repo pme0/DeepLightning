@@ -21,7 +21,7 @@ def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
     """
     cfg = OmegaConf.load(config_file)
     cfg = merge_defaults(cfg)
-    cfg = check_consistency(cfg)
+    #cfg = check_consistency(cfg)
     cfg = runtime_compute(cfg)
     OmegaConf.resolve(cfg)
     #config_print(OmegaConf.to_yaml(cfg))
@@ -103,4 +103,4 @@ def log_config(cfg: OmegaConf, path: str) -> None:
     
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
-    OmegaConf.save(cfg, f = os.path.join(path, "cfg.yaml"))
+    OmegaConf.save(cfg, f=os.path.join(path, "cfg.yaml"))

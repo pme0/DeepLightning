@@ -1,4 +1,4 @@
-#from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 
 #from deeplightning.logger.wandb import wandbLogger
 """
@@ -95,7 +95,7 @@ METRICS_REGISTRY = Registry("metrics")
 
 
 
-'''
+
 __TaskRegistry__ = [
     # Image
     "ImageClassification",
@@ -106,6 +106,12 @@ __TaskRegistry__ = [
     "AudioClassification",
 ]
 
+__LoggerRegistry__ = {
+    "wandb": WandbLogger,
+}
+
+
+'''
 __HooksRegistry__ = {
     # Image
     "ImageClassification": {
@@ -181,9 +187,4 @@ __MetricsRegistry__ = {
     },
 }
 
-
-
-__LoggerRegistry__ = {
-    "wandb": WandbLogger,
-}
 '''

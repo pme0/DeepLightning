@@ -2,8 +2,10 @@
 
 # before running the script make sure to activate `deeplightning`
 # environment and install `pytest` library
-#conda activate deeplightning
-#pip install pytest
+# ```
+# conda activate deeplightning
+# pip install pytest
+# ````
 
 # run `pytest --help` to see argument options
 

@@ -39,8 +39,8 @@ model:
     target: deeplightning.modules.loss.vqvae_loss.VQVAE_Loss
     params:
       smooth_l1_loss: True
-      num_tokens: ${model.network.params.num_tokens}
-      kl_div_loss_weight: ${model.network.params.kl_div_loss_weight}
+      num_tokens: 8  # ${model.network.params.num_tokens}
+      kl_div_loss_weight: 0.0  # ${model.network.params.kl_div_loss_weight}
   
 engine:
   backend: deepspeed_stage_3
@@ -64,8 +64,4 @@ log_to_wandb: true
 project_name: trial
 tags: ["image", "reconstruction", "vqvae"] # cannot be empty
 notes: null
-  type: pytorch_lightning.loggers.MLFlowLogger
-  params:
-    experiment_name: Default
-    tracking_uri: mlruns
-  log_every_n_steps: 10
+log_every_n_steps: 20

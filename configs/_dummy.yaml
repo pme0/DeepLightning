@@ -36,10 +36,16 @@ model:
     params:
 
 engine:
-  backend: deepspeed_stage_3
-  gpus: null
+  accelerator: cpu
+  strategy: auto
+  devices: auto
   num_nodes: 1
   precision: 32
+
+metrics:
+  train: default
+  val: default
+  test: default
 
 train:
   num_epochs: 1
@@ -47,14 +53,16 @@ train:
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
+  ckpt_monitor_metric: null  # used in `ModelCheckpoint` callback
   ckpt_every_n_epochs: 1
+  ckpt_save_top_k: 1
   early_stop_metric: null
+  early_stop_delta: 0.001
+  early_stop_patience: 3
 
 logger:
-  log_to_wandb: false
-  target: pytorch_lightning.loggers.MLFlowLogger
-  params:
-    experiment_name: Default
-    tracking_uri: mlruns
-  log_every_n_steps: 10
-  flush_logs_every_n_steps: 50
+  name: wandb
+  project_name: unittests
+  tags: ["_"] # cannot be empty
+  notes: null
+  log_every_n_steps: 20
