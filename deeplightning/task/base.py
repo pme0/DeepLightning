@@ -39,10 +39,6 @@ class BaseTask(pl.LightningModule):
         # everything is correct. Use this to avoid logging during that
         self.sanity_check = True
 
-        # Initialise metrics to track during training
-        self.device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
-        self.metrics = init_metrics(cfg, device=self.device)
-
         # Initialise label to track metrics against
         self.step_label = "iteration"
 
@@ -50,24 +46,46 @@ class BaseTask(pl.LightningModule):
         self.gather_on_step = gather_on_step
         self.gather_on_epoch = gather_on_epoch
 
-
-    def num_parameters(self):
-        """Prints the number of model parameters
-
-        Lightning's model summary does not give the correct number 
-        of trainable parameters. See 
-        https://github.com/PyTorchLightning/pytorch-lightning/issues/12130
+    
+    def on_task_init_end(self):
+        """Attributes to initialise at the end of the `__init__` method
+        of the class that inherits from this `BaseTask` class.
         """
+        self.set_num_model_params()
+        self.print_num_model_params()
+ 
+
+    @property
+    def num_trainable_params(self):
+        return self._num_trainable_params
     
-        trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
-        nontrainable_params = sum(p.numel() for p in self.model.parameters() if not p.requires_grad)
-        total_params =  trainable_params + nontrainable_params
+
+    @property
+    def num_nontrainable_params(self):
+        return self._num_nontrainable_params
+    
+
+    @property
+    def num_total_params(self):
+        return self._num_total_params
+
+
+    def set_num_model_params(self):
+        self._num_trainable_params = sum(
+            p.numel() for p in self.model.parameters() if p.requires_grad
+        )
+        self._num_nontrainable_params = sum(
+            p.numel() for p in self.model.parameters() if not p.requires_grad
+        )
+        self._num_total_params = self._num_trainable_params + self._num_nontrainable_params
+
+    
+    def print_num_model_params(self):
+        info_message("Trainable model parameters: {:,d}".format(self.num_trainable_params))
+        info_message("Non-trainable model parameters: {:,d}".format(self.num_nontrainable_params))
+        info_message("Total model parameters: {:,d}".format(self.num_total_params))
         
-        info_message("Trainable model parameters: {:,d}".format(trainable_params))
-        info_message("Non-trainable model parameters: {:,d}".format(nontrainable_params))
-        info_message("Total model parameters: {:,d}".format(total_params))
-    
-    
+
     def forward(self, x: Tensor) -> Tensor:
         raise NotImplementedError
 
