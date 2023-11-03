@@ -88,14 +88,6 @@ class Registry:
         return sorted(list(self.elements_dict.keys()))
 
 
-TASK_REGISTRY = Registry("tasks")
-MODEL_REGISTRY = Registry("models")
-DATA_REGISTRY = Registry("datasets")
-METRICS_REGISTRY = Registry("metrics")
-
-
-
-
 __TaskRegistry__ = [
     # Image
     "ImageClassification",
