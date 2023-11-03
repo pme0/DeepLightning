@@ -41,10 +41,7 @@ trainer.fit(model, data)
   * [Run](#run)
   * [Configure](#configure)
   * [Customize](#customize)
-* [Examples](#examples) 
-* [Results](#results) 
-* [Development](#development)
-* [Further Reading](#further-reading)
+* [Examples](#examples)
 
 # Overview
 
@@ -116,23 +113,6 @@ For example, `model.optimizer.target` could be existing `deepspeed.ops.adam.Fuse
  
 ### Example
 ```yaml
-modes: 
-  train: true
-  test: false
-  
-task: ImageClassification
-
-data:
-  root: /data
-  dataset: MNIST
-  image_size: 28
-  num_channels: 1
-  num_classes: 10
-  num_workers: 4
-  batch_size: 256
-  module:
-    target: deeplightning.data.dataloaders.image.mnist.MNIST
-
 model:
   module:
     target: deeplightning.task.image.classification.TaskModule
@@ -141,49 +121,6 @@ model:
     params: 
       num_classes: 10
       num_channels: 1
-  optimizer:
-    target: torch.optim.SGD
-    params:
-      lr: 0.01
-      weight_decay: 0.01
-      momentum: 0.9
-  scheduler:
-    target: torch.optim.lr_scheduler.ExponentialLR
-    params:
-      gamma: 0.99
-    call:
-      interval: "epoch"
-      frequency: 1
-  loss:
-    target: torch.nn.CrossEntropyLoss
-    params:
-  
-engine:
-  accelerator: cpu
-  strategy: auto
-  devices: 1
-  num_nodes: 1
-  precision: 32
-
-train:
-  num_epochs: 1
-  val_every_n_epoch: 1
-  grad_accum_from_epoch: 0
-  grad_accum_every_n_batches: 1
-  ckpt_resume_path: null
-  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
-  ckpt_every_n_epochs: 1
-  ckpt_save_top_k: 1
-  early_stop_metric: null  # used in `EarlyStopping` callback
-  early_stop_delta: 0.001
-  early_stop_patience: 3
-
-logger:
-  name: wandb
-  project_name: trial
-  tags: ["_"] # cannot be empty
-  notes: null
-  log_every_n_steps: 20
 ```
 
 ### Customize
@@ -200,41 +137,3 @@ Beyond changing parameters values in existing configs, you can customize the fol
 
 See [`examples`](https://github.com/pme0/DeepLightning/tree/master/examples) for details.
 
-
-# Results
-
-[results on acceleration, memory use, etc.]
-
-
-# Development
-
-### Functionalities
-- [x] tracking logger (losses, learning rate, etc.)
-- [x] artifact storing (config, image, etc.)
-- [x] parallel training
-  - [x] multi-gpu
-  - [x] multi-node
-  - [x] backend engines:
-    - [x] ddp
-    - [x] deepspeed_stage_1 
-    - [x] deepspeed_stage_2
-    - [ ] deepspeed_stage_3 (TODO resuming, sharded initialization)
-- [x] 16-bit precision
-- [x] periodic model checkpoints
-- [ ] resume training from model checkpoint --- `deepspeed` untested [[docs](https://pytorch-lightning.readthedocs.io/en/stable/advanced/advanced_gpu.html#deepspeed)] [[docs](https://pytorch-lightning.readthedocs.io/en/stable/advanced/advanced_gpu.html#collating-single-file-checkpoint-for-deepspeed-zero-stage-3)];
-- [ ] sharded loading via LightningModule hook `configure_sharded_model(self):` [[docs](https://pytorch-lightning.readthedocs.io/en/latest/advanced/model_parallel.html#enabling-module-sharding-for-maximum-memory-efficiency)];
-- [x] gradient accumulation
-- [x] early stopping
-- [x] prediction API [TODO: add batch support]
-- [ ] multiple losses/optimizers e.g. GAN; [[docs](https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html?highlight=configure_optimizers#configure-optimizers)]; though deepspeed doesn't allow this atm "DeepSpeed currently only supports single optimizer, single scheduler within the training loop." [[docs](https://pytorch-lightning.readthedocs.io/en/stable/advanced/advanced_gpu.html#deepspeed)]
-- [x] reproducible examples
-  - [x] image classification
-  - [x] image reconstruction
-- [ ] model registry
-
-
-### Notes
-
-- :triangular_flag_on_post: on `deepspeed=0.5.10`, optimizer `deepspeed.ops.adam.FusedAdam` gives `AssertionError: CUDA_HOME does not exist, unable to compile CUDA op(s)`. Mentioned in issue [#1279](https://github.com/microsoft/DeepSpeed/issues/1279);
-- :warning: effective batch size is `batch * num_gpus * num_nodes` [[docs](https://pytorch-lightning.readthedocs.io/en/stable/advanced/multi_gpu.html#batch-size)] but huge batch size can cause convergence difficulties [[paper](https://arxiv.org/abs/1706.02677)];
-- :warning: deepspeed single-file checkpointing requires caution [[docs](https://pytorch-lightning.readthedocs.io/en/latest/advanced/advanced_gpu.html#collating-single-file-checkpoint-for-deepspeed-zero-stage-3)] [[docs](https://pytorch-lightning.readthedocs.io/en/stable/api/pytorch_lightning.plugins.training_type.DeepSpeedPlugin.html)]
