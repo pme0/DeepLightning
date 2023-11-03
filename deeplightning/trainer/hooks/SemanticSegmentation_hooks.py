@@ -85,12 +85,13 @@ def validation_step__SemanticSegmentation(self, batch, batch_idx):
     outputs = process_model_outputs(outputs, self.model)
     preds = torch.argmax(outputs, dim=1)
     
-    raise
+    '''
     for i in range(5):
         print(batch["inputs_paths"][i])
         print(batch["masks_paths"][i])
         save_image(preds[0].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/mask_step{self.global_step}.jpeg")
         i += 1
+    '''
 
     # loss
     val_loss = self.loss(outputs, batch["masks"])

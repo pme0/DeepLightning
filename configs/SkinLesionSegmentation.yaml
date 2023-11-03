@@ -75,7 +75,7 @@ test:
 
 logger:
   name: wandb
-  project_name: trial
+  project_name: skinlesion
   tags: ["_"] # cannot be empty
   notes: null
   log_every_n_steps: 20

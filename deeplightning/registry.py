@@ -1,7 +1,6 @@
 from lightning.pytorch.loggers import WandbLogger
 
 #from deeplightning.logger.wandb import wandbLogger
-"""
 from deeplightning.trainer.hooks.ImageClassification_hooks import (
     training_step__ImageClassification,
     training_step_end__ImageClassification,
@@ -23,19 +22,7 @@ from deeplightning.trainer.hooks.SemanticSegmentation_hooks import (
     test_step_end__SemanticSegmentation,
     on_test_epoch_end__SemanticSegmentation)
 
-from deeplightning.trainer.hooks.AudioClassification_hooks import (
-    training_step__AudioClassification,
-    training_step_end__AudioClassification,
-    training_epoch_end__AudioClassification,
-    validation_step__AudioClassification,
-    validation_step_end__AudioClassification,
-    validation_epoch_end__AudioClassification,
-    test_step__AudioClassification,
-    test_step_end__AudioClassification,
-    test_epoch_end__AudioClassification)
 
-from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
-"""
 
 from typing import Any, Callable, List, Type, TypeVar
 T = TypeVar('T')
@@ -103,7 +90,7 @@ __LoggerRegistry__ = {
 }
 
 
-'''
+
 __HooksRegistry__ = {
     # Image
     "ImageClassification": {
@@ -149,34 +136,3 @@ __HooksRegistry__ = {
 }
 
 
-__MetricsRegistry__ = {
-    # Image
-	"ImageClassification": {
-        "Accuracy_train": Metric_Accuracy,
-        "Accuracy_val": Metric_Accuracy,
-        "Accuracy_test": Metric_Accuracy,
-        "ConfusionMatrix_val": Metric_ConfusionMatrix,
-        "ConfusionMatrix_test": Metric_ConfusionMatrix,
-		"PrecisionRecallCurve_val": Metric_PrecisionRecallCurve,
-		"PrecisionRecallCurve_test": Metric_PrecisionRecallCurve,
-	},
-    "ImageReconstruction": {
-        "_": None,
-    },
-    "ObjectDetection": {
-        "_": None,
-    },
-    "SemanticSegmentation": {
-        "Accuracy_train": Metric_Accuracy,
-        "Accuracy_val": Metric_Accuracy,
-        "Accuracy_test": Metric_Accuracy,
-    },
-    # Audio
-    "AudioClassification":{
-        "Accuracy": Metric_Accuracy,
-        "ConfusionMatrix": Metric_ConfusionMatrix,
-		"PrecisionRecallCurve": Metric_PrecisionRecallCurve,
-    },
-}
-
-'''

@@ -8,7 +8,8 @@ from deeplightning.init.imports import init_obj_from_config
 from deeplightning.init.initializers import init_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
-from deeplightning.registry import __MetricsRegistry__, __HooksRegistry__
+from deeplightning.registry import __HooksRegistry__
+from deeplightning.utils.metrics import classification_accuracy
 
 
 
@@ -48,7 +49,13 @@ class TaskModule(pl.LightningModule):
 
         # Initialise metrics to track during training
         torch_device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
-        self.metrics = init_metrics(cfg, device=torch_device)
+
+        #self.metrics = init_metrics(cfg, device=torch_device)
+        self.metrics = {
+            "Accuracy_train": classification_accuracy(cfg),
+            "Accuracy_val": classification_accuracy(cfg),
+            "Accuracy_test": classification_accuracy(cfg),
+        }
 
         # Initialise label to track metrics against
         self.step_label = "iteration"

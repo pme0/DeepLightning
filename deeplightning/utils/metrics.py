@@ -12,7 +12,8 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
 
-from deeplightning.registry import METRICS_REGISTRY
+from deeplightning import METRIC_REGISTRY
+#from deeplightning.utils.metrics import Metric_Accuracy, Metric_ConfusionMatrix, Metric_PrecisionRecallCurve
 
 
 __all__ = [
@@ -20,6 +21,39 @@ __all__ = [
 	"PrecisionRecallCurve", "precision_recall_curve",
 	"ConfusionMatrix", "confusion_matrix",
 ]
+
+
+'''
+__MetricsRegistry__ = {
+    # Image
+	"ImageClassification": {
+        "Accuracy_train": Metric_Accuracy,
+        "Accuracy_val": Metric_Accuracy,
+        "Accuracy_test": Metric_Accuracy,
+        "ConfusionMatrix_val": Metric_ConfusionMatrix,
+        "ConfusionMatrix_test": Metric_ConfusionMatrix,
+		"PrecisionRecallCurve_val": Metric_PrecisionRecallCurve,
+		"PrecisionRecallCurve_test": Metric_PrecisionRecallCurve,
+	},
+    "ImageReconstruction": {
+        "_": None,
+    },
+    "ObjectDetection": {
+        "_": None,
+    },
+    "SemanticSegmentation": {
+        "Accuracy_train": Metric_Accuracy,
+        "Accuracy_val": Metric_Accuracy,
+        "Accuracy_test": Metric_Accuracy,
+    },
+    # Audio
+    "AudioClassification":{
+        "Accuracy": Metric_Accuracy,
+        "ConfusionMatrix": Metric_ConfusionMatrix,
+		"PrecisionRecallCurve": Metric_PrecisionRecallCurve,
+    },
+}
+'''
 
 
 class ClassificationAccuracy(MulticlassAccuracy):
@@ -33,7 +67,7 @@ class ClassificationAccuracy(MulticlassAccuracy):
         super().__init__(**args)
 
 
-@METRICS_REGISTRY.register_element()
+@METRIC_REGISTRY.register_element()
 def classification_accuracy(cfg) -> ClassificationAccuracy:
     return ClassificationAccuracy(cfg)
 
@@ -80,7 +114,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		return fig
 	
 
-@METRICS_REGISTRY.register_element()
+@METRIC_REGISTRY.register_element()
 def precision_recall_curve(cfg) -> PrecisionRecallCurve:
     return PrecisionRecallCurve(cfg)
 
@@ -130,7 +164,7 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 		return fig
 
 
-@METRICS_REGISTRY.register_element()	
+@METRIC_REGISTRY.register_element()	
 def confusion_matrix(cfg) -> ConfusionMatrix:
     return ConfusionMatrix(cfg)
 
