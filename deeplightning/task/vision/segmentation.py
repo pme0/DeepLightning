@@ -10,29 +10,17 @@ from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 from deeplightning.registry import __HooksRegistry__
 from deeplightning.utils.metrics import classification_accuracy
+from deeplightning.task.base import BaseTask
 
 
+class SemanticSegmentationTask(BaseTask):
+    """ Task module for Semantic Segmentation. 
 
-class TaskModule(pl.LightningModule):
-    """ Task module for Image Classification. 
-
-    LOGGING: manual logging `self.logger.log()` is used. This
-    is more flexible as PyTorchLightning automatic logging 
-    `self.log()`) only allows scalars, not histograms, images, etc.
-    Additionally, auto-logging doesn't log at step 0, which is useful.
-
-    Parameters
-    ----------
-    cfg : yaml configuration object
-    
+    Args:
+        cfg: yaml configuration object
     """
-
     def __init__(self, cfg: OmegaConf):
-        super().__init__()
-        self.cfg = cfg  #TODO check if this contains logger runtime params
-        self.num_classes = cfg.model.network.params.num_classes
-        #self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
-
+        super().__init__(cfg=cfg)
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
@@ -64,15 +52,15 @@ class TaskModule(pl.LightningModule):
         # to make the hooks bound to the class (so that they can access class attributes 
         #  using `self.something`), the assignment must specify the class name as follows:
         # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
-        TaskModule._training_step = __HooksRegistry__[cfg.task]["training_step"]
-        TaskModule._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
-        TaskModule._on_training_epoch_end = __HooksRegistry__[cfg.task]["on_training_epoch_end"]
-        TaskModule._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
-        TaskModule._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
-        TaskModule._on_validation_epoch_end = __HooksRegistry__[cfg.task]["on_validation_epoch_end"]
-        TaskModule._test_step = __HooksRegistry__[cfg.task]["test_step"]
-        TaskModule._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
-        TaskModule._on_test_epoch_end = __HooksRegistry__[cfg.task]["on_test_epoch_end"]
+        SemanticSegmentationTask._training_step = __HooksRegistry__[cfg.task]["training_step"]
+        SemanticSegmentationTask._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
+        SemanticSegmentationTask._on_training_epoch_end = __HooksRegistry__[cfg.task]["on_training_epoch_end"]
+        SemanticSegmentationTask._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
+        SemanticSegmentationTask._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
+        SemanticSegmentationTask._on_validation_epoch_end = __HooksRegistry__[cfg.task]["on_validation_epoch_end"]
+        SemanticSegmentationTask._test_step = __HooksRegistry__[cfg.task]["test_step"]
+        SemanticSegmentationTask._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
+        SemanticSegmentationTask._on_test_epoch_end = __HooksRegistry__[cfg.task]["on_test_epoch_end"]
 
         # Aggregation utilities
         self.gather_on_step = gather_on_step

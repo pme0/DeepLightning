@@ -26,7 +26,7 @@ data:
  
 model:
   module: 
-    target: deeplightning.task.vision.segmentation.TaskModule
+    target: deeplightning.task.vision.segmentation.SemanticSegmentationTask
   network:
     target: torchvision.models.segmentation.deeplabv3_resnet50
     params: 
