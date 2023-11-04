@@ -22,7 +22,6 @@ class TaskSpecification():
 class ImageClassificationTask(TaskSpecification):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
-        if cfg.task = 
         self.metrics = [
             "classification_accuracy",
         ]
