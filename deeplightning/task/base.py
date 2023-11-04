@@ -100,10 +100,6 @@ class BaseTask(pl.LightningModule):
         raise NotImplementedError
 
 
-    def training_step_end(self):
-        raise NotImplementedError
-
-
     def on_training_epoch_end(self):
         raise NotImplementedError
     
@@ -112,19 +108,11 @@ class BaseTask(pl.LightningModule):
         raise NotImplementedError
 
 
-    def validation_step_end(self):
-        raise NotImplementedError
-
-
     def on_validation_epoch_end(self):
         raise NotImplementedError
 
 
     def test_step(self, batch, batch_idx):
-        raise NotImplementedError
-
-
-    def test_step_end(self):
         raise NotImplementedError
 
 

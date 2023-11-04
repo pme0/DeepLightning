@@ -215,13 +215,13 @@ class SemanticSegmentationTask(BaseTask):
         #self.metrics["PrecisionRecallCurve_val"].update(preds = outputs, target = batch["masks"])
 
 
-    def validation_step_end__SemanticSegmentation(self):
+    def validation_step_end(self):
         """ Hook for `validation_step_end`.
         """
         pass
 
 
-    def on_validation_epoch_end__SemanticSegmentation(self):
+    def on_validation_epoch_end(self):
         """ Hook for `on_validation_epoch_end`.
         """
 
@@ -275,7 +275,7 @@ class SemanticSegmentationTask(BaseTask):
             self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
 
 
-    def test_step__SemanticSegmentation(self, batch, batch_idx):
+    def test_step(self, batch, batch_idx):
         """ Hook for `test_step`.
 
         Parameters
@@ -305,13 +305,13 @@ class SemanticSegmentationTask(BaseTask):
         #self.metrics["PrecisionRecallCurve_test"].update(preds = outputs, target = batch["masks"])
                 
 
-    def test_step_end__SemanticSegmentation(self):
+    def test_step_end(self):
         """ Hook for `test_step_end`.
         """
         pass
 
 
-    def on_test_epoch_end__SemanticSegmentation(self):
+    def on_test_epoch_end(self):
         """ Hook for `on_test_epoch_end`.
         """
 
