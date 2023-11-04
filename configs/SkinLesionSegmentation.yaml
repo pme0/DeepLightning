@@ -75,7 +75,7 @@ test:
 
 logger:
   name: wandb
-  project_name: skinlesion
+  project_name: skin-lesion-segmentation
   tags: ["_"] # cannot be empty
   notes: null
   log_every_n_steps: 20
