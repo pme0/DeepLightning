@@ -2,11 +2,14 @@ from typing import Tuple
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
+from torchvision.utils import save_image
+
 import lightning as pl
+from lightning.pytorch.trainer.states import RunningStage
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.init.initializers import init_metrics
-from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
+#from deeplightning.init.initializers import init_metrics
+#from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 from deeplightning.registry import __HooksRegistry__
 from deeplightning.utils.metrics import classification_accuracy
@@ -45,7 +48,7 @@ class SemanticSegmentationTask(BaseTask):
 
         # PyTorch-Lightning performs a partial validation epoch to ensure that
         # everything is correct. Use this to avoid logging metrics to W&B for that 
-        self.sanity_check = True
+        #self.sanity_check = True
 
         # Initialise metrics to track during training
         torch_device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
@@ -117,13 +120,6 @@ class SemanticSegmentationTask(BaseTask):
     """    
 
     def training_step(self, batch, batch_idx):
-        """ Hook for `training_step`.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader.
-        batch_idx : index of batch
-        """
 
         # convert batch to dictionary form
         batch = dictionarify_batch(batch, self.cfg.data.dataset)
@@ -142,49 +138,33 @@ class SemanticSegmentationTask(BaseTask):
         # metrics
         self.metrics["Accuracy_train"].update(preds=outputs, target=batch["masks"])
 
+        if self.global_step % self.cfg.logger.log_every_n_steps == 0:
+
+            metrics = {}
+            metrics["train_loss"] = torch.stack(self.training_step_outputs["train_loss"]).mean()
+            self.training_step_outputs.clear()  # free memory
+            # accuracy (batch only)
+            metrics["train_acc"] = self.metrics["Accuracy_train"].compute()
+            self.metrics["Accuracy_train"].reset()
+            # log learning rate
+            #metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
+
+            # log training metrics
+            metrics[self.step_label] = self.global_step
+            self.logger.log_metrics(metrics)
+
         # the output is not used but returning None gives the following warning
         # """lightning/pytorch/loops/optimization/automatic.py:129: 
         # UserWarning: `training_step` returned `None`. If this was 
         # on purpose, ignore this warning..."""
         return {"loss": train_loss}
-
-
-    def training_step_end(self):
-        """ Hook for `training_step_end`.
-        """
-        if self.global_step % self.cfg.logger.log_every_n_steps == 0:
-
-            metrics = {}
-
-            metrics["train_loss"] = torch.stack(self.training_step_outputs["train_loss"]).mean()
-            self.training_step_outputs.clear()  # free memory
-
-            # accuracy (batch only)
-            metrics["train_acc"] = self.metrics["Accuracy_train"].compute()
-            self.metrics["Accuracy_train"].reset()
-
-            # log learning rate
-            #metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
-                
-            # log training metrics
-            metrics[self.step_label] = self.global_step
-            self.logger.log_metrics(metrics)
-
+    
 
     def on_training_epoch_end(self):
-        """ Hook for `on_training_epoch_end`.
-        """
         pass
 
 
     def validation_step(self, batch, batch_idx):
-        """ Hook for `validation_step`.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader.
-        batch_idx : index of batch
-        """
 
         # convert batch to dictionary form
         batch = dictionarify_batch(batch, self.cfg.data.dataset)
@@ -194,13 +174,11 @@ class SemanticSegmentationTask(BaseTask):
         outputs = process_model_outputs(outputs, self.model)
         preds = torch.argmax(outputs, dim=1)
         
-        '''
         for i in range(5):
             print(batch["inputs_paths"][i])
             print(batch["masks_paths"][i])
-            save_image(preds[0].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/mask_step{self.global_step}.jpeg")
-            i += 1
-        '''
+            torch.save(obj=preds[i], f=f"/Users/pme/Downloads/segm/mask_step{self.global_step}_i{i}.pt")
+            save_image(preds[i].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/mask_step{self.global_step}_i{i}.jpeg")
 
         # loss
         val_loss = self.loss(outputs, batch["masks"])
@@ -215,18 +193,7 @@ class SemanticSegmentationTask(BaseTask):
         #self.metrics["PrecisionRecallCurve_val"].update(preds = outputs, target = batch["masks"])
 
 
-    def validation_step_end(self):
-        """ Hook for `validation_step_end`.
-        """
-        pass
-
-
     def on_validation_epoch_end(self):
-        """ Hook for `on_validation_epoch_end`.
-        """
-
-        #TODO confirm on multi-gpu
-        #print('\nself.validation_step_outputs["val_loss"]', len(self.validation_step_outputs["val_loss"]), '\n')
 
         metrics = {}
         metrics["val_loss"] = torch.stack(self.validation_step_outputs["val_loss"]).mean()
@@ -259,9 +226,9 @@ class SemanticSegmentationTask(BaseTask):
 
         # log validation metrics
         metrics[self.step_label] = self.global_step
-        if not self.sanity_check:
+        if self.trainer.state.stage != RunningStage.SANITY_CHECKING:  # `and self.global_step > 0`
             self.logger.log_metrics(metrics)
-        self.sanity_check = False
+        #self.sanity_check = False
 
         # The following is required for EarlyStopping and ModelCheckpoint callbacks to work properly. 
         # Callbacks read from `self.log()`, not from `self.logger.log()`, so need to log there.
@@ -276,13 +243,6 @@ class SemanticSegmentationTask(BaseTask):
 
 
     def test_step(self, batch, batch_idx):
-        """ Hook for `test_step`.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader.
-        batch_idx: index of batch.
-        """
 
         # convert batch to dictionary form
         batch = dictionarify_batch(batch, self.cfg.data.dataset)
@@ -303,17 +263,9 @@ class SemanticSegmentationTask(BaseTask):
         self.metrics["Accuracy_test"].update(preds = preds, target = batch["masks"])
             #self.metrics["ConfusionMatrix_test"].update(preds = preds, target = batch["masks"])
         #self.metrics["PrecisionRecallCurve_test"].update(preds = outputs, target = batch["masks"])
-                
-
-    def test_step_end(self):
-        """ Hook for `test_step_end`.
-        """
-        pass
 
 
     def on_test_epoch_end(self):
-        """ Hook for `on_test_epoch_end`.
-        """
 
         metrics = {}
         metrics["test_loss"] = torch.stack(self.test_step_outputs["test_loss"]).mean()

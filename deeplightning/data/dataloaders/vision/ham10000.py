@@ -27,19 +27,17 @@ def _extract_masks(metadata, root):
 
 
 class HAM10000_dataset(Dataset):
-    """HAM10000 Dataset ("Human Against Machine with 10000 training images") 
-    for Image Classification and Semantic Segmentation.
+    """HAM10000 Dataset for Image Classification and Semantic Segmentation.
     It contains dermatoscopic images from different populations, acquired and 
     stored by different modalities. Cases include a representative collection 
     of all important diagnostic categories in the realm of pigmented lesions.
 
-    Statistics & Details
-    --------------------
-    - images and segmentation masks size: (width,height)=(600,450)
-    - normalization constants for images: mean=(?,) and std=(?,)
-    - number of samples: 10015
-    - number of image classes: 7
-    - number of segmentation classes: 7 ()
+    images and segmentation masks size: (width,height)=(600,450)
+    normalization constants for images: mean=(?,) and std=(?,)
+    number of samples: 10015
+    number of image classes: 7
+    number of segmentation classes: 7
+
     |-------|-------------|------------------------------------------------------------------------------------------------------------|
     | label | no. samples | description                                                                                                |
     |-------|-------------|------------------------------------------------------------------------------------------------------------|
@@ -52,17 +50,16 @@ class HAM10000_dataset(Dataset):
     | VASC  | 142         | vascular lesions (angiomas, angiokeratomas, pyogenic granulomas and hemorrhage)                            |
     |-------|-------------|------------------------------------------------------------------------------------------------------------|
         
-    References
-    ----------
-    - Tschandl, P., Rosendahl, C., & Kittler, H. (2018). "The HAM10000 
-        dataset, a large collection of multi-source dermatoscopic images 
-        of common pigmented skin lesions". Scientific data, 5(1), 1-9.
-    - https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T
-    
-    Arguments
-    ---------
-    cfg : configuration object
-    transform : Transforms to be applied to images
+    References:
+        > "Human Against Machine with 10000 training images"
+        > https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T
+        > Tschandl, P., Rosendahl, C., & Kittler, H. (2018). "The HAM10000 
+            dataset, a large collection of multi-source dermatoscopic images 
+            of common pigmented skin lesions". Scientific data, 5(1), 1-9.
+
+    Args:
+        cfg: configuration object
+        transform: Transforms to be applied to images
 
     """
     def __init__(self, 

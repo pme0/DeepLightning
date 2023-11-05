@@ -73,6 +73,8 @@ class BaseTask(pl.LightningModule):
 
 
     def set_num_model_params(self) -> None:
+        """Set the number of model parameters as attributes of the class.
+        """
         self._num_trainable_params = sum(
             p.numel() for p in self.model.parameters() if p.requires_grad
         )
@@ -83,10 +85,12 @@ class BaseTask(pl.LightningModule):
 
     
     def print_num_model_params(self) -> None:
+        """Print the number of model parameters.
+        """
         info_message("Trainable model parameters: {:,d}".format(self.num_trainable_params))
         info_message("Non-trainable model parameters: {:,d}".format(self.num_nontrainable_params))
         info_message("Total model parameters: {:,d}".format(self.num_total_params))
-        
+
 
     def forward(self, x: Tensor) -> Tensor:
         raise NotImplementedError
@@ -97,6 +101,12 @@ class BaseTask(pl.LightningModule):
     
 
     def training_step(self, batch, batch_idx):
+        """ Lightning hook for training step.
+
+        Args:
+            batch: object containing the data output by the dataloader.
+            batch_idx: index of batch
+        """
         raise NotImplementedError
 
 
@@ -105,6 +115,12 @@ class BaseTask(pl.LightningModule):
     
 
     def validation_step(self, batch, batch_idx):
+        """ Lightning hook for validation step.
+
+        Args:
+            batch: object containing the data output by the dataloader.
+            batch_idx: index of batch
+        """
         raise NotImplementedError
 
 
@@ -113,6 +129,12 @@ class BaseTask(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx):
+        """ Lightning hook for test step.
+
+        Args:
+            batch: object containing the data output by the dataloader.
+            batch_idx: index of batch
+        """
         raise NotImplementedError
 
 
