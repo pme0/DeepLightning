@@ -145,7 +145,7 @@ class SemanticSegmentationTask(BaseTask):
             print(batch["inputs_paths"][i])
             print(batch["masks_paths"][i])
             torch.save(obj=preds[i], f=f"/Users/pme/Downloads/segm/mask_step{self.global_step}_i{i}.pt")
-            save_image(preds[i].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/mask_step{self.global_step}_i{i}.jpeg")
+            save_image(preds[i].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/{batch['masks_paths'][i]}_pred_step{self.global_step}.png")
 
         # loss
         val_loss = self.loss(outputs, batch["masks"])

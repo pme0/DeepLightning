@@ -18,7 +18,7 @@ data:
     normalize: # use `deeplightning.utils.data.compute_dataset_mean_and_stdev()`
       mean: [0., 0., 0.]
       std: [1., 1., 1.]
-    resize: [32, 32]
+    resize: [128, 128]
   test_transforms:
     normalize:
       mean: [0., 0., 0.]
@@ -58,7 +58,7 @@ metrics:
   test: default
   
 train:
-  num_epochs: 2
+  num_epochs: 20
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
