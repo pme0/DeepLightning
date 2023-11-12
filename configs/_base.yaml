@@ -1,0 +1,69 @@
+task: 
+
+modes: 
+  train: 
+  test: 
+  
+data:
+  dataset: 
+  root: 
+  num_workers: 
+  batch_size: 
+  module: 
+    target: 
+  train_transforms:
+  test_transforms:
+ 
+model:
+  module: 
+    target: 
+  network:
+    target: 
+    params: 
+  optimizer:
+    target: 
+    params:
+  scheduler:
+    target: 
+    params:
+    call:
+      interval: 
+      frequency: 
+  loss:
+    target: 
+    params:
+
+engine:
+  accelerator: 
+  strategy: 
+  devices: 
+  num_nodes: 
+  precision: 
+
+metrics:
+  train: 
+  val: 
+  test: 
+  
+train:
+  num_epochs: 
+  val_every_n_epoch: 
+  grad_accum_from_epoch: 
+  grad_accum_every_n_batches: 
+  ckpt_resume_path: 
+  ckpt_monitor_metric:
+  ckpt_every_n_epochs: 
+  ckpt_save_top_k: 
+  early_stop_metric: 
+  early_stop_delta: 
+  early_stop_patience: 
+
+test:
+  ckpt_test_path:
+
+logger:
+  name: 
+  project_name: 
+  tags: 
+  notes: 
+  log_every_n_steps: 

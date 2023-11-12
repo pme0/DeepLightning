@@ -4,8 +4,18 @@ from torchvision.utils import save_image
 
 from deeplightning.trainer.batch import dictionarify_batch
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.trainer.utils import process_model_outputs
 
+
+def process_model_outputs(outputs, model):
+    """Processes model outouts and selects the appropriate elements
+    """
+    if model.__class__.__name__ == "DeepLabV3":
+        # `DeepLabV3` returns a dictionaty with keys `out` (segmentation 
+        # mask) and optionally `aux` if an auxiliary classifier is used.
+        return outputs["out"]
+    else:
+        return outputs
+    
 
 def training_step__SemanticSegmentation(self, batch, batch_idx):
     """ Hook for `training_step`.
@@ -85,12 +95,13 @@ def validation_step__SemanticSegmentation(self, batch, batch_idx):
     outputs = process_model_outputs(outputs, self.model)
     preds = torch.argmax(outputs, dim=1)
     
-    raise
+    '''
     for i in range(5):
         print(batch["inputs_paths"][i])
         print(batch["masks_paths"][i])
         save_image(preds[0].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/mask_step{self.global_step}.jpeg")
         i += 1
+    '''
 
     # loss
     val_loss = self.loss(outputs, batch["masks"])

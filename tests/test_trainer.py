@@ -20,23 +20,14 @@ CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
     "kwargs",
     (
         pytest.param(
-            dict(
-                strategy = None, 
-                precision = 32,
-                gpus = None)),
+            dict(accelerator="cpu", strategy="auto", devices="auto", precision=32)),
         pytest.param(
-            dict(
-                strategy = "ddp",  
-                precision = 32, 
-                gpus = [0]), 
+            dict(accelerator="gpu", strategy="ddp", devices="auto", precision=32), 
             marks = pytest.mark.skipif(
                 condition = not torch.cuda.is_available(), 
-                reason="single-gpu unavailable")),
+                reason="gpu unavailable")),
         pytest.param(
-            dict(
-                strategy = "ddp",  
-                precision = 32, 
-                gpus = [0,1]), 
+            dict(accelerator="gpu", strategy="ddp", precision=32), 
             marks = pytest.mark.skipif(
                 condition = torch.cuda.device_count() < 2, 
                 reason="multi-gpu unavailable")),
@@ -44,19 +35,12 @@ CKPT_PATH = os.path.join(TMP_DIR, "last.ckpt")
 )
 def test_trainer(kwargs):
 
-    cfg = load_config(config_file = "helpers/dummy_config.yaml")
+    cfg = load_config(config_file = "tests/helpers/_dummy.yaml")
     
+    cfg.engine.accelerator = kwargs["accelerator"]
     cfg.engine.strategy = kwargs["strategy"]
     cfg.engine.precision = kwargs["precision"]
-    cfg.engine.devices = kwargs["gpus"]
-    # TODO extra params for quick testing
-    '''
-    cfg.test_params.limit_train_batches = 2
-    cfg.test_params.limit_val_batches = 2
-    cfg.test_params.enable_model_summary = False,
-    cfg.test_params.enable_progress_bar = False,
-    cfg.test_params.logger = False
-    '''
+    cfg.engine.devices = kwargs["devices"]
     
     model = init_model(cfg)
     trainer = init_trainer(cfg)

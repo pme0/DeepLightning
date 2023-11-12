@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def dictionarify_batch(batch: Any, dataset: str):
+def dictionarify_batch(batch: Any, dataset: str) -> dict:
     """Convert batch to dictionary format.
     
     Typically keys in this dictionary would be `inputs`, `targets`

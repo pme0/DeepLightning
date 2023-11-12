@@ -16,8 +16,6 @@ from deeplightning.config.load import log_config
 from deeplightning.logger.helpers import add_logger_params_to_config
 from deeplightning.logger.wandb import init_wandb_metrics
 from deeplightning.utils.messages import config_print
-from deeplightning.registry import (__LoggerRegistry__, 
-                                    __HooksRegistry__)
 from deeplightning.utils.python_utils import flatten_dict
 
 
@@ -84,7 +82,7 @@ class DLTrainer(Trainer):
 
             # intialize step label for each metrics
             logger.step_label = init_wandb_metrics(
-                metric_names = __HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
+                metric_names = [f"{x}_{y}" for x in cfg.metrics for y in cfg.metrics[x]],  #__HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
                 step_label = "iteration",
             )
 

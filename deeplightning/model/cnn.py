@@ -12,8 +12,8 @@ __all__ = [
     "spectrogram_cnn",
 ]
 
+
 class SymbolCNN(nn.Module):
-    
     def __init__(self, num_classes: int, num_channels: int):
         super().__init__()
         self.num_classes = num_classes
@@ -39,7 +39,6 @@ class SymbolCNN(nn.Module):
 
 
 class SpectrogramCNN(nn.Module):
-    
     def __init__(self, num_classes: int, num_channels: int):
         super().__init__()
         self.num_classes = num_classes
@@ -65,7 +64,6 @@ class SpectrogramCNN(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.fc = nn.Linear(64 * 5 * 5, num_classes)
-        #self.dropout = nn.Dropout(p=0.1)
 
     def forward(self, x):
         x = self.conv1(x)

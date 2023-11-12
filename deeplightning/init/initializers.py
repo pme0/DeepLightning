@@ -7,7 +7,7 @@ from lightning import LightningModule, LightningDataModule
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.init.imports import init_module
 from deeplightning.trainer.trainer import DLTrainer
-from deeplightning.registry import __MetricsRegistry__
+#from deeplightning.utils.metrics import __MetricsRegistry__
 
 
 
@@ -53,4 +53,5 @@ def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModul
 def init_metrics(cfg: OmegaConf, device: torch.device) -> dict:
     """ Initialize performance metrics
     """
+    raise NotImplementedError
     return {k: v(cfg).to(device) for k, v in __MetricsRegistry__[cfg.task].items()}

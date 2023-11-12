@@ -9,6 +9,7 @@ tests/mlruns/
 tests/logs/
 tests/wandb/
 tests/lightning_logs/
+# hydra
 outputs/
 
 # model weights

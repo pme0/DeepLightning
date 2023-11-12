@@ -1,8 +1,9 @@
+task: SemanticSegmentation
+
 modes: 
   train: true
   test: false
   
-task: SemanticSegmentation
 data:
   dataset: HAM10000
   root: /Users/pme/research/data/HAM10000
@@ -17,7 +18,7 @@ data:
     normalize: # use `deeplightning.utils.data.compute_dataset_mean_and_stdev()`
       mean: [0., 0., 0.]
       std: [1., 1., 1.]
-    resize: [32, 32]
+    resize: [128, 128]
   test_transforms:
     normalize:
       mean: [0., 0., 0.]
@@ -25,7 +26,7 @@ data:
  
 model:
   module: 
-    target: deeplightning.task.vision.segmentation.TaskModule
+    target: deeplightning.task.vision.segmentation.SemanticSegmentationTask
   network:
     target: torchvision.models.segmentation.deeplabv3_resnet50
     params: 
@@ -51,8 +52,13 @@ engine:
   num_nodes: 1
   precision: 32
 
+metrics:
+  train: default
+  val: default
+  test: default
+  
 train:
-  num_epochs: 10
+  num_epochs: 20
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -69,7 +75,7 @@ test:
 
 logger:
   name: wandb
-  project_name: trial
+  project_name: skin-lesion-segmentation
   tags: ["_"] # cannot be empty
   notes: null
   log_every_n_steps: 20

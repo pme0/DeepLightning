@@ -48,7 +48,7 @@ class TaskModule(pl.LightningModule):
 
         # Initialise metrics to track during training
         torch_device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
-        self.metrics = init_metrics(cfg, device=torch_device)
+        #self.metrics = init_metrics(cfg, device=torch_device)
 
         # Initialise label to track metrics against
         self.step_label = "iteration"
