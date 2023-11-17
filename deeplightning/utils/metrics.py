@@ -17,9 +17,12 @@ from deeplightning import METRIC_REGISTRY
 
 
 __all__ = [
-	"ClassificationAccuracy", "classification_accuracy",
-	"PrecisionRecallCurve", "precision_recall_curve",
-	"ConfusionMatrix", "confusion_matrix",
+	"ClassificationAccuracy",
+	"classification_accuracy",
+	"PrecisionRecallCurve", 
+	"precision_recall_curve",
+	"ConfusionMatrix", 
+	"confusion_matrix",
 ]
 
 

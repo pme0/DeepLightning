@@ -12,7 +12,9 @@ from deeplightning.init.imports import init_obj_from_config
 #from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 from deeplightning.registry import __HooksRegistry__
-from deeplightning.utils.metrics import classification_accuracy
+from deeplightning.utils.metrics import (classification_accuracy,
+                                         confusion_matrix,
+                                         precision_recall_curve)
 from deeplightning.task.base import BaseTask
 from deeplightning.trainer.batch import dictionarify_batch
 
@@ -50,6 +52,10 @@ class SemanticSegmentationTask(BaseTask):
             "Accuracy_train": classification_accuracy(cfg),
             "Accuracy_val": classification_accuracy(cfg),
             "Accuracy_test": classification_accuracy(cfg),
+            "ConfusionMatrix_val": confusion_matrix(cfg),
+            "ConfusionMatrix_test": confusion_matrix(cfg),
+            "PrecisionRecallCurve_val": precision_recall_curve(cfg),
+            "PrecisionRecallCurve_test": precision_recall_curve(cfg),
         }
 
         self.on_task_init_end()
@@ -155,9 +161,9 @@ class SemanticSegmentationTask(BaseTask):
         self.validation_step_outputs["val_loss"].append(val_loss)
 
         # metrics
-        self.metrics["Accuracy_val"].update(preds = preds, target = batch["masks"])
-        #self.metrics["ConfusionMatrix_val"].update(preds = preds, target = batch["masks"])
-        #self.metrics["PrecisionRecallCurve_val"].update(preds = outputs, target = batch["masks"])
+        self.metrics["Accuracy_val"].update(preds=preds, target=batch["masks"])
+        self.metrics["ConfusionMatrix_val"].update(preds=preds, target=batch["masks"])
+        self.metrics["PrecisionRecallCurve_val"].update(preds=outputs, target=batch["masks"])
 
 
     def on_validation_epoch_end(self):
@@ -227,9 +233,9 @@ class SemanticSegmentationTask(BaseTask):
         self.test_step_outputs["test_loss"].append(test_loss)
 
         # metrics
-        self.metrics["Accuracy_test"].update(preds = preds, target = batch["masks"])
-            #self.metrics["ConfusionMatrix_test"].update(preds = preds, target = batch["masks"])
-        #self.metrics["PrecisionRecallCurve_test"].update(preds = outputs, target = batch["masks"])
+        self.metrics["Accuracy_test"].update(preds=preds, target=batch["masks"])
+        self.metrics["ConfusionMatrix_test"].update(preds=preds, target=batch["masks"])
+        self.metrics["PrecisionRecallCurve_test"].update(preds=outputs, target=batch["masks"])
 
 
     def on_test_epoch_end(self):
