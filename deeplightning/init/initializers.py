@@ -7,7 +7,6 @@ from lightning import LightningModule, LightningDataModule
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.init.imports import init_module
 from deeplightning.trainer.trainer import DLTrainer
-#from deeplightning.utils.metrics import __MetricsRegistry__
 
 
 
