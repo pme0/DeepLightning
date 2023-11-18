@@ -132,7 +132,7 @@ class CDCGAN(nn.Module):
         return None
     
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def dcgan(**kwargs: Any) -> DCGAN:
     """Deep Convolutional Generative Adversarial Network architecture
 
@@ -147,7 +147,7 @@ def dcgan(**kwargs: Any) -> DCGAN:
     return DCGAN(**kwargs)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def cdcgan(**kwargs: Any) -> CDCGAN:
     """Conditional Deep Convolutional Generative Adversarial Network architecture
 

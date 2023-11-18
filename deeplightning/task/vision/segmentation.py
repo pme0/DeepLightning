@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Tuple
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
@@ -7,6 +7,7 @@ from torchvision.utils import save_image
 import lightning as pl
 from lightning.pytorch.trainer.states import RunningStage
 
+from deeplightning import TASK_REGISTRY
 from deeplightning.init.imports import init_obj_from_config
 #from deeplightning.init.initializers import init_metrics
 #from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
@@ -28,7 +29,7 @@ def process_model_outputs(outputs, model):
         return outputs["out"]
     else:
         return outputs
-        
+
 
 class SemanticSegmentationTask(BaseTask):
     """ Task module for Semantic Segmentation. 
@@ -273,3 +274,7 @@ class SemanticSegmentationTask(BaseTask):
         metrics[self.step_label] = self.global_step
         self.logger.log_metrics(metrics)
 
+
+@TASK_REGISTRY.register_element()
+def semantic_segmentation(**kwargs: Any) -> SemanticSegmentationTask:
+    return SemanticSegmentationTask(**kwargs)

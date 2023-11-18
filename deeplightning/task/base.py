@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union, List
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
@@ -9,6 +9,25 @@ from deeplightning.init.initializers import init_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 
+'''
+class Metrics():
+    """
+    """
+    def __init__(self, cfg: OmegaConf) -> None:
+        self.metrics = {}
+
+    def update(self, metric_names: Union[str, List[str]] = "all"):
+        if metric_names == "all":
+            metric_names = self.metrics.keys()
+        for metric_name in metric_names:
+            self.metrics[metric_name].update(...)
+
+    def compute(self):
+        pass
+
+    def reset(self):
+        pass
+'''
 
 
 class BaseTask(pl.LightningModule):
@@ -43,10 +62,10 @@ class BaseTask(pl.LightningModule):
         self.cfg = cfg  #TODO check if this contains logger runtime params
         self.step_label = "iteration"
         self.sanity_check = True
-    
+
     def on_task_init_end(self) -> None:
         """Additional attributes to initialise at the end of the `__init__` 
-        method of the class that inherits from this `BaseTask` class.
+        method of the task class inheriting from `BaseTask` class.
 
         Attributes:
             num_trainable_params: (int) mumber of trainable model parameters.

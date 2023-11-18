@@ -73,7 +73,7 @@ class GAN(nn.Module):
         return self.discriminator(images)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def gan(**kwargs: Any) -> GAN:
     """Generative Adversarial Network architecture
 

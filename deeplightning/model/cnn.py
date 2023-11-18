@@ -76,11 +76,11 @@ class SpectrogramCNN(nn.Module):
         return x
     
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def symbol_cnn(**kwargs: Any) -> SymbolCNN:
     return SymbolCNN(**kwargs)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def spectrogram_cnn(**kwargs: Any) -> SpectrogramCNN:
     return SpectrogramCNN(**kwargs)

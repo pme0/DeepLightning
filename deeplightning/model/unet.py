@@ -128,7 +128,7 @@ class UNet(nn.Module):
         return x
     
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def unet(**kwargs: Any) -> UNet:
     """UNet architecture
 

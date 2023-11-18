@@ -120,12 +120,14 @@ class HAM10000(pl.LightningDataModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-
+        
         # check that config params are set correctly
+        assert cfg.data.image_size [0] == 600 # width
+        assert cfg.data.image_size [1] == 450 # height
         assert cfg.data.num_channels == 3
-        if cfg.task == "ImageClassification":
+        if cfg.task == "image_classification":
             assert cfg.data.num_classes == 7
-        elif cfg.task == "SemanticSegmentation":
+        elif cfg.task == "semantic_segmentation":
             assert cfg.data.num_classes == 2
         else:
             raise ValueError

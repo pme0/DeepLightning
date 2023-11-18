@@ -39,7 +39,7 @@ class LeNet5(nn.Module):
         return x
     
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def lenet5(**kwargs: Any) -> LeNet5:
     """LeNet5 architecture
 

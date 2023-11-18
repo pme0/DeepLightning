@@ -475,7 +475,7 @@ def _mobilenet_v3(
 
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def mobilenet_v3_large(
     *, weights: Optional[Any] = None, progress: bool = True, num_channels, num_classes, **kwargs: Any
 ) -> MobileNetV3:
@@ -503,7 +503,7 @@ def mobilenet_v3_large(
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, num_channels, num_classes, **kwargs)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def mobilenet_v3_small(
     *, weights: Optional[Any] = None, progress: bool = True, num_channels: int, num_classes: int, **kwargs: Any
 ) -> MobileNetV3:

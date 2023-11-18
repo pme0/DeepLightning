@@ -2,7 +2,7 @@ from omegaconf import OmegaConf
 from torch import Tensor
 from torchmetrics.classification.precision_recall_curve import MulticlassPrecisionRecallCurve
 from matplotlib.figure import Figure
-from matplotlib.pyplot import pyplot as plt
+import matplotlib.pyplot as plt
 
 from deeplightning import METRIC_REGISTRY
 

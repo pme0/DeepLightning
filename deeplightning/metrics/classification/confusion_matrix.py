@@ -4,7 +4,7 @@ from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatr
 import seaborn as sn
 import numpy as np
 from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
 from deeplightning import METRIC_REGISTRY
 

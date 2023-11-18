@@ -46,7 +46,7 @@ class ConvMixer(nn.Module):
         return self.layers(x)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def conv_mixer(**kwargs) -> ConvMixer:
     """ConvMixer architecture
 

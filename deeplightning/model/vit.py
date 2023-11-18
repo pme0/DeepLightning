@@ -252,7 +252,7 @@ class VisionTransformer(nn.Module):
         return x
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def vision_transformer(**kwargs: Any) -> VisionTransformer:
     """Vision Transformer (ViT) architecture
 

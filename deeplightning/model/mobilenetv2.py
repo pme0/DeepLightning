@@ -322,7 +322,7 @@ class MobileNetV2(nn.Module):
         return self._forward_impl(x)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def mobilenet_v2(
     *, weights: Optional[Any] = None, progress: bool = True, **kwargs: Any
 ) -> MobileNetV2:

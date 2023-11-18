@@ -3,19 +3,9 @@ from omegaconf import OmegaConf
 from deeplightning.registry import METRICS_REGISTRY, TASK_REGISTRY
 
 
-__TASKS__ = [
-    "ImageClassification",
-    "SemanticSegmentation",
-]
-
-
-#|TODO register metrics with decorator
-__METRICS__ = {"classification_accuracy": None}
-
-
 class TaskSpecification():
     def __init__(self, cfg: OmegaConf):
-        assert cfg.task in __TASKS__
+        assert cfg.task in TASK_REGISTRY.get_element_names()
         self.task = cfg.task
 
 

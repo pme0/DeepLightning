@@ -1,4 +1,4 @@
-task: SemanticSegmentation
+task: semantic_segmentation
 
 modes: 
   train: true

@@ -73,7 +73,7 @@ class MLPMixer(nn.Module):
         self.layers(x)
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def mlp_mixer(**kwargs: Any) -> MLPMixer:
     """MLPMixer architecture
 

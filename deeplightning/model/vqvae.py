@@ -49,7 +49,7 @@ class ResidualBlock(nn.Module):
         return self.net(x) + x
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 class DiscreteVAE(nn.Module):
     """
     Args
@@ -174,7 +174,7 @@ class DiscreteVAE(nn.Module):
         return recon, 
 
 
-@MODEL_REGISTRY.register_model()
+@MODEL_REGISTRY.register_element()
 def lenet5(**kwargs: Any) -> DiscreteVAE:
     """Discrete (a.k.a. Vector-Quantized) VAE architecture
 
