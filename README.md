@@ -52,8 +52,6 @@ trainer.fit(model, data)
 - Deployment (prediction API) with **Flask**
 - Implementations of popular tasks/models with [**Examples**](https://github.com/pme0/DeepLightning/tree/master/examples)
 
-> See [Development](#development) for a list of functionalities.
-
 # Installation
 
 Pre-requirement: Anaconda (installation instructions [here](https://docs.anaconda.com/anaconda/install)).
