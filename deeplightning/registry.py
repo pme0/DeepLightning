@@ -1,29 +1,3 @@
-from lightning.pytorch.loggers import WandbLogger
-
-#from deeplightning.logger.wandb import wandbLogger
-from deeplightning.trainer.hooks.ImageClassification_hooks import (
-    training_step__ImageClassification,
-    training_step_end__ImageClassification,
-    on_training_epoch_end__ImageClassification,
-    validation_step__ImageClassification,
-    validation_step_end__ImageClassification,
-    on_validation_epoch_end__ImageClassification,
-    test_step__ImageClassification,
-    test_step_end__ImageClassification,
-    on_test_epoch_end__ImageClassification)
-from deeplightning.trainer.hooks.SemanticSegmentation_hooks import (
-    training_step__SemanticSegmentation,
-    training_step_end__SemanticSegmentation,
-    on_training_epoch_end__SemanticSegmentation,
-    validation_step__SemanticSegmentation,
-    validation_step_end__SemanticSegmentation,
-    on_validation_epoch_end__SemanticSegmentation,
-    test_step__SemanticSegmentation,
-    test_step_end__SemanticSegmentation,
-    on_test_epoch_end__SemanticSegmentation)
-
-
-
 from typing import Any, Callable, List, Type, TypeVar
 T = TypeVar('T')
 
@@ -75,21 +49,28 @@ class Registry:
         return sorted(list(self.elements_dict.keys()))
 
 
-__TaskRegistry__ = [
-    # Image
-    "ImageClassification",
-    "ImageReconstruction",
-    "ObjectDetection",
-    "SemanticSegmentation",
-    # Audio
-    "AudioClassification",
-]
 
-__LoggerRegistry__ = {
-    "wandb": WandbLogger,
-}
-
-
+# OBSOLETE - to clean up
+from deeplightning.trainer.hooks.ImageClassification_hooks import (
+    training_step__ImageClassification,
+    training_step_end__ImageClassification,
+    on_training_epoch_end__ImageClassification,
+    validation_step__ImageClassification,
+    validation_step_end__ImageClassification,
+    on_validation_epoch_end__ImageClassification,
+    test_step__ImageClassification,
+    test_step_end__ImageClassification,
+    on_test_epoch_end__ImageClassification)
+from deeplightning.trainer.hooks.SemanticSegmentation_hooks import (
+    training_step__SemanticSegmentation,
+    training_step_end__SemanticSegmentation,
+    on_training_epoch_end__SemanticSegmentation,
+    validation_step__SemanticSegmentation,
+    validation_step_end__SemanticSegmentation,
+    on_validation_epoch_end__SemanticSegmentation,
+    test_step__SemanticSegmentation,
+    test_step_end__SemanticSegmentation,
+    on_test_epoch_end__SemanticSegmentation)
 
 __HooksRegistry__ = {
     # Image

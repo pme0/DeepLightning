@@ -10,7 +10,7 @@ from deeplightning.utils.messages import info_message
 #from deeplightning.utils.metrics import metric_accuracy, MetricsConfusionMatrix | OBSOLETE - use `deeplightning.metrics`
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.trainer.batch import dictionarify_batch
-from deeplightning.logger.logwandb import initilise_wandb_metrics
+from deeplightning.logger.wandb import init_wandb_metrics
 
 
 class AudioClassification(pl.LightningModule):
@@ -57,8 +57,8 @@ class AudioClassification(pl.LightningModule):
        
         # WandB logging:
         if self.cfg.logger.log_to_wandb:
-            self.step_label = initilise_wandb_metrics(
-                metrics = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
+            self.step_label = init_wandb_metrics(
+                metric_names = ["train_loss", "train_acc", "val_loss", "val_acc", "test_loss", "test_acc"], 
                 step_label = "iteration",
             )
 

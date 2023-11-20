@@ -1,12 +1,8 @@
 from typing import Tuple, Union, List
 from omegaconf import OmegaConf
-import torch
 from torch import Tensor
 import lightning as pl
 
-from deeplightning.init.imports import init_obj_from_config
-from deeplightning.init.initializers import init_metrics
-from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 
 '''

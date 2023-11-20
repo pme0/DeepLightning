@@ -4,9 +4,8 @@ import os
 from omegaconf import OmegaConf
 import torch
 
+from deeplightning import TASK_REGISTRY
 from deeplightning.config.compute import runtime_compute
-from deeplightning.registry import (__TaskRegistry__, 
-                                    __LoggerRegistry__,)
 from deeplightning.config.defaults import __ConfigGroups__
 from deeplightning.utils.messages import (info_message, 
                                           warning_message,
@@ -49,19 +48,18 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
     """ Perform parameter checks and modify where inconsistent.
     """
     
-    if cfg.task is None or cfg.task not in __TaskRegistry__:
+    if cfg.task is None or cfg.task not in TASK_REGISTRY.get_element_names():
         error_message(
             f"Task (cfg.task={cfg.task}) not in the registry "
-            f"(__TaskRegistry__={__TaskRegistry__})."
+            f"(TASK_REGISTRY={TASK_REGISTRY.get_element_names()})."
         )
         raise ValueError
     
-    if cfg.logger.name not in __LoggerRegistry__:
+    if cfg.logger.name != "wandb":
         error_message(
-            f"Logger (cfg.logger.name={cfg.logger.name}) not in the registry "
-            f"(__LoggerRegistry__={__LoggerRegistry__})."
+            f"Logger (cfg.logger.name={cfg.logger.name}) not implemented."
         )
-        raise ValueError
+        raise NotImplementedError
     '''
     if cfg.engine.devices is not None:
         if not torch.cuda.is_available():
