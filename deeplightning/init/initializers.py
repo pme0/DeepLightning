@@ -47,10 +47,3 @@ def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModul
     data = init_dataset(cfg)
     trainer = init_trainer(cfg)
     return model, data, trainer
-
-
-def init_metrics(cfg: OmegaConf, device: torch.device) -> dict:
-    """ Initialize performance metrics
-    """
-    raise NotImplementedError
-    return {k: v(cfg).to(device) for k, v in __MetricsRegistry__[cfg.task].items()}

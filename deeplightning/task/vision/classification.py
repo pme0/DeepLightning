@@ -5,7 +5,6 @@ from torch import Tensor
 import lightning as pl
 
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.init.initializers import init_metrics
 from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
 from deeplightning.utils.messages import info_message
 from deeplightning.registry import __MetricsRegistry__, __HooksRegistry__
@@ -45,10 +44,6 @@ class TaskModule(pl.LightningModule):
         # PyTorch-Lightning performs a partial validation epoch to ensure that
         # everything is correct. Use this to avoid logging metrics to W&B for that 
         self.sanity_check = True
-
-        # Initialise metrics to track during training
-        torch_device = torch.device("cuda") if cfg.engine.accelerator == "gpu" else torch.device('cpu')
-        #self.metrics = init_metrics(cfg, device=torch_device)
 
         # Initialise label to track metrics against
         self.step_label = "iteration"
