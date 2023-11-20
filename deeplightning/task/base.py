@@ -29,17 +29,19 @@ class Metrics():
 class BaseTask(pl.LightningModule):
     """Base task module.
 
-    Notes:
-        logging: manual logging `self.logger.log()` is used. This is more 
-            flexible as Lightning automatic logging `self.log()`) only 
-            allows scalars, not histograms, images, etc./ Additionally, 
-            auto-logging doesn't log at step 0, which is useful.
-        hooks: For *training*, the input to `training_epoch_end()` is the 
-            set of outputs from `training_step()`. For *validation*, the 
-            input to `validation_epoch_end()` is the output from 
-            `validation_step_end()` and the input to `validation_step_end()` 
-            is the output from `validation_step()`. See 
-            https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
+    Note on logging:
+        manual logging `self.logger.log()` is used. This is more 
+        flexible as Lightning automatic logging `self.log()`) only 
+        allows scalars, not histograms, images, etc./ Additionally, 
+        auto-logging doesn't log at step 0, which is useful.
+        
+    Note on hooks: 
+        For *training*, the input to `training_epoch_end()` is the 
+        set of outputs from `training_step()`. For *validation*, the 
+        input to `validation_epoch_end()` is the output from 
+        `validation_step_end()` and the input to `validation_step_end()` 
+        is the output from `validation_step()`. See 
+        https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
 
     Args:
         cfg: yaml configuration object

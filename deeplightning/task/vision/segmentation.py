@@ -74,18 +74,6 @@ class SemanticSegmentationTask(BaseTask):
             },
         })
 
-    
-    """ NOTE on training/validation hooks.
-
-        For *training*, the input to `training_epoch_end()` is 
-        the set of outputs from `training_step()`. For 
-        *validation*, the input to `validation_epoch_end()` 
-        is the output from `validation_step_end()` and the input 
-        to `validation_step_end()` is the output from 
-        `validation_step()`.
-
-        https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
-    """    
 
     def training_step(self, batch, batch_idx):
 
@@ -146,7 +134,10 @@ class SemanticSegmentationTask(BaseTask):
             print(batch["inputs_paths"][i])
             print(batch["masks_paths"][i])
             torch.save(obj=preds[i], f=f"/Users/pme/Downloads/segm/mask_step{self.global_step}_i{i}.pt")
-            save_image(preds[i].unsqueeze(0).float(), fp=f"/Users/pme/Downloads/segm/{batch['masks_paths'][i]}_pred_step{self.global_step}.png")
+            save_image(
+                tensor = preds[i].unsqueeze(0).float(), 
+                fp = f"/Users/pme/Downloads/segm/{batch['masks_paths'][i]}_pred_step{self.global_step}.png"
+            )
 
         # loss
         val_loss = self.loss(outputs, batch["masks"])
