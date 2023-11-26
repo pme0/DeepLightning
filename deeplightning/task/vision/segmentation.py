@@ -4,9 +4,11 @@ import torch
 from torch import Tensor
 from torchvision.utils import save_image
 from lightning.pytorch.trainer.states import RunningStage
+import wandb
 
 from deeplightning import TASK_REGISTRY
 from deeplightning.init.imports import init_obj_from_config
+from deeplightning.metrics.base import Metrics
 from deeplightning.metrics.classification.accuracy import classification_accuracy
 from deeplightning.metrics.classification.confusion_matrix import confusion_matrix
 from deeplightning.metrics.classification.precision_recall import precision_recall_curve
@@ -39,19 +41,15 @@ class SemanticSegmentationTask(BaseTask):
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
         
+        self.default_metrics_dict = {
+            "train": ["classification_accuracy"],
+            "val": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],
+            "test": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],}
+        self.metrics = Metrics(cfg=cfg, defaults=self.default_metrics_dict).metrics_dict
+
         self.training_step_outputs = {"train_loss": []}
         self.validation_step_outputs = {"val_loss": []}
         self.test_step_outputs = {"test_loss": []}
-
-        self.metrics = {
-            "Accuracy_train": classification_accuracy(cfg),
-            "Accuracy_val": classification_accuracy(cfg),
-            "Accuracy_test": classification_accuracy(cfg),
-            "ConfusionMatrix_val": confusion_matrix(cfg),
-            "ConfusionMatrix_test": confusion_matrix(cfg),
-            "PrecisionRecallCurve_val": precision_recall_curve(cfg),
-            "PrecisionRecallCurve_test": precision_recall_curve(cfg),
-        }
 
         self.on_task_init_end()
 
@@ -92,7 +90,7 @@ class SemanticSegmentationTask(BaseTask):
         self.training_step_outputs["train_loss"].append(train_loss)
 
         # metrics
-        self.metrics["Accuracy_train"].update(preds=outputs, target=batch["masks"])
+        self.metrics["train"]["classification_accuracy"].update(preds=outputs, target=batch["masks"])
 
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
 
@@ -100,8 +98,8 @@ class SemanticSegmentationTask(BaseTask):
             metrics["train_loss"] = torch.stack(self.training_step_outputs["train_loss"]).mean()
             self.training_step_outputs.clear()  # free memory
             # accuracy (batch only)
-            metrics["train_acc"] = self.metrics["Accuracy_train"].compute()
-            self.metrics["Accuracy_train"].reset()
+            metrics["train_acc"] = self.metrics["train"]["classification_accuracy"].compute()
+            self.metrics["train"]["classification_accuracy"].reset()
             # log learning rate
             #metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
 
@@ -147,9 +145,9 @@ class SemanticSegmentationTask(BaseTask):
         self.validation_step_outputs["val_loss"].append(val_loss)
 
         # metrics
-        self.metrics["Accuracy_val"].update(preds=preds, target=batch["masks"])
-        self.metrics["ConfusionMatrix_val"].update(preds=preds, target=batch["masks"])
-        self.metrics["PrecisionRecallCurve_val"].update(preds=outputs, target=batch["masks"])
+        self.metrics["val"]["classification_accuracy"].update(preds=preds, target=batch["masks"])
+        self.metrics["val"]["confusion_matrix"].update(preds=preds, target=batch["masks"])
+        self.metrics["val"]["precision_recall_curve"].update(preds=outputs, target=batch["masks"])
 
 
     def on_validation_epoch_end(self):
@@ -160,28 +158,24 @@ class SemanticSegmentationTask(BaseTask):
 
         # accuracy
         metrics["val_acc"] = self.metrics["Accuracy_val"].compute()
-        self.metrics["Accuracy_val"].reset()
+        self.metrics["val"]["classification_accuracy"].reset()
 
         # confusion matrix
-        '''
-        cm = self.metrics["ConfusionMatrix_val"].compute()
-        figure = self.metrics["ConfusionMatrix_val"].draw(
+        cm = self.metrics["val"]["confusion_matrix"].compute()
+        figure = self.metrics["val"]["confusion_matrix"].draw(
             confusion_matrix=cm, subset="val", epoch=self.current_epoch+1)
         metrics["val_confusion_matrix"] = wandb.Image(figure, 
             caption=f"Confusion Matrix [val, epoch {self.current_epoch+1}]")
-        self.metrics["ConfusionMatrix_val"].reset()
-        '''
+        self.metrics["val"]["confusion_matrix"].reset()
 
         # precision-recall
-        '''
-        precision, recall, thresholds = self.metrics["PrecisionRecallCurve_val"].compute()
-        figure = self.metrics["PrecisionRecallCurve_val"].draw(
+        precision, recall, thresholds = self.metrics["val"]["precision_recall_curve"].compute()
+        figure = self.metrics["val"]["precision_recall_curve"].draw(
             precision=precision, recall=recall, thresholds=thresholds, 
             subset="val", epoch=self.current_epoch+1)
         metrics["val_precision_recall"] = wandb.Image(figure, 
             caption=f"Precision-Recall Curve [val, epoch {self.current_epoch+1}]")
-        self.metrics["PrecisionRecallCurve_val"].reset()
-        '''
+        self.metrics["val"]["precision_recall_curve"].reset()
 
         # log validation metrics
         metrics[self.step_label] = self.global_step
@@ -219,9 +213,9 @@ class SemanticSegmentationTask(BaseTask):
         self.test_step_outputs["test_loss"].append(test_loss)
 
         # metrics
-        self.metrics["Accuracy_test"].update(preds=preds, target=batch["masks"])
-        self.metrics["ConfusionMatrix_test"].update(preds=preds, target=batch["masks"])
-        self.metrics["PrecisionRecallCurve_test"].update(preds=outputs, target=batch["masks"])
+        self.metrics["test"]["classification_accuracy"].update(preds=preds, target=batch["masks"])
+        self.metrics["test"]["confusion_matrix"].update(preds=preds, target=batch["masks"])
+        self.metrics["test"]["precision_recall_curve"].update(preds=outputs, target=batch["masks"])
 
 
     def on_test_epoch_end(self):
@@ -231,29 +225,25 @@ class SemanticSegmentationTask(BaseTask):
         self.test_step_outputs.clear()  # free memory
 
         # accuracy
-        metrics["test_acc"] = self.metrics["Accuracy_test"].compute()
-        self.metrics["Accuracy_test"].reset()
+        metrics["test_acc"] = self.metrics["test"]["classification_accuracy"].compute()
+        self.metrics["test"]["classification_accuracy"].reset()
 
         # confusion matrix
-        '''
-        cm = self.metrics["ConfusionMatrix_test"].compute()
-        figure = self.metrics["ConfusionMatrix_test"].draw(
+        cm = self.metrics["test"]["confusion_matrix"].compute()
+        figure = self.metrics["test"]["confusion_matrix"].draw(
             confusion_matrix=cm, subset="test", epoch=self.current_epoch+1)
         metrics["test_confusion_matrix"] = wandb.Image(figure, 
             caption=f"Confusion Matrix [test, epoch {self.current_epoch+1}]")
-        self.metrics["ConfusionMatrix_test"].reset()    
-        '''
+        self.metrics["test"]["confusion_matrix"].reset()    
 
         # precision-recall
-        '''
-        precision, recall, thresholds = self.metrics["PrecisionRecallCurve_test"].compute()
-        figure = self.metrics["PrecisionRecallCurve_test"].draw(
+        precision, recall, thresholds = self.metrics["test"]["precision_recall_curve"].compute()
+        figure = self.metrics["test"]["precision_recall_curve"].draw(
             precision=precision, recall=recall, thresholds=thresholds, 
             subset="test", epoch=self.current_epoch+1)
         metrics["test_precision_recall"] = wandb.Image(figure, 
             caption=f"Precision-Recall Curve [test, epoch {self.current_epoch+1}]")
-        self.metrics["PrecisionRecallCurve_test"].reset()
-        '''
+        self.metrics["test"]["precision_recall_curve"].reset()
 
         # log test metrics
         metrics[self.step_label] = self.global_step

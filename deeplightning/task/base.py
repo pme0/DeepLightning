@@ -5,26 +5,6 @@ import lightning as pl
 
 from deeplightning.utils.messages import info_message
 
-'''
-class Metrics():
-    """
-    """
-    def __init__(self, cfg: OmegaConf) -> None:
-        self.metrics = {}
-
-    def update(self, metric_names: Union[str, List[str]] = "all"):
-        if metric_names == "all":
-            metric_names = self.metrics.keys()
-        for metric_name in metric_names:
-            self.metrics[metric_name].update(...)
-
-    def compute(self):
-        pass
-
-    def reset(self):
-        pass
-'''
-
 
 class BaseTask(pl.LightningModule):
     """Base task module.
