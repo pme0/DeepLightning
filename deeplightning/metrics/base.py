@@ -3,25 +3,6 @@ from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
 
 from deeplightning import METRIC_REGISTRY
-
-
-def init_metrics(cfg, defaults) -> dict:
-    metrics_dict = {}
-    for subset in ["train", "val", "test"]:
-        metrics_dict[subset] = {}
-        metrics_list = metrics_filter(cfg, subset, defaults)
-        for metric_name in metrics_list:
-            metrics_dict[subset][metric_name] = metric_name
-    return metrics_dict
-    
-
-def metrics_filter(cfg, subset, defaults) -> list:
-    if isinstance(cfg.metrics[subset], ListConfig):
-        return cfg.metrics[subset]
-    elif cfg.metrics[subset] == "default":
-        return defaults[subset]
-    else:
-        raise ValueError
         
         
 class Metrics():
@@ -39,7 +20,7 @@ class Metrics():
     Args:
         cfg: yaml configuration object
         defaults: dictionary of default lists of metrics for each subset,
-            `{"train": ["m1"], "val": ["m1", "m2"], "test": ["m1", "m2"]}`.
+            `{"train": ["m1"], "val": ["m2"], "test": ["m2", "m3"]}`.
 
     Attributes:
         metrics_dict: dictionary of the form `{"train": x, "val": y, "test": z}`
@@ -66,3 +47,26 @@ class Metrics():
     def reset(self):
         #TODO
         raise NotImplementedError
+
+
+# Auxiliary 
+
+
+def init_metrics(cfg, defaults: dict) -> dict:
+    metrics_dict = {}
+    for subset in ["train", "val", "test"]:
+        metrics_dict[subset] = {}
+        metrics_list = metrics_filter(cfg, subset, defaults)
+        for metric_name in metrics_list:
+            metrics_dict[subset][metric_name] = METRIC_REGISTRY.get_element_instance(
+                name=metric_name, cfg=cfg)
+    return metrics_dict
+    
+
+def metrics_filter(cfg, subset: str, defaults: dict) -> list:
+    if isinstance(cfg.metrics[subset], ListConfig):
+        return cfg.metrics[subset]
+    elif cfg.metrics[subset] == "default":
+        return defaults[subset]
+    else:
+        raise ValueError
