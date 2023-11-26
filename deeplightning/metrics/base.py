@@ -24,10 +24,12 @@ class Metrics():
 
     Attributes:
         metrics_dict: dictionary of the form `{"train": x, "val": y, "test": z}`
-            where `x, y, z` are either "default" or a list of metric names.
+            where `x, y, z` are either "default" (in which case a default set of 
+            metrics is used, as defined in the task class) or a list of metric 
+            names read from the config.
     """
     def __init__(self, cfg: OmegaConf, defaults: dict) -> None:
-        self.metrics_dict = init_metrics(cfg=cfg, defaults=defaults)
+        self.metrics_dict = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
     def update(self, subset, metric_names: Union[str, List[str]] = "all"):
@@ -52,7 +54,7 @@ class Metrics():
 # Auxiliary 
 
 
-def init_metrics(cfg, defaults: dict) -> dict:
+def initialise_metrics(cfg: OmegaConf, defaults: dict) -> dict:
     metrics_dict = {}
     for subset in ["train", "val", "test"]:
         metrics_dict[subset] = {}
@@ -63,7 +65,7 @@ def init_metrics(cfg, defaults: dict) -> dict:
     return metrics_dict
     
 
-def metrics_filter(cfg, subset: str, defaults: dict) -> list:
+def metrics_filter(cfg: OmegaConf, subset: str, defaults: dict) -> list:
     if isinstance(cfg.metrics[subset], ListConfig):
         return cfg.metrics[subset]
     elif cfg.metrics[subset] == "default":
