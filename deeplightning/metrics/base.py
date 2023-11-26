@@ -1,32 +1,52 @@
 from typing import Tuple, Union, List
 from omegaconf import OmegaConf
+from omegaconf.listconfig import ListConfig
 
 from deeplightning import METRIC_REGISTRY
 
 
+def init_metrics(cfg, defaults) -> dict:
+    metrics_dict = {}
+    for subset in ["train", "val", "test"]:
+        metrics_dict[subset] = {}
+        metrics_list = metrics_filter(cfg, subset, defaults)
+        for metric_name in metrics_list:
+            metrics_dict[subset][metric_name] = metric_name
+    return metrics_dict
+    
+
+def metrics_filter(cfg, subset, defaults) -> list:
+    if isinstance(cfg.metrics[subset], ListConfig):
+        return cfg.metrics[subset]
+    elif cfg.metrics[subset] == "default":
+        return defaults[subset]
+    else:
+        raise ValueError
+        
+        
 class Metrics():
     """Class for model evaluation metrics.
 
-    Requires the following structure to be present in the config: 
+    Requires the following structure to be present in the config defining a list
+    of metrics to be computed during training/validation/testing:
     ```
     metrics:
         train: Union['default', List]
         val: Union['default', List]
         test: Union['default', List]
     ```
-    defining a list of metrics to be computed during training/validation/testing.
+
+    Args:
+        cfg: yaml configuration object
+        defaults: dictionary of default lists of metrics for each subset,
+            `{"train": ["m1"], "val": ["m1", "m2"], "test": ["m1", "m2"]}`.
+
+    Attributes:
+        metrics_dict: dictionary of the form `{"train": x, "val": y, "test": z}`
+            where `x, y, z` are either "default" or a list of metric names.
     """
     def __init__(self, cfg: OmegaConf, defaults: dict) -> None:
-        # intialise metrics dictionary
-        self.metrics_dict = {}
-        for subset in cfg.metrics:
-            self.metrics_dict[subset] = {}
-            metrics_list = cfg.metrics[subset]
-            if metrics_list == "default":
-                metrics_list = defaults[subset]
-            for m in metrics_list:
-                self.metrics_dict[subset][m] = METRIC_REGISTRY.get_element_instance(
-                    name=m, cfg=cfg)
+        self.metrics_dict = init_metrics(cfg=cfg, defaults=defaults)
 
 
     def update(self, subset, metric_names: Union[str, List[str]] = "all"):
