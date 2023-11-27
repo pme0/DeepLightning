@@ -9,16 +9,15 @@ def dictionarify_batch(batch: Any, dataset: str) -> dict:
     hooks must use these same keys when accessing elements from 
     the batch dictionary.
 
-    Parameters
-    ----------
-    :batch: batch object which is output by the LightningDataModule
+    Args:
+    batch: batch object which is output by the LightningDataModule
         and is the input to `training_step()`, `validation_step()`
         and `testing_step()`.
-    :dataset: the dataset name, to make pre-existing datasets conform
+    dataset: the dataset name, to make pre-existing datasets conform
         with the batch dictionary convention.
     """
     if dataset in ["MNIST", "CIFAR10"]:
-        batch = {"paths": None, "inputs": batch[0], "targets": batch[1]}
+        batch = {"inputs_paths": None, "inputs": batch[0], "targets": batch[1]}
         return batch
     elif isinstance(batch, dict):
         return batch

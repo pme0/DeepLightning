@@ -6,6 +6,7 @@ import lightning as pl
 from deeplightning.utils.messages import info_message
 
 
+
 class BaseTask(pl.LightningModule):
     """Base task module.
 
@@ -33,13 +34,22 @@ class BaseTask(pl.LightningModule):
             at the start, to ensure no issues at the validation stage. The 
             attribute `sanity_check` is set to `True` initially and set to 
             `False` after the sanity check run is complete. This is to
-            prevent logging during that preliminary run.
+            prevent logging during that preliminary run. |TODO obsolete
+        training_step_outputs: (list)
+        validation_step_outputs: (list)
+        test_step_outputs: (list)
     """
     def __init__(self, cfg: OmegaConf) -> None:
         super().__init__()
         self.cfg = cfg  #TODO check if this contains logger runtime params
         self.step_label = "iteration"
-        self.sanity_check = True
+        #self.sanity_check = True  # replaced with `RunningStage.SANITY_CHECKING``
+
+        # initialise loss accumulators
+        self.training_step_outputs = []
+        self.validation_step_outputs = []
+        self.test_step_outputs = []
+
 
     def on_task_init_end(self) -> None:
         """Additional attributes to initialise at the end of the `__init__` 

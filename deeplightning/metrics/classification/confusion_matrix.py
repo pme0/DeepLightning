@@ -31,13 +31,15 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 		confusion_matrix: Tensor, 
 		stage: str,
 		epoch: int,
+		max_epochs: int,
 	) -> Figure:
-		"""Draw Confusion Matrix as a figure, to be logged as artifact media
+		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
 
 		Args:
 			confusion_matrix: confusion matrix values
 			stage: data subset {"train", "val", "test"}, for labelling
-			epoch: current epoch, for labelling
+			epoch: current epoch, for labelling (0-indexed)
+			max_epochs: number of training epochs
 		"""
 		assert self.num_classes == confusion_matrix.shape[0]
 		assert self.num_classes == confusion_matrix.shape[1]
@@ -53,7 +55,7 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 			data = confusion_matrix, 
 			annot=True, fmt="g", square=True, cmap="Blues", 
 			vmin=0, vmax=100, cbar_kws=cbar_args)
-		plt.title(f"Confusion Matrix [{stage}, epoch {epoch}]")
+		plt.title(f"Confusion Matrix [{stage}, epoch {epoch+1}/{max_epochs}]")
 		plt.xlabel("Predicted class")
 		plt.ylabel("True class")
 		plt.close()

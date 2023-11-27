@@ -15,7 +15,7 @@ from torch import nn, Tensor
 #from ._meta import _IMAGENET_CATEGORIES
 #from ._utils import _make_divisible, _ovewrite_named_param, handle_legacy_interface
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 __all__ = [

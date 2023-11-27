@@ -1,6 +1,7 @@
 from typing import Tuple, Union, List
 from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
+import inspect
 
 from deeplightning import METRIC_REGISTRY
         
@@ -19,7 +20,7 @@ class Metrics():
 
     Args:
         cfg: yaml configuration object
-        defaults: dictionary of default lists of metrics for each subset,
+        defaults: dictionary of default lists of metrics for each stage,
             `{"train": ["m1"], "val": ["m2"], "test": ["m2", "m3"]}`.
 
     Attributes:
@@ -32,21 +33,43 @@ class Metrics():
         self.metrics_dict = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
-    def update(self, subset, metric_names: Union[str, List[str]] = "all"):
-        #TODO
-        raise NotImplementedError
+    def _update_single_metric(self, stage: str, metric_name: str, **kwargs) -> None:
+        """
+        """
+        # Extract update function from the metrics dict
+        fn = self.metrics_dict[stage][metric_name].update
+        
+        # Determine update function's arg names
+        fn_arg_names = [p.name for p in inspect.signature(fn).parameters.values()]
+        
+        # Construct update function's arg dict from `kwargs`
+        fn_args = {k: v for k, v in kwargs.items() if k in fn_arg_names}
+        
+        # Call update function with the approproate args
+        fn(**fn_args)
+
+
+    def update(self, stage, metric_names: Union[str, List[str]] = "all", **kwargs) -> None:
+        """Updates metrics using the corresponding `update` function.
+        """
         if metric_names == "all":
-            metric_names = self.metrics_dict[subset].keys()
+            metric_names = self.metrics_dict[stage].keys()
         for metric_name in metric_names:
-            self.metrics_dict[subset][metric_name].update(...)
+            self._update_single_metric(stage, metric_name, **kwargs)
+
+            
 
 
     def compute(self):
+        """Computes metrics using the corresponding `compute` function.
+        """
         #TODO
         raise NotImplementedError
 
 
     def reset(self):
+        """Resets metrics using the corresponding `reset` function.
+        """
         #TODO
         raise NotImplementedError
 
@@ -54,21 +77,21 @@ class Metrics():
 # Auxiliary 
 
 
-def initialise_metrics(cfg: OmegaConf, defaults: dict) -> dict:
+def initialise_metrics(cfg: OmegaConf, defaults: dict = None) -> dict:
     metrics_dict = {}
-    for subset in ["train", "val", "test"]:
-        metrics_dict[subset] = {}
-        metrics_list = metrics_filter(cfg, subset, defaults)
+    for stage in ["train", "val", "test"]:
+        metrics_dict[stage] = {}
+        metrics_list = metrics_defaults(cfg, stage, defaults)
         for metric_name in metrics_list:
-            metrics_dict[subset][metric_name] = METRIC_REGISTRY.get_element_instance(
+            metrics_dict[stage][metric_name] = METRIC_REGISTRY.get_element_instance(
                 name=metric_name, cfg=cfg)
     return metrics_dict
     
 
-def metrics_filter(cfg: OmegaConf, subset: str, defaults: dict) -> list:
-    if isinstance(cfg.metrics[subset], ListConfig):
-        return cfg.metrics[subset]
-    elif cfg.metrics[subset] == "default":
-        return defaults[subset]
+def metrics_defaults(cfg: OmegaConf, stage: str, defaults: dict = None) -> list:
+    if defaults is None or isinstance(cfg.metrics[stage], ListConfig):
+        return cfg.metrics[stage]
+    elif cfg.metrics[stage] == "default":
+        return defaults[stage]
     else:
         raise ValueError

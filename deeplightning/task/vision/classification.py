@@ -1,77 +1,53 @@
-from typing import Tuple
+from typing import Any, Tuple
 from omegaconf import OmegaConf
 import torch
 from torch import Tensor
-import lightning as pl
+from torchvision.utils import save_image
+from lightning.pytorch.trainer.states import RunningStage
+import wandb
 
+from deeplightning import TASK_REGISTRY
 from deeplightning.init.imports import init_obj_from_config
-from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.utils.messages import info_message
-from deeplightning.registry import __MetricsRegistry__, __HooksRegistry__
+from deeplightning.metrics.base import Metrics
+from deeplightning.metrics.classification.accuracy import classification_accuracy
+from deeplightning.metrics.classification.confusion_matrix import confusion_matrix
+from deeplightning.metrics.classification.precision_recall import precision_recall_curve
+from deeplightning.task.base import BaseTask
+from deeplightning.trainer.batch import dictionarify_batch
 
 
+def process_model_outputs(outputs, model):
+    """Processes model outouts and selects the appropriate elements
+    """
+    if model.__class__.__name__ == "someModel":
+        return outputs["someThing"]
+    else:
+        return outputs
 
-class TaskModule(pl.LightningModule):
+
+class ImageClassificationTask(BaseTask):
     """ Task module for Image Classification. 
 
-    LOGGING: manual logging `self.logger.log()` is used. This
-    is more flexible as PyTorchLightning automatic logging 
-    `self.log()`) only allows scalars, not histograms, images, etc.
-    Additionally, auto-logging doesn't log at step 0, which is useful.
-
-    Parameters
-    ----------
-    cfg : yaml configuration object
-    
+    Args:
+        cfg: yaml configuration object
     """
-
     def __init__(self, cfg: OmegaConf):
-        super().__init__()
-        self.cfg = cfg  #TODO check if this contains logger runtime params
-        self.num_classes = cfg.model.network.params.num_classes
-        self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
-
+        super().__init__(cfg=cfg)
+        
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)
         self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
         
-        # migration from `pytorch_lightning==1.5.10` to `lightning==2.0.0`
-        self.training_step_outputs = {"train_loss": []}
-        self.validation_step_outputs = {"val_loss": []}
-        self.test_step_outputs = {"test_loss": []}
+        self.default_task_metrics = {
+            "train": ["classification_accuracy"],
+            "val": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],
+            "test": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],}
+        #self.metrics = Metrics(cfg=cfg, defaults=self.default_metrics_dict)
+        self.metrics = Metrics(cfg=cfg, defaults=self.default_task_metrics).metrics_dict
 
-        # PyTorch-Lightning performs a partial validation epoch to ensure that
-        # everything is correct. Use this to avoid logging metrics to W&B for that 
-        self.sanity_check = True
+        self.on_task_init_end()
 
-        # Initialise label to track metrics against
-        self.step_label = "iteration"
-
-        # Define hook functions
-        # to make the hooks bound to the class (so that they can access class attributes 
-        #  using `self.something`), the assignment must specify the class name as follows:
-        # `ClassName.fn = my_fn` rather than `self.fn = my_fn`
-        TaskModule._training_step = __HooksRegistry__[cfg.task]["training_step"]
-        TaskModule._training_step_end = __HooksRegistry__[cfg.task]["training_step_end"]
-        TaskModule._on_training_epoch_end = __HooksRegistry__[cfg.task]["on_training_epoch_end"]
-        TaskModule._validation_step = __HooksRegistry__[cfg.task]["validation_step"]
-        TaskModule._validation_step_end = __HooksRegistry__[cfg.task]["validation_step_end"]
-        TaskModule._on_validation_epoch_end = __HooksRegistry__[cfg.task]["on_validation_epoch_end"]
-        TaskModule._test_step = __HooksRegistry__[cfg.task]["test_step"]
-        TaskModule._test_step_end = __HooksRegistry__[cfg.task]["test_step_end"]
-        TaskModule._on_test_epoch_end = __HooksRegistry__[cfg.task]["on_test_epoch_end"]
-
-        # Aggregation utilities
-        self.gather_on_step = gather_on_step
-        self.gather_on_epoch = gather_on_epoch
-
-        # PyTorch-Lightning's model summary does not give the 
-        # correct  number of trainable parameters; see 
-        # https://github.com/PyTorchLightning/pytorch-lightning/issues/12130
-        self.trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
-        info_message("Trainable parameters: {:,d}".format(self.trainable_params))
-       
 
     def forward(self, x: Tensor) -> Tensor:
         """ Model forward pass.
@@ -91,85 +67,185 @@ class TaskModule(pl.LightningModule):
             },
         })
 
-    
-    """ NOTE on training/validation hooks.
-
-        For *training*, the input to `training_epoch_end()` is 
-        the set of outputs from `training_step()`. For 
-        *validation*, the input to `validation_epoch_end()` 
-        is the output from `validation_step_end()` and the input 
-        to `validation_step_end()` is the output from 
-        `validation_step()`.
-
-        https://github.com/PyTorchLightning/pytorch-lightning/issues/9811
-    """
-
 
     def training_step(self, batch, batch_idx):
-        """ Hook for `training_step`.
 
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader.
-        batch_idx : index of batch
-        """
-        return self._training_step(batch, batch_idx)
+        # convert batch to dictionary form
+        batch = dictionarify_batch(batch, self.cfg.data.dataset)
 
+        # forward pass
+        outputs = self.model(batch["inputs"])
+        outputs = process_model_outputs(outputs, self.model)
 
-    def training_step_end(self):
-        """ Hook for `training_step_end`.
-        """
-        self._training_step_end()
+        # loss
+        train_loss = self.loss(outputs, batch["targets"])
 
+        self.training_step_outputs.append(train_loss)
 
-    def on_training_epoch_end(self):
-        """ Hook for `on_training_epoch_end`.
-        """
-        self._on_training_epoch_end()
+        # metrics
+        self.metrics["train"]["classification_accuracy"].update(preds=outputs, target=batch["targets"])
+
+        if self.global_step % self.cfg.logger.log_every_n_steps == 0:
+
+            metrics = {}
+            metrics["train_loss"] = torch.stack(self.training_step_outputs).mean()
+            self.training_step_outputs.clear()  # free memory
+            # accuracy (batch only)
+            metrics["train_acc"] = self.metrics["train"]["classification_accuracy"].compute()
+            self.metrics["train"]["classification_accuracy"].reset()
+           
+            # log training metrics
+            metrics[self.step_label] = self.global_step
+            self.logger.log_metrics(metrics)
+
+        # the output is not used but returning None gives the following warning
+        # """lightning/pytorch/loops/optimization/automatic.py:129: 
+        # UserWarning: `training_step` returned `None`. If this was 
+        # on purpose, ignore this warning..."""
+        return {"loss": train_loss}
     
 
+    def on_training_epoch_end(self):
+        pass
+
+
     def validation_step(self, batch, batch_idx):
-        """ Hook for `validation_step`.
 
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader.
-        batch_idx : index of batch.
+        # convert batch to dictionary form
+        batch = dictionarify_batch(batch, self.cfg.data.dataset)
+            
+        # forward pass
+        outputs = self.model(batch["inputs"])
+        outputs = process_model_outputs(outputs, self.model)
+        preds = torch.argmax(outputs, dim=1)
 
-        """
-        return self._validation_step(batch, batch_idx)
+        # loss
+        val_loss = self.loss(outputs, batch["targets"])
 
+        self.validation_step_outputs.append(val_loss)
 
-    def validation_step_end(self):
-        """ Hook for `validation_step_end`.
-        """
-        return self._validation_step_end()
+        # metrics
+        self.metrics["val"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
+        self.metrics["val"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
+        self.metrics["val"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
 
 
     def on_validation_epoch_end(self):
-        """ Hook for `validation_epoch_end`.
-        """
-        self._on_validation_epoch_end()
+
+        metrics = {}
+        metrics["val_loss"] = torch.stack(self.validation_step_outputs).mean()
+        self.validation_step_outputs.clear()  # free memory
+
+        # accuracy
+        metrics["val_acc"] = self.metrics["val"]["classification_accuracy"].compute()
+        self.metrics["val"]["classification_accuracy"].reset()
+
+        # confusion matrix
+        cm = self.metrics["val"]["confusion_matrix"].compute()
+        figure = self.metrics["val"]["confusion_matrix"].draw(
+            confusion_matrix = cm, 
+            stage = "val", 
+            epoch = self.current_epoch, 
+            max_epochs = self.trainer.max_epochs,
+        )
+        caption = f"Confusion Matrix [val, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
+        metrics["val_confusion_matrix"] = wandb.Image(figure, caption=caption)
+        self.metrics["val"]["confusion_matrix"].reset()
+
+        # precision-recall
+        precision, recall, thresholds = self.metrics["val"]["precision_recall_curve"].compute()
+        figure = self.metrics["val"]["precision_recall_curve"].draw(
+            precision = precision,
+            recall = recall,
+            thresholds = thresholds, 
+            stage = "val", 
+            epoch = self.current_epoch,
+            max_epochs = self.trainer.max_epochs,
+        )
+        caption = f"Precision-Recall Curve [val, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
+        metrics["val_precision_recall"] = wandb.Image(figure, caption=caption)
+        self.metrics["val"]["precision_recall_curve"].reset()
+
+        # log validation metrics
+        metrics[self.step_label] = self.global_step
+        if self.trainer.state.stage != RunningStage.SANITY_CHECKING:  # `and self.global_step > 0`
+            self.logger.log_metrics(metrics)
+        #self.sanity_check = False
+
+        # The following is required for EarlyStopping and ModelCheckpoint callbacks to work properly. 
+        # Callbacks read from `self.log()`, not from `self.logger.log()`, so need to log there.
+        # [EarlyStopping] key `m = self.cfg.train.early_stop_metric` must exist in `metrics`
+        if self.cfg.train.early_stop_metric is not None:
+            m_earlystop = self.cfg.train.early_stop_metric
+            self.log(m_earlystop, metrics[m_earlystop], sync_dist=True)
+        # [ModelCheckpoint] key `m = self.cfg.train.ckpt_monitor_metric` must exist in `metrics`
+        if self.cfg.train.ckpt_monitor_metric is not None:
+            m_checkpoint = self.cfg.train.ckpt_monitor_metric
+            self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
 
 
     def test_step(self, batch, batch_idx):
-        """ Hook for `test_step`.
 
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader. 
-        batch_idx: index of batch.
-        """
-        return self._test_step(batch, batch_idx)
+        # convert batch to dictionary form
+        batch = dictionarify_batch(batch, self.cfg.data.dataset)
 
+        # forward pass
+        outputs = self.model(batch["inputs"])
+        outputs = process_model_outputs(outputs, self.model)
+        preds = torch.argmax(outputs, dim=1)
+                
+        # loss
+        test_loss = self.loss(outputs, batch["targets"])
 
-    def test_step_end(self):
-        """ Hook for `test_step_end`.
-        """
-        return self._test_step_end()
+        self.test_step_outputs.append(test_loss)
+
+        # metrics
+        self.metrics["test"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
+        self.metrics["test"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
+        self.metrics["test"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
 
 
     def on_test_epoch_end(self):
-        """ Hook for `on_test_epoch_end`.
-        """
-        self._on_test_epoch_end()
+
+        metrics = {}
+        metrics["test_loss"] = torch.stack(self.test_step_outputs).mean()
+        self.test_step_outputs.clear()  # free memory
+
+        # accuracy
+        metrics["test_acc"] = self.metrics["test"]["classification_accuracy"].compute()
+        self.metrics["test"]["classification_accuracy"].reset()
+
+        # confusion matrix
+        cm = self.metrics["test"]["confusion_matrix"].compute()
+        figure = self.metrics["test"]["confusion_matrix"].draw(
+            confusion_matrix = cm,
+            stage = "test", 
+            epoch = self.current_epoch,
+            max_epochs = self.trainer.max_epochs,
+        )
+        caption = f"Confusion Matrix [test, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
+        metrics["test_confusion_matrix"] = wandb.Image(figure, caption=caption)
+        self.metrics["test"]["confusion_matrix"].reset()    
+
+        # precision-recall
+        precision, recall, thresholds = self.metrics["test"]["precision_recall_curve"].compute()
+        figure = self.metrics["test"]["precision_recall_curve"].draw(
+            precision = precision, 
+            recall = recall, 
+            thresholds = thresholds, 
+            stage = "test", 
+            epoch = self.current_epoch,
+            max_epochs = self.trainer.max_epochs,
+        )
+        caption = f"Precision-Recall Curve [test, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
+        metrics["test_precision_recall"] = wandb.Image(figure, caption=caption)
+        self.metrics["test"]["precision_recall_curve"].reset()
+
+        # log test metrics
+        metrics[self.step_label] = self.global_step
+        self.logger.log_metrics(metrics)
+
+
+@TASK_REGISTRY.register_element()
+def image_classification(**kwargs: Any) -> ImageClassificationTask:
+    return ImageClassificationTask(**kwargs)

@@ -1,4 +1,5 @@
 from omegaconf import OmegaConf
+from omegaconf.listconfig import ListConfig
 from torchvision.datasets import mnist
 from torch.utils.data import DataLoader, random_split
 import lightning as pl
@@ -26,7 +27,9 @@ class MNIST(pl.LightningDataModule):
         self.cfg = cfg
 
         # check that config params are set correctly
-        assert cfg.data.image_size == 28
+        assert isinstance(cfg.data.image_size, ListConfig)
+        assert cfg.data.image_size[0] == 28
+        assert cfg.data.image_size[1] == 28
         assert cfg.data.num_channels == 1
         assert cfg.data.num_classes == 10
 

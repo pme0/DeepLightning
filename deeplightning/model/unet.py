@@ -4,12 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 all = [
     "UNet",
-    "lenet5",
+    "unet",
 ]
 
 

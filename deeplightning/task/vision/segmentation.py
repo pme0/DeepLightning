@@ -27,8 +27,8 @@ def process_model_outputs(outputs, model):
         return outputs
 
 
-class SemanticSegmentationTask(BaseTask):
-    """ Task module for Semantic Segmentation. 
+class ImageSemanticSegmentationTask(BaseTask):
+    """ Task module for Image Semantic Segmentation. 
 
     Args:
         cfg: yaml configuration object
@@ -45,7 +45,8 @@ class SemanticSegmentationTask(BaseTask):
             "train": ["classification_accuracy"],
             "val": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],
             "test": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],}
-        self.metrics = Metrics(cfg=cfg, defaults=self.default_metrics_dict).metrics_dict
+        #self.metrics = Metrics(cfg=cfg, defaults=self.default_metrics_dict)
+        self.metrics = Metrics(cfg=cfg).metrics_dict
 
         self.training_step_outputs = {"train_loss": []}
         self.validation_step_outputs = {"val_loss": []}
@@ -100,9 +101,7 @@ class SemanticSegmentationTask(BaseTask):
             # accuracy (batch only)
             metrics["train_acc"] = self.metrics["train"]["classification_accuracy"].compute()
             self.metrics["train"]["classification_accuracy"].reset()
-            # log learning rate
-            #metrics['lr'] = self.lr_schedulers().get_last_lr()[0]
-
+           
             # log training metrics
             metrics[self.step_label] = self.global_step
             self.logger.log_metrics(metrics)
@@ -157,13 +156,13 @@ class SemanticSegmentationTask(BaseTask):
         self.validation_step_outputs.clear()  # free memory
 
         # accuracy
-        metrics["val_acc"] = self.metrics["Accuracy_val"].compute()
+        metrics["val_acc"] = self.metrics["val"]["classification_accuracy"].compute()
         self.metrics["val"]["classification_accuracy"].reset()
 
         # confusion matrix
         cm = self.metrics["val"]["confusion_matrix"].compute()
         figure = self.metrics["val"]["confusion_matrix"].draw(
-            confusion_matrix=cm, subset="val", epoch=self.current_epoch+1)
+            confusion_matrix=cm, stage="val", epoch=self.current_epoch+1)
         metrics["val_confusion_matrix"] = wandb.Image(figure, 
             caption=f"Confusion Matrix [val, epoch {self.current_epoch+1}]")
         self.metrics["val"]["confusion_matrix"].reset()
@@ -172,7 +171,7 @@ class SemanticSegmentationTask(BaseTask):
         precision, recall, thresholds = self.metrics["val"]["precision_recall_curve"].compute()
         figure = self.metrics["val"]["precision_recall_curve"].draw(
             precision=precision, recall=recall, thresholds=thresholds, 
-            subset="val", epoch=self.current_epoch+1)
+            stage="val", epoch=self.current_epoch+1)
         metrics["val_precision_recall"] = wandb.Image(figure, 
             caption=f"Precision-Recall Curve [val, epoch {self.current_epoch+1}]")
         self.metrics["val"]["precision_recall_curve"].reset()
@@ -231,7 +230,7 @@ class SemanticSegmentationTask(BaseTask):
         # confusion matrix
         cm = self.metrics["test"]["confusion_matrix"].compute()
         figure = self.metrics["test"]["confusion_matrix"].draw(
-            confusion_matrix=cm, subset="test", epoch=self.current_epoch+1)
+            confusion_matrix=cm, stage="test", epoch=self.current_epoch+1)
         metrics["test_confusion_matrix"] = wandb.Image(figure, 
             caption=f"Confusion Matrix [test, epoch {self.current_epoch+1}]")
         self.metrics["test"]["confusion_matrix"].reset()    
@@ -240,7 +239,7 @@ class SemanticSegmentationTask(BaseTask):
         precision, recall, thresholds = self.metrics["test"]["precision_recall_curve"].compute()
         figure = self.metrics["test"]["precision_recall_curve"].draw(
             precision=precision, recall=recall, thresholds=thresholds, 
-            subset="test", epoch=self.current_epoch+1)
+            stage="test", epoch=self.current_epoch+1)
         metrics["test_precision_recall"] = wandb.Image(figure, 
             caption=f"Precision-Recall Curve [test, epoch {self.current_epoch+1}]")
         self.metrics["test"]["precision_recall_curve"].reset()
@@ -251,5 +250,5 @@ class SemanticSegmentationTask(BaseTask):
 
 
 @TASK_REGISTRY.register_element()
-def semantic_segmentation(**kwargs: Any) -> SemanticSegmentationTask:
-    return SemanticSegmentationTask(**kwargs)
+def image_semantic_segmentation(**kwargs: Any) -> ImageSemanticSegmentationTask:
+    return ImageSemanticSegmentationTask(**kwargs)

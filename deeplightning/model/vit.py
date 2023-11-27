@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure as pltFigure
 import omegaconf
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 all = [

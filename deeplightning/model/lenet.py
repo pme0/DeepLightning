@@ -2,7 +2,7 @@ from typing import Any
 import torch
 import torch.nn as nn
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 all = [

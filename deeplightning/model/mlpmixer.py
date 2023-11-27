@@ -4,7 +4,7 @@ import torch.nn as nn
 from functools import partial
 from einops.layers.torch import Rearrange, Reduce
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 all = [

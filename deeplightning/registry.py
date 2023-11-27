@@ -34,17 +34,17 @@ class Registry:
         return decorator
 
     def get_element_reference(self, name: str) -> Type[T]:
-        """Get a element reference from its name
+        """Get element reference from its name
         """
         return self.elements_dict[name]
     
     def get_element_instance(self, name: str, **params: Any) -> Callable:
-        """Get a element instance from its name and parameters
+        """Get element instance from its name and parameters
         """
         return self.get_element_reference(name)(**params)
     
     def get_element_names(self) -> List:
-        """Get the names of all registered elements
+        """Get names of all registered elements
         """
         return sorted(list(self.elements_dict.keys()))
 

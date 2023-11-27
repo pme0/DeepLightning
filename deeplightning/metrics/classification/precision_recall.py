@@ -28,7 +28,8 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		recall: Tensor,
 		thresholds: Tensor,
 		stage: str,
-		epoch: int
+		epoch: int,
+		max_epochs: int,
 	) -> Figure:
 		"""Draw Precision-Recall Curve as a figure, to be logged as artifact media
 
@@ -46,7 +47,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		fig = plt.figure()
 		for i in range(self.num_classes):
 			plt.plot(recall[i].cpu(), precision[i].cpu(), label=i)
-		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch}]")
+		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch}/{max_epochs}]")
 		plt.xlabel("Recall")
 		plt.ylabel("Precision")
 		if self.num_classes <= 10:

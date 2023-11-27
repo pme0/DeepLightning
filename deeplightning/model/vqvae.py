@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch import nn, einsum
 import torch.nn.functional as F
 
-from deeplightning.registry import MODEL_REGISTRY
+from deeplightning import MODEL_REGISTRY
 
 
 all = [
@@ -175,7 +175,7 @@ class DiscreteVAE(nn.Module):
 
 
 @MODEL_REGISTRY.register_element()
-def lenet5(**kwargs: Any) -> DiscreteVAE:
+def discrete_vae(**kwargs: Any) -> DiscreteVAE:
     """Discrete (a.k.a. Vector-Quantized) VAE architecture
 
     Reference
