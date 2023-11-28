@@ -49,7 +49,6 @@ class ResidualBlock(nn.Module):
         return self.net(x) + x
 
 
-@MODEL_REGISTRY.register_element()
 class DiscreteVAE(nn.Module):
     """
     Args
