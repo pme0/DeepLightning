@@ -139,7 +139,6 @@ class Bottleneck(nn.Module):
         return out
 
 
-@MODEL_REGISTRY.register_element()
 class ResNet(nn.Module):
     def __init__(
         self,

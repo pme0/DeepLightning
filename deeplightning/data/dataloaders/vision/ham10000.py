@@ -22,7 +22,9 @@ def _extract_classes(metadata, class_labels_str, label2index):
 
 
 def _extract_masks(metadata, root):
-    masks = ["{}".format(os.path.join(root, "masks", f"{metadata.loc[i,'image']}_segmentation.png")) for i in range(metadata.shape[0])]
+    masks = ["{}".format(
+        os.path.join(root, "masks", f"{metadata.loc[i,'image']}_segmentation.png"))
+        for i in range(metadata.shape[0])]
     return masks
 
 
@@ -36,19 +38,23 @@ class HAM10000_dataset(Dataset):
     normalization constants for images: mean=(?,) and std=(?,)
     number of samples: 10015
     number of image classes: 7
-    number of segmentation classes: 7
+    number of segmentation classes: 2
 
-    |-------|-------------|------------------------------------------------------------------------------------------------------------|
-    | label | no. samples | description                                                                                                |
-    |-------|-------------|------------------------------------------------------------------------------------------------------------|
-    | MEL   | 1113        | melanoma                                                                                                   |
-    | NV    | 6705        | melanocytic nevi                                                                                           |
-    | BCC   | 514         | basal cell carcinoma                                                                                       |
-    | AKIEC | 327         | actinic keratoses and intraepithelial carcinoma / Bowen's disease                                          |
-    | BKL   | 1099        | benign keratosis-like lesions (solar lentigines / seborrheic keratoses and lichen-planus like keratoses)   |
-    | DF    | 115         | dermatofibroma                                                                                             |
-    | VASC  | 142         | vascular lesions (angiomas, angiokeratomas, pyogenic granulomas and hemorrhage)                            |
-    |-------|-------------|------------------------------------------------------------------------------------------------------------|
+    |-------|-------------|----------------------------------------------------|
+    | label | no. samples | description                                        |
+    |-------|-------------|----------------------------------------------------|
+    | MEL   | 1113        | Melanoma                                           |
+    | NV    | 6705        | Melanocytic nevi                                   |
+    | BCC   | 514         | Basal cell carcinoma                               |
+    | AKIEC | 327         | Actinic keratoses and intraepithelial carcinoma /  |
+    |       |             |     Bowen's disease                                |
+    | BKL   | 1099        | Benign keratosis-like lesions (solar lentigines /  |
+    |       |             |     seborrheic keratoses and lichen-planus like    |
+    |       |             |     keratoses)                                     |
+    | DF    | 115         | Dermatofibroma                                     |
+    | VASC  | 142         | Vascular lesions (angiomas, angiokeratomas,        |
+    |       |             |     pyogenic granulomas and hemorrhage)            |
+    |-------|-------------|----------------------------------------------------|
         
     References:
         > "Human Against Machine with 10000 training images"
@@ -60,7 +66,6 @@ class HAM10000_dataset(Dataset):
     Args:
         cfg: configuration object
         transform: Transforms to be applied to images
-
     """
     def __init__(self, 
         task: str,
@@ -127,7 +132,7 @@ class HAM10000(pl.LightningDataModule):
         assert cfg.data.num_channels == 3
         if cfg.task == "image_classification":
             assert cfg.data.num_classes == 7
-        elif cfg.task == "semantic_segmentation":
+        elif cfg.task == "image_semantic_segmentation":
             assert cfg.data.num_classes == 2
         else:
             raise ValueError
