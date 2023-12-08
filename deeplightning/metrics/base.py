@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List
+from typing import List, Literal, Tuple, Union
 from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
 import inspect
@@ -24,53 +24,121 @@ class Metrics():
             `{"train": ["m1"], "val": ["m2"], "test": ["m2", "m3"]}`.
 
     Attributes:
-        metrics_dict: dictionary of the form `{"train": x, "val": y, "test": z}`
+        md: metrics dictionary of the form `{"train": x, "val": y, "test": z}`
             where `x, y, z` are either "default" (in which case a default set of 
             metrics is used, as defined in the task class) or a list of metric 
             names read from the config.
     """
     def __init__(self, cfg: OmegaConf, defaults: dict) -> None:
-        self.metrics_dict = initialise_metrics(cfg=cfg, defaults=defaults)
+        self.md = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
-    def _update_single_metric(self, stage: str, metric_name: str, **kwargs) -> None:
-        """
-        """
-        # Extract update function from the metrics dict
-        fn = self.metrics_dict[stage][metric_name].update
-        
-        # Determine update function's arg names
-        fn_arg_names = [p.name for p in inspect.signature(fn).parameters.values()]
-        
-        # Construct update function's arg dict from `kwargs`
-        fn_args = {k: v for k, v in kwargs.items() if k in fn_arg_names}
-        
-        # Call update function with the approproate args
-        fn(**fn_args)
-
-
-    def update(self, stage, metric_names: Union[str, List[str]] = "all", **kwargs) -> None:
-        """Updates metrics using the corresponding `update` function.
-        """
+    def _metrics_list_if_all(self, stage, metric_names) -> List[str]:
         if metric_names == "all":
-            metric_names = self.metrics_dict[stage].keys()
+            return self.md[stage].keys()
+        return metric_names
+
+
+    def _call_metric_method(self, method_name: str, stage: str, metric_name: str, **kwargs) -> None:
+        """Call metric method.
+
+        Args:
+            method_name: name of method to call, one of {"update", "compute",
+                "reset", "draw"}.
+            stage: trainer stage, one of {"train", "val", "test"}.
+            metric_name: name of metric.
+            **kwargs: keyword arguments to be passed to the metric method 
+                function.
+        """
+        # Extract method
+        fn = getattr(self.md[stage][metric_name], method_name)
+        # Determine arg names
+        fn_arg_names = [p.name for p in inspect.signature(fn).parameters.values()]
+        # Construct arg dict
+        fn_args_dict = {k: v for k, v in kwargs.items() if k in fn_arg_names}
+        # Call method
+        return fn(**fn_args_dict)
+
+
+    def update(self, 
+        stage: str,
+        metric_names: Union[str, List[str]] = "all",
+        **kwargs,
+    ) -> None:
+        """Update metrics accumulators using the corresponding `update` method.
+        """
+        metric_names = self._metrics_list_if_all(stage, metric_names)
         for metric_name in metric_names:
-            self._update_single_metric(stage, metric_name, **kwargs)
+            self._call_metric_method(
+                stage = stage,
+                metric_name = metric_name,
+                method_name = "update",
+                **kwargs)
 
+
+    def compute(self, 
+        existing_metrics: dict,
+        stage: str, 
+        metric_names: Union[Literal["all"], List[str]] = "all",
+        reset: bool = False, 
+        **kwargs,
+    ) -> None:
+        """Compute metrics using the corresponding `compute` method.
+
+        Currently, `draw` and `reset` methods are called indirectly via this 
+        `compute` method, though they can be called directly if necessary.
+        """
+        metric_names = self._metrics_list_if_all(stage, metric_names)
+        for name in metric_names:
+            logging_methods = self.md[stage][name].logging_methods
+            key = "{}_{}".format(stage, self.md[stage][name].display_name)
             
+            if "compute" in logging_methods:
+                value = self._call_metric_method(
+                    method_name = "compute",
+                    stage = stage,
+                    metric_name = name)
+                print(key, value)
+                existing_metrics.update({key: value})
+            
+            if "draw" in logging_methods:
+                value = self._call_metric_method(
+                    method_name = "draw",
+                    stage = stage,
+                    metric_name = name,
+                    compute_fn = self.metrics.md[stage][name].compute,
+                    **kwargs)
+                existing_metrics.update({key: value})
+            
+            if reset:
+                self._call_metric_method(
+                    method_name = "reset",
+                    stage = stage,
+                    metric_name = name)
 
 
-    def compute(self):
-        """Computes metrics using the corresponding `compute` function.
+    def reset(self, 
+        stage: str, 
+        metric_names: Union[str, List[str]] = "all",
+         **kwargs,
+    ) -> None:
+        """Reset metrics accumulators using the corresponding `reset` method.
         """
-        #TODO
-        raise NotImplementedError
+        metric_names = self._metrics_list_if_all(stage, metric_names)
+        for name in metric_names:
+            self._call_metric_method(
+                stage = stage,
+                metric_name = name,
+                method_name = "reset")
 
 
-    def reset(self):
-        """Resets metrics using the corresponding `reset` function.
+    def draw(self, 
+        stage: str, 
+        metric_names: Union[str, List[str]] = "all", 
+        **kwargs,
+    ) -> None:
+        """Draw metrics visualisations using the corresponding `draw` method.
         """
-        #TODO
         raise NotImplementedError
 
 

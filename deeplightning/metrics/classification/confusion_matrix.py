@@ -1,3 +1,4 @@
+from typing import Callable
 from omegaconf import OmegaConf
 from torch import Tensor
 from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatrix
@@ -16,9 +17,16 @@ __all__ = [
 
 
 class ConfusionMatrix(MulticlassConfusionMatrix):
-	"""Confusion Matrix metric class, inheriting from torchmetrics
+	"""Confusion Matrix metric class, inheriting from torchmetrics.
+
+	Attributes:
+		display_name: 
+		logging_methods: 
 	"""
 	def __init__(self, cfg: OmegaConf):
+		self.display_name = "confusion_matrix"
+		self.logging_methods = ["draw"]
+
 		self.num_classes = cfg.model.network.params.num_classes
 		args = {
 			"num_classes": self.num_classes,
@@ -28,24 +36,27 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 
 	def draw(self, 
-		confusion_matrix: Tensor, 
 		stage: str,
+		metric_name: str,
+		compute_fn: Callable,
 		epoch: int,
 		max_epochs: int,
 	) -> Figure:
 		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
 
 		Args:
-			confusion_matrix: confusion matrix values
-			stage: data subset {"train", "val", "test"}, for labelling
-			epoch: current epoch, for labelling (0-indexed)
-			max_epochs: number of training epochs
+			stage: trainer stage, one of {"train", "val", "test"}.
+			metric_name: name of metric.
+			compute_fn: the metric's compute function.
+			epoch: current epoch, for labelling (0-indexed).
+			max_epochs: number of training epochs.
 		"""
+
+		# compute and round confusion matrix
+		confusion_matrix = compute_fn()
+		confusion_matrix = np.round(100*confusion_matrix.cpu().numpy()).astype(int)
 		assert self.num_classes == confusion_matrix.shape[0]
 		assert self.num_classes == confusion_matrix.shape[1]
-		
-		# round confusion matrix values
-		confusion_matrix = np.round(100*confusion_matrix.cpu().numpy()).astype(int)
 		
 		# draw figure
 		fig = plt.subplot()

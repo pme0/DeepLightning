@@ -64,6 +64,10 @@ class BaseTask(pl.LightningModule):
         self.print_num_model_params()
  
 
+    def on_logging_start(self, global_step) -> None:
+        pass
+
+
     @property
     def num_trainable_params(self) -> int:
         return self._num_trainable_params

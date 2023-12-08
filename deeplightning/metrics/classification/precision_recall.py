@@ -14,9 +14,14 @@ __all__ = [
 
 
 class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
-	"""Precision-Recall metric class, inheriting from torchmetrics
+	"""Precision-Recall metric class, inheriting from torchmetrics.
+
+	Attributes:
+		display_name: 
+		logging_methods: 
 	"""
 	def __init__(self, cfg: OmegaConf):
+		self.display_name = "precision_recall"
 		self.num_classes = cfg.model.network.params.num_classes
 		args = {
 			"num_classes": self.num_classes,

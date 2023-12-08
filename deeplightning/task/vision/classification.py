@@ -43,8 +43,8 @@ class ImageClassificationTask(BaseTask):
             "train": ["classification_accuracy"],
             "val": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],
             "test": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],}
-        #self.metrics = Metrics(cfg=cfg, defaults=self.default_metrics_dict)
-        self.metrics = Metrics(cfg=cfg, defaults=self.default_task_metrics).metrics_dict
+        self.metrics = Metrics(cfg=cfg, defaults=self.default_task_metrics)
+       # self.metrics = Metrics(cfg=cfg, defaults=self.default_task_metrics).md
 
         self.on_task_init_end()
 
@@ -70,31 +70,33 @@ class ImageClassificationTask(BaseTask):
 
     def training_step(self, batch, batch_idx):
 
-        # convert batch to dictionary form
+        # Convert batch to dictionary form
         batch = dictionarify_batch(batch, self.cfg.data.dataset)
 
-        # forward pass
+        # Compute forward pass
         outputs = self.model(batch["inputs"])
         outputs = process_model_outputs(outputs, self.model)
 
-        # loss
+        # Compute loss
         train_loss = self.loss(outputs, batch["targets"])
-
         self.training_step_outputs.append(train_loss)
 
-        # metrics
-        self.metrics["train"]["classification_accuracy"].update(preds=outputs, target=batch["targets"])
-
+        # Compute metrics
+        update_args = {"preds": outputs, "target": batch["targets"]}
+        self.metrics.update(stage="train", **update_args)
+    
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
 
-            metrics = {}
+            metrics = {} #self.on_logging_start(self.global_step)
+
+            # Loss
             metrics["train_loss"] = torch.stack(self.training_step_outputs).mean()
             self.training_step_outputs.clear()  # free memory
-            # accuracy (batch only)
-            metrics["train_acc"] = self.metrics["train"]["classification_accuracy"].compute()
-            self.metrics["train"]["classification_accuracy"].reset()
-           
-            # log training metrics
+            
+            # Metrics (batch only)
+            self.metrics.compute(existing_metrics=metrics, stage="train", reset=True)
+   
+            # Logging
             metrics[self.step_label] = self.global_step
             self.logger.log_metrics(metrics)
 
@@ -111,38 +113,44 @@ class ImageClassificationTask(BaseTask):
 
     def validation_step(self, batch, batch_idx):
 
-        # convert batch to dictionary form
+        # Convert batch to dictionary form
         batch = dictionarify_batch(batch, self.cfg.data.dataset)
             
-        # forward pass
+        # Compute forward pass
         outputs = self.model(batch["inputs"])
         outputs = process_model_outputs(outputs, self.model)
         preds = torch.argmax(outputs, dim=1)
 
-        # loss
+        # Compute forward loss
         val_loss = self.loss(outputs, batch["targets"])
-
         self.validation_step_outputs.append(val_loss)
 
-        # metrics
-        self.metrics["val"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
-        self.metrics["val"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
-        self.metrics["val"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
+        # Compute metrics
+        update_args = {"preds": outputs, "target": batch["targets"]}
+        self.metrics.update(stage="val", **update_args)
+        #self.metrics.md["val"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
+        #self.metrics.md["val"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
+        #self.metrics.md["val"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
 
 
     def on_validation_epoch_end(self):
 
         metrics = {}
+
         metrics["val_loss"] = torch.stack(self.validation_step_outputs).mean()
         self.validation_step_outputs.clear()  # free memory
 
         # accuracy
-        metrics["val_acc"] = self.metrics["val"]["classification_accuracy"].compute()
-        self.metrics["val"]["classification_accuracy"].reset()
+        self.metrics.compute(existing_metrics=metrics, stage="val", reset=True)
+        #metrics["val_acc"] = self.metrics.md["val"]["classification_accuracy"].compute()
+        #self.metrics.md["val"]["classification_accuracy"].reset()
+        print(self.global_step, metrics["val_accuracy"])
+        print(self.global_step, metrics["val_confusion_matrix"])
+        raise
 
         # confusion matrix
-        cm = self.metrics["val"]["confusion_matrix"].compute()
-        figure = self.metrics["val"]["confusion_matrix"].draw(
+        cm = self.metrics.md["val"]["confusion_matrix"].compute()
+        figure = self.metrics.md["val"]["confusion_matrix"].draw(
             confusion_matrix = cm, 
             stage = "val", 
             epoch = self.current_epoch, 
@@ -150,11 +158,11 @@ class ImageClassificationTask(BaseTask):
         )
         caption = f"Confusion Matrix [val, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
         metrics["val_confusion_matrix"] = wandb.Image(figure, caption=caption)
-        self.metrics["val"]["confusion_matrix"].reset()
+        self.metrics.md["val"]["confusion_matrix"].reset()
 
         # precision-recall
-        precision, recall, thresholds = self.metrics["val"]["precision_recall_curve"].compute()
-        figure = self.metrics["val"]["precision_recall_curve"].draw(
+        precision, recall, thresholds = self.metrics.md["val"]["precision_recall_curve"].compute()
+        figure = self.metrics.md["val"]["precision_recall_curve"].draw(
             precision = precision,
             recall = recall,
             thresholds = thresholds, 
@@ -164,7 +172,7 @@ class ImageClassificationTask(BaseTask):
         )
         caption = f"Precision-Recall Curve [val, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
         metrics["val_precision_recall"] = wandb.Image(figure, caption=caption)
-        self.metrics["val"]["precision_recall_curve"].reset()
+        self.metrics.md["val"]["precision_recall_curve"].reset()
 
         # log validation metrics
         metrics[self.step_label] = self.global_step
@@ -196,13 +204,12 @@ class ImageClassificationTask(BaseTask):
                 
         # loss
         test_loss = self.loss(outputs, batch["targets"])
-
         self.test_step_outputs.append(test_loss)
 
         # metrics
-        self.metrics["test"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
-        self.metrics["test"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
-        self.metrics["test"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
+        self.metrics.md["test"]["classification_accuracy"].update(preds=preds, target=batch["targets"])
+        self.metrics.md["test"]["confusion_matrix"].update(preds=preds, target=batch["targets"])
+        self.metrics.md["test"]["precision_recall_curve"].update(preds=outputs, target=batch["targets"])
 
 
     def on_test_epoch_end(self):
@@ -212,12 +219,12 @@ class ImageClassificationTask(BaseTask):
         self.test_step_outputs.clear()  # free memory
 
         # accuracy
-        metrics["test_acc"] = self.metrics["test"]["classification_accuracy"].compute()
-        self.metrics["test"]["classification_accuracy"].reset()
+        metrics["test_acc"] = self.metrics.md["test"]["classification_accuracy"].compute()
+        self.metrics.md["test"]["classification_accuracy"].reset()
 
         # confusion matrix
-        cm = self.metrics["test"]["confusion_matrix"].compute()
-        figure = self.metrics["test"]["confusion_matrix"].draw(
+        cm = self.metrics.md["test"]["confusion_matrix"].compute()
+        figure = self.metrics.md["test"]["confusion_matrix"].draw(
             confusion_matrix = cm,
             stage = "test", 
             epoch = self.current_epoch,
@@ -225,11 +232,11 @@ class ImageClassificationTask(BaseTask):
         )
         caption = f"Confusion Matrix [test, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
         metrics["test_confusion_matrix"] = wandb.Image(figure, caption=caption)
-        self.metrics["test"]["confusion_matrix"].reset()    
+        self.metrics.md["test"]["confusion_matrix"].reset()    
 
         # precision-recall
-        precision, recall, thresholds = self.metrics["test"]["precision_recall_curve"].compute()
-        figure = self.metrics["test"]["precision_recall_curve"].draw(
+        precision, recall, thresholds = self.metrics.md["test"]["precision_recall_curve"].compute()
+        figure = self.metrics.md["test"]["precision_recall_curve"].draw(
             precision = precision, 
             recall = recall, 
             thresholds = thresholds, 
@@ -239,7 +246,7 @@ class ImageClassificationTask(BaseTask):
         )
         caption = f"Precision-Recall Curve [test, epoch {self.current_epoch+1}/{self.trainer.max_epochs}]"
         metrics["test_precision_recall"] = wandb.Image(figure, caption=caption)
-        self.metrics["test"]["precision_recall_curve"].reset()
+        self.metrics.md["test"]["precision_recall_curve"].reset()
 
         # log test metrics
         metrics[self.step_label] = self.global_step
