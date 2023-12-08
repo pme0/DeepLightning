@@ -33,7 +33,7 @@ class Metrics():
         self.md = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
-    def _metrics_list_if_all(self, stage, metric_names) -> List[str]:
+    def _all_metrics_if_unspecified(self, stage, metric_names) -> List[str]:
         if not metric_names:
             return self.md[stage].keys()
         return metric_names
@@ -67,7 +67,7 @@ class Metrics():
     ) -> None:
         """Update metrics accumulators using the corresponding `update` method.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for metric_name in metric_names:
             self._call_metric_method(
                 stage = stage,
@@ -88,7 +88,7 @@ class Metrics():
         Currently, `draw` and `reset` methods are called indirectly via this 
         `compute` method, though they can be called directly if necessary.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for name in metric_names:
             logging_methods = self.md[stage][name].logging_methods
             key = "{}_{}".format(stage, self.md[stage][name].display_name)
@@ -124,7 +124,7 @@ class Metrics():
     ) -> None:
         """Reset metrics accumulators using the corresponding `reset` method.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for name in metric_names:
             self._call_metric_method(
                 stage = stage,
