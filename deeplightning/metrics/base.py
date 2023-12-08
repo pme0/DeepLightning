@@ -34,7 +34,7 @@ class Metrics():
 
 
     def _metrics_list_if_all(self, stage, metric_names) -> List[str]:
-        if metric_names == "all":
+        if not metric_names:
             return self.md[stage].keys()
         return metric_names
 
@@ -62,7 +62,7 @@ class Metrics():
 
     def update(self, 
         stage: str,
-        metric_names: Union[str, List[str]] = "all",
+        metric_names: List[str] = [],
         **kwargs,
     ) -> None:
         """Update metrics accumulators using the corresponding `update` method.
@@ -79,7 +79,7 @@ class Metrics():
     def compute(self, 
         existing_metrics: dict,
         stage: str, 
-        metric_names: Union[Literal["all"], List[str]] = "all",
+        metric_names: List[str] = [],
         reset: bool = False, 
         **kwargs,
     ) -> None:
@@ -119,7 +119,7 @@ class Metrics():
 
     def reset(self, 
         stage: str, 
-        metric_names: Union[str, List[str]] = "all",
+        metric_names: List[str] = [],
          **kwargs,
     ) -> None:
         """Reset metrics accumulators using the corresponding `reset` method.
@@ -134,7 +134,7 @@ class Metrics():
 
     def draw(self, 
         stage: str, 
-        metric_names: Union[str, List[str]] = "all", 
+        metric_names: List[str] = [],
         **kwargs,
     ) -> None:
         """Draw metrics visualisations using the corresponding `draw` method.
