@@ -5,7 +5,7 @@ import torch.nn as nn
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "ResNet",
     "resnet18",
     "resnet34",

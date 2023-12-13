@@ -7,7 +7,7 @@ from einops.layers.torch import Rearrange, Reduce
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "MLPMixer",
     "mlp_mixer"
 ]
@@ -77,13 +77,13 @@ class MLPMixer(nn.Module):
 def mlp_mixer(**kwargs: Any) -> MLPMixer:
     """MLPMixer architecture
 
-    Reference
-        Tolstikhin et al (2021) `MLP-Mixer: An all-MLP Architecture for Vision`.
+    References:
+        Tolstikhin et al (2021) "MLP-Mixer: An all-MLP Architecture for Vision".
         <https://arxiv.org/abs/2105.01601>
         <https://github.com/lucidrains/mlp-mixer-pytorch>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return MLPMixer(**kwargs)
 

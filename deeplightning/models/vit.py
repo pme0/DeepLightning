@@ -11,7 +11,7 @@ import omegaconf
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "VisionTransformer",
     "vision_transformer",
 ]
@@ -23,19 +23,17 @@ pair = lambda x: x if isinstance(x, tuple) or isinstance(x, omegaconf.listconfig
 class Patchify(nn.Module):
     """Reshape image into patches.
 
-    The implementation used is equivalent to the one 
-    below but is slightly faster though more verbose:
+    The implementation used is equivalent to the one below but is slightly 
+    faster though more verbose:
     ```Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_height, p2 = patch_width)```
     (https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py)
 
-    Parameters
-    ----------
-    x : image tensor of shape [B, C, H, W]
-    patch_size : number of pixels per dimension in each patch; patches are 
-        assumed square (`patch_size x patch_size`)
-    flatten_pixels : if True, pixels in patches will be returned in flattened
-        as a feature vector instead of a 2D grid with 1 or 3 channels.
-        
+    Args:
+        x : image tensor of shape [B, C, H, W]
+        patch_size : number of pixels per dimension in each patch; patches are 
+            assumed square (`patch_size x patch_size`)
+        flatten_pixels : if True, pixels in patches will be returned in flattened
+            as a feature vector instead of a 2D grid with 1 or 3 channels.
     """
     def __init__(self, patch_size: int, flatten_pixels: bool = True):
         super().__init__()
@@ -59,14 +57,11 @@ class Patchify(nn.Module):
     def show_patches(x: Union[torch.Tensor, str], resize: Tuple[int,int] = None) -> pltFigure:
         """Plot a grid of image patches.
 
-        Parameters
-        ----------
-        x : either a path to an image or an image tensor of 
-            size [P,H,W,C] where P is number of patches 
-            (flattened), H is patch height, W is patch width, 
-            C is number of channels
-        resize : target size if `x` is a path
-
+        Args:
+            x : either a path to an image or an image tensor of size [P,H,W,C] 
+                where P is number of patches (flattened), H is patch height, W is 
+                patch width, C is number of channels.
+            resize : target size if `x` is a path.
         """
         if isinstance(x, str):
             x = Image.open(x)
@@ -124,13 +119,11 @@ class LinearEmbedding(nn.Module):
 class Embedding(nn.Module):
     """Embed patches
 
-    Parameters
-    ----------
-    num_channels: number of channels in image
-    image_size: size of image
-    patch_size: size of patches (in pixels)
-    embed_dim : size of embedding
-    
+    Args:
+        num_channels: number of channels in image
+        image_size: size of image
+        patch_size: size of patches (in pixels)
+        embed_dim : size of embedding
     """
     def __init__(self, 
         num_channels: int, 
@@ -156,18 +149,13 @@ class Embedding(nn.Module):
 class AttentionBlock(nn.Module):
     """Multi-Headed Self-Attention block
 
-    References
-    ----------
-    (paper) "Attention Is All You Need", https://arxiv.org/abs/1706.03762
-
-    Parameters
-    ----------
-    embed_dim: dimensionality of input and attention feature vectors
-    mlp_dim: dimensionality of hidden layer in feed-forward network,
-        usually 2-4x larger than `embed_dim`
-    num_heads: number of heads in the attention layer
-    dropout: dropout probability applied in the linear layer
-    
+    Args:
+        embed_dim: dimensionality of input and attention feature vectors
+        mlp_dim: dimensionality of hidden layer in feed-forward network,
+            usually 2-4x larger than `embed_dim`
+        num_heads: number of heads in the attention layer
+        dropout: dropout probability applied in the linear layer
+        
     """
     def __init__(self, 
         embed_dim: int, 
@@ -197,7 +185,7 @@ class AttentionBlock(nn.Module):
 
 class VisionTransformer(nn.Module):
     """
-    Args
+    Args:
         [input]
             num_channels: number of channels of the input (3 for RGB)
             image_size: image size `dim` for square images `(dim, dim)`, 
@@ -228,14 +216,18 @@ class VisionTransformer(nn.Module):
         super().__init__()
         self.patch_size = patch_size
         image_w, image_h = pair(image_size)
-        assert (image_w % patch_size) == 0, f"image width ({image_w}) must be divisible by patch size ({patch_size})"
-        assert (image_h % patch_size) == 0, f"image height ({image_h}) must be divisible by patch size ({patch_size})"
+        assert (image_w % patch_size) == 0, \
+            f"image width ({image_w}) must be divisible by patch size ({patch_size})"
+        assert (image_h % patch_size) == 0, \
+            f"image height ({image_h}) must be divisible by patch size ({patch_size})"
 
         self.patchify = Patchify(patch_size=patch_size)
         self.embedding = Embedding(num_channels, image_size, patch_size, embed_dim)
         self.transformer = nn.Sequential(
-            *(AttentionBlock(embed_dim, mlp_dim, num_heads, dropout=dropout) for _ in range(num_layers)))
-        self.mlp_head = nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, num_classes))
+            *(AttentionBlock(embed_dim, mlp_dim, num_heads, dropout=dropout) 
+                for _ in range(num_layers)))
+        self.mlp_head = nn.Sequential(
+            nn.LayerNorm(embed_dim), nn.Linear(embed_dim, num_classes))
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -256,12 +248,12 @@ class VisionTransformer(nn.Module):
 def vision_transformer(**kwargs: Any) -> VisionTransformer:
     """Vision Transformer (ViT) architecture
 
-    Reference
-        Dosovitskiy et al (2020) `An Image is Worth 16x16 Words: Transformers 
-        for Image Recognition at Scale`.
+    References:
+        Dosovitskiy et al (2020) "An Image is Worth 16x16 Words: Transformers 
+        for Image Recognition at Scale".
         <https://arxiv.org/abs/2010.11929>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return VisionTransformer(**kwargs)

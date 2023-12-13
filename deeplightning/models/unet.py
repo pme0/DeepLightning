@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "UNet",
     "unet",
 ]
@@ -130,7 +130,7 @@ class UNet(nn.Module):
 
 @MODEL_REGISTRY.register_element()
 def unet(**kwargs: Any) -> UNet:
-    """UNet architecture
+    """UNet architecture.
 
     The authors explain the architecture: 'It consists of a contracting
     path (left side) and an expansive path (right side). The contracting path follows
@@ -146,12 +146,12 @@ def unet(**kwargs: Any) -> UNet:
     every convolution. At the final layer a 1x1 convolution is used to map each 
     64-component feature vector to the desired number of classes.'
 
-    Reference
-        Ronneberger et al (2015) `U-Net: Convolutional Networks for Biomedical
-        Image Segmentation`.
+    References:
+        Ronneberger et al (2015) "U-Net: Convolutional Networks for Biomedical
+        Image Segmentation".
         <https://arxiv.org/abs/1505.04597>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return UNet(**kwargs)

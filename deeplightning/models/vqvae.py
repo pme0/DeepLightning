@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "DiscreteVAE",
     "discrete_vae",
 ]
@@ -90,7 +90,7 @@ class DiscreteVAE(nn.Module):
         self.num_layers = num_layers
         self.temperature = temperature
         self.straight_through = straight_through
-        self.codebook = nn.Embedding(num_tokens, codebook_dim) # TODO confirm that codebook is updating
+        self.codebook = nn.Embedding(num_tokens, codebook_dim)
 
         enc_chans = [hidden_dim] * num_layers
         dec_chans = list(reversed(enc_chans))
@@ -174,15 +174,18 @@ class DiscreteVAE(nn.Module):
 
 
 @MODEL_REGISTRY.register_element()
-def discrete_vae(**kwargs: Any) -> DiscreteVAE:
+def discrete_vae(**kwargs) -> DiscreteVAE:
     """Discrete (a.k.a. Vector-Quantized) VAE architecture
 
-    Reference
-        Lecun et al (1998) `Gradient-based learning applied to document
-        recognition`.
-        <https://ieeexplore.ieee.org/abstract/document/726791>
+    References:
+        van den Oord et al (2017) "Neural Discrete Representation Learning".
+        <https://arxiv.org/abs/1711.00937>
 
-    Args
-        **kwargs: parameters passed to the model class
+        Ramesh et al (2021) "Zero-Shot Text-to-Image Generation".
+        <https://arxiv.org/abs/2102.12092>
+
+
+    Args:
+        kwargs: parameters passed to the model class
     """
     return DiscreteVAE(**kwargs)

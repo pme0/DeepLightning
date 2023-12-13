@@ -50,12 +50,12 @@ class ConvMixer(nn.Module):
 def conv_mixer(**kwargs) -> ConvMixer:
     """ConvMixer architecture
 
-    Reference
-        Trockman et al (2022) `Patches Are All You Need?`.
+    References:
+        Trockman et al (2022) "Patches Are All You Need?".
         <https://arxiv.org/abs/2201.09792>
         <https://github.com/locuslab/convmixer>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return ConvMixer(**kwargs)

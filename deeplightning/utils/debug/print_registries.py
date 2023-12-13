@@ -5,7 +5,7 @@ from deeplightning import METRIC_REGISTRY
 from deeplightning import DATA_REGISTRY
 
 import deeplightning.task
-import deeplightning.model
+import deeplightning.models
 import deeplightning.metrics
 import deeplightning.data
 

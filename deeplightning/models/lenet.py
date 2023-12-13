@@ -5,7 +5,7 @@ import torch.nn as nn
 from deeplightning import MODEL_REGISTRY
 
 
-all = [
+__all__ = [
     "LeNet5",
     "lenet5",
 ]
@@ -13,7 +13,7 @@ all = [
     
 class LeNet5(nn.Module):
     """
-    Args
+    Args:
         num_classes: number of classes
     """
     def __init__(self, num_classes: int):
@@ -43,12 +43,12 @@ class LeNet5(nn.Module):
 def lenet5(**kwargs: Any) -> LeNet5:
     """LeNet5 architecture
 
-    Reference
-        Lecun et al (1998) `Gradient-based learning applied to document
-        recognition`.
+    References:
+        Lecun et al (1998) "Gradient-based learning applied to document
+        recognition".
         <https://ieeexplore.ieee.org/abstract/document/726791>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return LeNet5(**kwargs)

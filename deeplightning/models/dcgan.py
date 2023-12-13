@@ -136,13 +136,13 @@ class CDCGAN(nn.Module):
 def dcgan(**kwargs: Any) -> DCGAN:
     """Deep Convolutional Generative Adversarial Network architecture
 
-    Reference
-        Radford et al (2015) `Unsupervised Representation Learning with 
-        Deep Convolutional Generative Adversarial Networks`.
+    References:
+        Radford et al (2015) "Unsupervised Representation Learning with 
+        Deep Convolutional Generative Adversarial Networks".
         <https://arxiv.org/abs/1511.06434>
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return DCGAN(**kwargs)
 
@@ -151,10 +151,10 @@ def dcgan(**kwargs: Any) -> DCGAN:
 def cdcgan(**kwargs: Any) -> CDCGAN:
     """Conditional Deep Convolutional Generative Adversarial Network architecture
 
-    Reference
+    Reference:s
         ?
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return CDCGAN(**kwargs)

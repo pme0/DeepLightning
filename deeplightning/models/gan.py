@@ -77,10 +77,10 @@ class GAN(nn.Module):
 def gan(**kwargs: Any) -> GAN:
     """Generative Adversarial Network architecture
 
-    Reference
+    Reference:
         ?
 
-    Args
-        **kwargs: parameters passed to the model class
+    Args:
+        kwargs: parameters passed to the model class
     """
     return GAN(**kwargs)
