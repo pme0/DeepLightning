@@ -33,8 +33,8 @@ class Metrics():
         self.md = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
-    def _metrics_list_if_all(self, stage, metric_names) -> List[str]:
-        if metric_names == "all":
+    def _all_metrics_if_unspecified(self, stage, metric_names) -> List[str]:
+        if not metric_names:
             return self.md[stage].keys()
         return metric_names
 
@@ -62,12 +62,12 @@ class Metrics():
 
     def update(self, 
         stage: str,
-        metric_names: Union[str, List[str]] = "all",
+        metric_names: List[str] = [],
         **kwargs,
     ) -> None:
         """Update metrics accumulators using the corresponding `update` method.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for metric_name in metric_names:
             self._call_metric_method(
                 stage = stage,
@@ -79,7 +79,7 @@ class Metrics():
     def compute(self, 
         existing_metrics: dict,
         stage: str, 
-        metric_names: Union[Literal["all"], List[str]] = "all",
+        metric_names: List[str] = [],
         reset: bool = False, 
         **kwargs,
     ) -> None:
@@ -88,7 +88,7 @@ class Metrics():
         Currently, `draw` and `reset` methods are called indirectly via this 
         `compute` method, though they can be called directly if necessary.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for name in metric_names:
             logging_methods = self.md[stage][name].logging_methods
             key = "{}_{}".format(stage, self.md[stage][name].display_name)
@@ -119,12 +119,12 @@ class Metrics():
 
     def reset(self, 
         stage: str, 
-        metric_names: Union[str, List[str]] = "all",
+        metric_names: List[str] = [],
          **kwargs,
     ) -> None:
         """Reset metrics accumulators using the corresponding `reset` method.
         """
-        metric_names = self._metrics_list_if_all(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for name in metric_names:
             self._call_metric_method(
                 stage = stage,
@@ -134,7 +134,7 @@ class Metrics():
 
     def draw(self, 
         stage: str, 
-        metric_names: Union[str, List[str]] = "all", 
+        metric_names: List[str] = [],
         **kwargs,
     ) -> None:
         """Draw metrics visualisations using the corresponding `draw` method.
