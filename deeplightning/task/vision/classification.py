@@ -89,7 +89,7 @@ class ImageClassificationTask(BaseTask):
     
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
             
-            metrics = self.init_metrics_dict(self, self.global_step)
+            metrics = self.init_metrics_dict(self.global_step)
 
             # Compute loss
             metrics["train_loss"] = torch.stack(self.training_step_outputs).mean()
@@ -136,7 +136,7 @@ class ImageClassificationTask(BaseTask):
 
     def on_validation_epoch_end(self):
 
-        metrics = self.init_metrics_dict(self, self.global_step)
+        metrics = self.init_metrics_dict(self.global_step)
 
         # Compute loss
         metrics["val_loss"] = torch.stack(self.validation_step_outputs).mean().item()
@@ -191,8 +191,7 @@ class ImageClassificationTask(BaseTask):
 
     def on_test_epoch_end(self):
 
-        metrics = {}
-        metrics[self.step_label] = self.global_step
+        metrics = self.init_metrics_dict(self.global_step)
 
         # Compute loss
         metrics["test_loss"] = torch.stack(self.test_step_outputs).mean().item()
@@ -203,7 +202,9 @@ class ImageClassificationTask(BaseTask):
             "existing_metrics": metrics, 
             "stage": "test",
             "reset": True,
-            "epoch": self.current_epoch,
+            # `current_epoch` seems to be incremented after the last validation
+            # loop so it's 1 more than it should be during the testing loop
+            "epoch": self.current_epoch-1,
             "max_epochs": self.trainer.max_epochs,
         })
 
