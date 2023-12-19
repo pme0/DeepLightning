@@ -47,7 +47,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 			epoch: current epoch, for labelling.
 			max_epochs: number of training epochs.
 		"""
-		
+
 		# Compute precision and recall
 		precision, recall, thresholds = self.compute()
 		assert self.num_classes == len(precision)
@@ -57,7 +57,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		figure = plt.figure()
 		for i in range(self.num_classes):
 			plt.plot(recall[i].cpu(), precision[i].cpu(), label=i)
-		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch}/{max_epochs}]")
+		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch+1}/{max_epochs}]")
 		plt.xlabel("Recall")
 		plt.ylabel("Precision")
 		if self.num_classes <= 10:
