@@ -132,7 +132,7 @@ class DLTrainer(Trainer):
             every_n_epochs = cfg.train.ckpt_every_n_epochs,
             save_last = False,
             save_top_k = cfg.train.ckpt_save_top_k,
-            monitor = "val_acc",
+            monitor = cfg.train.ckpt_monitor_metric,
             mode = "max",
             filename = "{epoch}-{step}-{val_acc:.4f}",  #TODO put filename_metric here
             save_on_train_epoch_end = False # False: save at validation_epoch_end

@@ -18,9 +18,9 @@ __all__ = [
 class ClassificationAccuracy(MulticlassAccuracy):
     """Classification Accuracy metric class, inheriting from torchmetrics.
 
-    Attributes:
-		display_name: 
-		logging_methods: 
+    Attributes (mandatory):
+        display_name: name used by the logger when displaying the metric.
+        logging_methods: metric methods called by the logger.
     """
     def __init__(self, cfg: OmegaConf):
         self.display_name = "accuracy"
@@ -31,10 +31,6 @@ class ClassificationAccuracy(MulticlassAccuracy):
             "num_classes": self.num_classes,
         }
         super().__init__(**args)
-
-
-    def draw(self, **kwargs):
-        pass
 
 
 @METRIC_REGISTRY.register_element()

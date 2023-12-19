@@ -1,11 +1,11 @@
 from typing import Callable
 from omegaconf import OmegaConf
-from torch import Tensor
 from torchmetrics.classification.confusion_matrix import MulticlassConfusionMatrix
 import seaborn as sn
 import numpy as np
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import wandb
 
 from deeplightning import METRIC_REGISTRY
 
@@ -19,9 +19,9 @@ __all__ = [
 class ConfusionMatrix(MulticlassConfusionMatrix):
 	"""Confusion Matrix metric class, inheriting from torchmetrics.
 
-	Attributes:
-		display_name: 
-		logging_methods: 
+	Attributes (mandatory):
+        display_name: name used by the logger when displaying the metric.
+        logging_methods: metric methods called by the logger.
 	"""
 	def __init__(self, cfg: OmegaConf):
 		self.display_name = "confusion_matrix"
@@ -37,40 +37,42 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 	def draw(self, 
 		stage: str,
-		metric_name: str,
-		compute_fn: Callable,
+		existing_metrics: dict,
+		key: str,
 		epoch: int,
 		max_epochs: int,
-	) -> Figure:
+	) -> None:
 		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
 
 		Args:
 			stage: trainer stage, one of {"train", "val", "test"}.
-			metric_name: name of metric.
-			compute_fn: the metric's compute function.
+			existing_metrics: dictionary of metrics logged.
+			key: name under which metric is logged.
 			epoch: current epoch, for labelling (0-indexed).
 			max_epochs: number of training epochs.
 		"""
 
-		# compute and round confusion matrix
-		confusion_matrix = compute_fn()
-		confusion_matrix = np.round(100*confusion_matrix.cpu().numpy()).astype(int)
-		assert self.num_classes == confusion_matrix.shape[0]
-		assert self.num_classes == confusion_matrix.shape[1]
+		# Compute confusion matrix
+		cm = self.compute()
+		cm = np.round(100*cm.cpu().numpy()).astype(int)
+		assert self.num_classes == cm.shape[0] == cm.shape[1]
 		
-		# draw figure
-		fig = plt.subplot()
+		# Draw figure
+		figure = plt.subplot()
 		cbar_args = {
 			"label": "Correct predictions (%), normalized by true class"}
 		sn.heatmap(
-			data = confusion_matrix, 
+			data = cm, 
 			annot=True, fmt="g", square=True, cmap="Blues", 
 			vmin=0, vmax=100, cbar_kws=cbar_args)
 		plt.title(f"Confusion Matrix [{stage}, epoch {epoch+1}/{max_epochs}]")
 		plt.xlabel("Predicted class")
 		plt.ylabel("True class")
 		plt.close()
-		return fig
+
+		# Save figure
+		caption = f"Confusion Matrix [val, epoch {epoch+1}/{max_epochs}]"
+		existing_metrics[key] = wandb.Image(figure, caption=caption)
 
 
 @METRIC_REGISTRY.register_element()	

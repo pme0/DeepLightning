@@ -2,9 +2,10 @@ from typing import List, Literal, Tuple, Union
 from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
 import inspect
+from torch import Tensor
 
 from deeplightning import METRIC_REGISTRY
-        
+
         
 class Metrics():
     """Class for model evaluation metrics.
@@ -50,13 +51,17 @@ class Metrics():
             **kwargs: keyword arguments to be passed to the metric method 
                 function.
         """
+        # Merge named args and kwargs
+        # TODO: build dict in update()/compute() and receive only **kwargs in `_call_metric_method`
+        all_args = {"method_name": method_name, "stage": stage, "metric_name": metric_name, **kwargs}
         # Extract method
         fn = getattr(self.md[stage][metric_name], method_name)
         # Determine arg names
         fn_arg_names = [p.name for p in inspect.signature(fn).parameters.values()]
         # Construct arg dict
-        fn_args_dict = {k: v for k, v in kwargs.items() if k in fn_arg_names}
+        fn_args_dict = {k: v for k, v in all_args.items() if k in fn_arg_names}
         # Call method
+        #print(method_name, stage, metric_name, fn_arg_names, fn_args_dict.keys())
         return fn(**fn_args_dict)
 
 
@@ -69,11 +74,13 @@ class Metrics():
         """
         metric_names = self._all_metrics_if_unspecified(stage, metric_names)
         for metric_name in metric_names:
-            self._call_metric_method(
-                stage = stage,
-                metric_name = metric_name,
-                method_name = "update",
-                **kwargs)
+            update_args_dict = {
+                "stage": stage,
+                "metric_name": metric_name,
+                "method_name": "update",
+                **kwargs,
+            }
+            self._call_metric_method(**update_args_dict)
 
 
     def compute(self, 
@@ -89,32 +96,36 @@ class Metrics():
         `compute` method, though they can be called directly if necessary.
         """
         metric_names = self._all_metrics_if_unspecified(stage, metric_names)
-        for name in metric_names:
-            logging_methods = self.md[stage][name].logging_methods
-            key = "{}_{}".format(stage, self.md[stage][name].display_name)
+        
+        for metric_name in metric_names:
             
-            if "compute" in logging_methods:
-                value = self._call_metric_method(
-                    method_name = "compute",
-                    stage = stage,
-                    metric_name = name)
-                print(key, value)
-                existing_metrics.update({key: value})
-            
-            if "draw" in logging_methods:
-                value = self._call_metric_method(
-                    method_name = "draw",
-                    stage = stage,
-                    metric_name = name,
-                    compute_fn = self.metrics.md[stage][name].compute,
-                    **kwargs)
-                existing_metrics.update({key: value})
+            logging_methods = self.md[stage][metric_name].logging_methods
+            key = "{}_{}".format(stage, self.md[stage][metric_name].display_name)
+
+            for method_name in logging_methods:
+                
+                args_dict = {
+                    "metric_name": metric_name,
+                    "method_name": method_name,
+                    "stage": stage,
+                    "existing_metrics": existing_metrics,
+                    "key": key,
+                    **kwargs,
+                }
+
+                value = self._call_metric_method(**args_dict)
+                
+                if value is not None:
+                    if isinstance(value, Tensor):
+                        value = value.item()
+                    existing_metrics.update({key: value})
             
             if reset:
                 self._call_metric_method(
                     method_name = "reset",
                     stage = stage,
-                    metric_name = name)
+                    metric_name = metric_name,
+                )
 
 
     def reset(self, 
@@ -130,16 +141,6 @@ class Metrics():
                 stage = stage,
                 metric_name = name,
                 method_name = "reset")
-
-
-    def draw(self, 
-        stage: str, 
-        metric_names: List[str] = [],
-        **kwargs,
-    ) -> None:
-        """Draw metrics visualisations using the corresponding `draw` method.
-        """
-        raise NotImplementedError
 
 
 # Auxiliary 

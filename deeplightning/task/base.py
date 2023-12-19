@@ -68,6 +68,10 @@ class BaseTask(pl.LightningModule):
         pass
 
 
+    def init_metrics_dict(self, global_step):
+        return {self.step_label: global_step}
+
+
     @property
     def num_trainable_params(self) -> int:
         return self._num_trainable_params
