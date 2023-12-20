@@ -8,9 +8,6 @@ from lightning.pytorch.trainer.states import RunningStage
 from deeplightning import TASK_REGISTRY
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.metrics.base import Metrics
-from deeplightning.metrics.classification.accuracy import classification_accuracy
-from deeplightning.metrics.classification.confusion_matrix import confusion_matrix
-from deeplightning.metrics.classification.precision_recall import precision_recall_curve
 from deeplightning.task.base import BaseTask
 from deeplightning.trainer.batch import dictionarify_batch
 
@@ -81,11 +78,12 @@ class ImageClassificationTask(BaseTask):
         self.training_step_outputs.append(train_loss)
 
         # Update metrics
-        self.metrics.update(**{
-            "stage": "train",
-            "preds": outputs,
-            "target": batch["targets"],
-        })
+        self.metrics.update(
+            stage = "train", 
+            **{
+                "preds": outputs, 
+                "target": batch["targets"],
+            })
     
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
             
@@ -93,10 +91,14 @@ class ImageClassificationTask(BaseTask):
 
             # Compute loss
             metrics["train_loss"] = torch.stack(self.training_step_outputs).mean()
-            self.training_step_outputs.clear()  # free memory
+            self.training_step_outputs.clear()
             
             # Compute metrics (batch only)
-            self.metrics.compute(existing_metrics=metrics, stage="train", reset=True)
+            self.metrics.compute(
+                stage = "train",
+                curr_metrics = metrics,
+                reset=True,
+                **{})
    
             # Logging
             self.logger.log_metrics(metrics)
@@ -127,11 +129,12 @@ class ImageClassificationTask(BaseTask):
         self.validation_step_outputs.append(val_loss)
 
         # Update metrics
-        self.metrics.update(**{
-            "stage": "val",
-            "preds": outputs,
-            "target": batch["targets"],
-        })
+        self.metrics.update(
+            stage = "val",
+            **{
+                "preds": outputs, 
+                "target": batch["targets"],
+            })
 
 
     def on_validation_epoch_end(self):
@@ -140,16 +143,17 @@ class ImageClassificationTask(BaseTask):
 
         # Compute loss
         metrics["val_loss"] = torch.stack(self.validation_step_outputs).mean().item()
-        self.validation_step_outputs.clear()  # free memory
+        self.validation_step_outputs.clear()
 
         # Compute metrics
-        self.metrics.compute(**{
-            "existing_metrics": metrics, 
-            "stage": "val",
-            "reset": True,
-            "epoch": self.current_epoch,
-            "max_epochs": self.trainer.max_epochs,
-        })
+        self.metrics.compute(
+            stage = "val",
+            curr_metrics = metrics,
+            reset = True,
+            **{
+                "epoch": self.current_epoch,
+                "max_epochs": self.trainer.max_epochs,
+            })
        
         # Logging
         if self.trainer.state.stage != RunningStage.SANITY_CHECKING:  # `and self.global_step > 0`
@@ -182,11 +186,12 @@ class ImageClassificationTask(BaseTask):
         self.test_step_outputs.append(test_loss)
 
         # Update metrics
-        self.metrics.update(**{
-            "stage": "test",
-            "preds": outputs,
-            "target": batch["targets"],
-        })
+        self.metrics.update(
+            stage = "test",
+            **{
+                "preds": outputs, 
+                "target": batch["targets"],
+            })
 
 
     def on_test_epoch_end(self):
@@ -195,18 +200,19 @@ class ImageClassificationTask(BaseTask):
 
         # Compute loss
         metrics["test_loss"] = torch.stack(self.test_step_outputs).mean().item()
-        self.test_step_outputs.clear()  # free memory
+        self.test_step_outputs.clear()
 
         # Compute metrics
-        self.metrics.compute(**{
-            "existing_metrics": metrics, 
-            "stage": "test",
-            "reset": True,
-            # `current_epoch` seems to be incremented after the last validation
-            # loop so it's 1 more than it should be during the testing loop
-            "epoch": self.current_epoch-1,
-            "max_epochs": self.trainer.max_epochs,
-        })
+        self.metrics.compute(
+            stage = "test",
+            curr_metrics = metrics,
+            reset = True,
+            **{
+                # `current_epoch` seems to be incremented after the last validation
+                # loop so it's 1 more than it should be during the testing loop
+                "epoch": self.current_epoch-1,
+                "max_epochs": self.trainer.max_epochs,
+            })
 
         # Logging
         self.logger.log_metrics(metrics)

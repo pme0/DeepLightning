@@ -37,8 +37,8 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 	def draw(self, 
 		stage: str,
-		existing_metrics: dict,
-		key: str,
+		curr_metrics: dict,
+		logging_key: str,
 		epoch: int,
 		max_epochs: int,
 	) -> None:
@@ -46,7 +46,7 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 		Args:
 			stage: trainer stage, one of {"train", "val", "test"}.
-			existing_metrics: dictionary of metrics logged.
+			curr_metrics: dictionary of metrics logged.
 			key: name under which metric is logged.
 			epoch: current epoch, for labelling (0-indexed).
 			max_epochs: number of training epochs.
@@ -72,7 +72,7 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 		# Save figure
 		caption = f"Confusion Matrix [val, epoch {epoch+1}/{max_epochs}]"
-		existing_metrics[key] = wandb.Image(figure, caption=caption)
+		curr_metrics[logging_key] = wandb.Image(figure, caption=caption)
 
 
 @METRIC_REGISTRY.register_element()	

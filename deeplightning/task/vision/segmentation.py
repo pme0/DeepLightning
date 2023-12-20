@@ -9,9 +9,6 @@ import wandb
 from deeplightning import TASK_REGISTRY
 from deeplightning.init.imports import init_obj_from_config
 from deeplightning.metrics.base import Metrics
-from deeplightning.metrics.classification.accuracy import classification_accuracy
-from deeplightning.metrics.classification.confusion_matrix import confusion_matrix
-from deeplightning.metrics.classification.precision_recall import precision_recall_curve
 from deeplightning.task.base import BaseTask
 from deeplightning.trainer.batch import dictionarify_batch
 
