@@ -68,26 +68,28 @@ class HAM10000_dataset(Dataset):
         transform: Transforms to be applied to images
     """
     def __init__(self, 
-        task: str,
-        root: str,
+        cfg: OmegaConf,
         transform: Union[Optional[Callable],None] = None,
         mask_transform: Union[Optional[Callable],None] = None,
     ):
-        self.task = task
-        self.root = root
+        self.task = cfg.task
+        self.root = cfg.data.root
         self.transform = transform
         self.mask_transform = mask_transform
         self.label2index = {"MEL":0, "NV":1, "BCC":2, "AKIEC":3, "BKL":4, "DF":5, "VASC":6}
-        metadata = pd.read_csv(os.path.join(root, "GroundTruth.csv"))
-        images = ["{}".format(os.path.join(root, "images", f"{metadata.loc[i,'image']}.jpg")) for i in range(metadata.shape[0])]
+        metadata = pd.read_csv(os.path.join(self.root, "GroundTruth.csv"))
+        images = ["{}".format(os.path.join(self.root, "images", f"{metadata.loc[i,'image']}.jpg")) for i in range(metadata.shape[0])]
         
         class_labels_str = list(self.label2index.keys())
         self.data = pd.DataFrame()
         self.data["images"] = images
-        if task == "ImageClassification":
+        if self.task == "image_classification":
             self.data["labels"] = _extract_classes(metadata, class_labels_str, self.label2index)
-        elif task == "SemanticSegmentation":
-            self.data["masks"] = _extract_masks(metadata, root)
+        elif self.task == "image_semantic_segmentation":
+            self.data["masks"] = _extract_masks(metadata, self.root)
+
+        # trim dataset (useful for debugging)
+        self.data = self.trim_dataset(self.data, cfg)
 
     def __len__(self):
         return self.data.shape[0]
@@ -106,9 +108,9 @@ class HAM10000_dataset(Dataset):
             sample["inputs"] = self.transform(sample["inputs"])
         
         # Process targets (labels or masks)
-        if self.task == "ImageClassification":
+        if self.task == "image_classification":
             sample["labels"] = self.data.loc[idx, "labels"]
-        elif self.task == "SemanticSegmentation":
+        elif self.task == "image_semantic_segmentation":
             sample["masks_paths"] = self.data.loc[idx, "masks"]
             sample["masks"] = Image.open(sample["masks_paths"])#.convert('RGB')
             if self.mask_transform:
@@ -119,7 +121,17 @@ class HAM10000_dataset(Dataset):
                 sample["masks"] = sample["masks"].squeeze(0).long()
 
         return sample
-    
+
+    def trim_dataset(self, dataframe, cfg):
+        if "dataset_size" in cfg.data:
+            if cfg.data.dataset_size is not None:
+                if cfg.data.dataset_size > 0:
+                    size_before = dataframe.shape[0]
+                    dataframe = dataframe.iloc[:cfg.data.dataset_size, :]
+                    size_after = dataframe.shape[0]
+                    info_message(f"Dataset trimmed from {size_before} to {size_after} samples (cfg.data.dataset_size={cfg.data.dataset_size}).")
+        return dataframe
+
 
 class HAM10000(pl.LightningDataModule):
     def __init__(self, cfg: OmegaConf):
@@ -150,8 +162,7 @@ class HAM10000(pl.LightningDataModule):
 
     def setup(self, stage) -> None:
         ds = HAM10000_dataset(
-            task = self.cfg.task,
-            root = self.cfg.data.root,
+            cfg = self.cfg,
             transform = self.test_transforms,
             mask_transform = self.mask_transform,
         )

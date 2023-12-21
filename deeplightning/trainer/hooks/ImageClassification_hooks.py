@@ -171,9 +171,9 @@ def test_step__ImageClassification(self, batch, batch_idx):
         # loss
         test_loss = self.loss(outputs, batch["targets"])
 
-        if "test_loss" not in self.test_step_outputs:
-            self.test_step_outputs["test_loss"] = []
-        self.test_step_outputs["test_loss"].append(test_loss)
+        if "test_loss" not in self.test_batch_losses:
+            self.test_batch_losses["test_loss"] = []
+        self.test_batch_losses["test_loss"].append(test_loss)
 
         # metrics
         self.metrics["Accuracy_test"].update(preds = preds, target = batch["targets"])
@@ -192,8 +192,8 @@ def on_test_epoch_end__ImageClassification(self):
     """
 
     metrics = {}
-    metrics["test_loss"] = torch.stack(self.test_step_outputs["test_loss"]).mean()
-    self.test_step_outputs.clear()  # free memory
+    metrics["test_loss"] = torch.stack(self.test_batch_losses["test_loss"]).mean()
+    self.test_batch_losses.clear()  # free memory
 
     # accuracy
     metrics["test_acc"] = self.metrics["Accuracy_test"].compute()

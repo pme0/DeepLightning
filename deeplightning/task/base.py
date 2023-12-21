@@ -1,5 +1,6 @@
 from typing import Tuple, Union, List
 from omegaconf import OmegaConf
+import torch
 from torch import Tensor
 import lightning as pl
 
@@ -30,25 +31,22 @@ class BaseTask(pl.LightningModule):
     Attributes:
         cfg: (OmegaConf) yaml configuration object.
         step_label: (str) label to track/log metrics against.
-        sanity_check: (bool) Lightning performs a partial validation epoch
-            at the start, to ensure no issues at the validation stage. The 
-            attribute `sanity_check` is set to `True` initially and set to 
-            `False` after the sanity check run is complete. This is to
-            prevent logging during that preliminary run. |TODO obsolete
-        training_step_outputs: (list)
-        validation_step_outputs: (list)
-        test_step_outputs: (list)
+        metrics_logged: (dict) to store metrics.
+        batch_losses: (dict[dict]) to store losses.
     """
     def __init__(self, cfg: OmegaConf) -> None:
         super().__init__()
         self.cfg = cfg  #TODO check if this contains logger runtime params
         self.step_label = "iteration"
-        #self.sanity_check = True  # replaced with `RunningStage.SANITY_CHECKING``
 
-        # initialise loss accumulators
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
-        self.test_step_outputs = []
+        # initialise metrics dictionary (to log)
+        self.metrics_logged = {}
+        # initialise loss accumulators (to store losses through steps)
+        self.batch_losses = {
+            "train": {},
+            "val": {},
+            "test": {},
+        }
 
 
     def on_task_init_end(self) -> None:
@@ -64,12 +62,54 @@ class BaseTask(pl.LightningModule):
         self.print_num_model_params()
  
 
-    def on_logging_start(self, global_step) -> None:
-        pass
+    def on_logging_start(self) -> None:
+        """Hook for start of logging stage.
+        """
+        # Set the appropriate label and step for the x-axis of the plots.
+        self.metrics_logged[self.step_label] = self.global_step
+    
+
+    def on_logging_end(self) -> None:
+        """Hook for end of logging stage.
+        """
+        # Push metrics to the logger
+        self.logger.log_metrics(self.metrics_logged)
+        # Reset metrics dictionary
+        self.metrics_logged.clear()
 
 
-    def init_metrics_dict(self, global_step):
-        return {self.step_label: global_step}
+    def update_losses(self, stage: str, losses: dict) -> None:
+        """Update loss accumulator with current step losses.
+
+        Args:
+            stage: 
+            losses: current step losses.
+        """
+        for key in losses:
+            if key not in self.batch_losses[stage]:
+                self.batch_losses[stage][key] = []
+            self.batch_losses[stage][key].append(losses[key])
+            
+
+    def gather_and_store_losses(self, stage: str) -> None:
+        """Aggregate losses across steps and distributed processes.
+
+        Args:
+            stage: .
+        """
+        #print(self.global_step, self.batch_losses[stage])
+        for key in self.batch_losses[stage]:
+            # Aggregate across steps
+            losses = torch.stack(self.batch_losses[stage][key])
+            # Aggregate across distributed processes
+            losses = self.all_gather(losses)
+            # Reduce
+            losses = losses.mean().item()
+            # Store
+            self.metrics_logged[key] = losses
+        # Reset accumulator
+        self.batch_losses[stage].clear()
+        #print(self.global_step, self.metrics_logged)
 
 
     @property

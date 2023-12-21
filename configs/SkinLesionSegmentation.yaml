@@ -9,6 +9,7 @@ data:
   root: /Users/pme/research/data/HAM10000
   num_workers: 4
   batch_size: 64
+  dataset_size: 128  # maximum number of samples; useful for debugging
   module: 
     target: deeplightning.data.dataloaders.vision.ham10000.HAM10000
   image_size: [600, 450]
@@ -63,7 +64,7 @@ train:
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
-  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
+  ckpt_monitor_metric: val_accuracy  # used in `ModelCheckpoint` callback
   ckpt_every_n_epochs: 1
   ckpt_save_top_k: 1
   early_stop_metric: null

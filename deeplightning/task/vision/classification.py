@@ -73,9 +73,9 @@ class ImageClassificationTask(BaseTask):
         outputs = process_model_outputs(outputs, self.model)
         #preds = torch.argmax(outputs, dim=1)
 
-        # Update loss
+        # Update losses
         train_loss = self.loss(outputs, batch["targets"])
-        self.training_step_outputs.append(train_loss)
+        self.update_losses(stage="train", losses={"train_loss": train_loss})
 
         # Update metrics
         self.metrics.update(
@@ -87,21 +87,19 @@ class ImageClassificationTask(BaseTask):
     
         if self.global_step % self.cfg.logger.log_every_n_steps == 0:
             
-            metrics = self.init_metrics_dict(self.global_step)
+            self.on_logging_start()
 
-            # Compute loss
-            metrics["train_loss"] = torch.stack(self.training_step_outputs).mean()
-            self.training_step_outputs.clear()
+            # Compute losses
+            self.gather_and_store_losses(stage="train")
             
             # Compute metrics (batch only)
             self.metrics.compute(
                 stage = "train",
-                curr_metrics = metrics,
-                reset=True,
+                metrics_logged = self.metrics_logged,
+                reset = True,
                 **{})
    
-            # Logging
-            self.logger.log_metrics(metrics)
+            self.on_logging_end()
 
         # the output is not used but returning None gives the following warning
         # """lightning/pytorch/loops/optimization/automatic.py:129: 
@@ -124,9 +122,9 @@ class ImageClassificationTask(BaseTask):
         outputs = process_model_outputs(outputs, self.model)
         #preds = torch.argmax(outputs, dim=1)
 
-        # Update loss
+        # Update losses
         val_loss = self.loss(outputs, batch["targets"])
-        self.validation_step_outputs.append(val_loss)
+        self.update_losses(stage="val", losses={"val_loss": val_loss})
 
         # Update metrics
         self.metrics.update(
@@ -138,37 +136,35 @@ class ImageClassificationTask(BaseTask):
 
 
     def on_validation_epoch_end(self):
-
-        metrics = self.init_metrics_dict(self.global_step)
-
-        # Compute loss
-        metrics["val_loss"] = torch.stack(self.validation_step_outputs).mean().item()
-        self.validation_step_outputs.clear()
+        
+        self.on_logging_start()
+        
+        # Compute losses
+        self.gather_and_store_losses(stage="val")
 
         # Compute metrics
         self.metrics.compute(
             stage = "val",
-            curr_metrics = metrics,
+            metrics_logged = self.metrics_logged,
             reset = True,
             **{
                 "epoch": self.current_epoch,
                 "max_epochs": self.trainer.max_epochs,
             })
-       
-        # Logging
-        if self.trainer.state.stage != RunningStage.SANITY_CHECKING:  # `and self.global_step > 0`
-            self.logger.log_metrics(metrics)
 
         # The following is required for EarlyStopping and ModelCheckpoint callbacks to work properly. 
         # Callbacks read from `self.log()`, not from `self.logger.log()`, so need to log there.
         # [EarlyStopping] key `m = self.cfg.train.early_stop_metric` must exist in `metrics`
         if self.cfg.train.early_stop_metric is not None:
             m_earlystop = self.cfg.train.early_stop_metric
-            self.log(m_earlystop, metrics[m_earlystop], sync_dist=True)
+            self.log(m_earlystop, self.metrics_logged[m_earlystop], sync_dist=True)
         # [ModelCheckpoint] key `m = self.cfg.train.ckpt_monitor_metric` must exist in `metrics`
         if self.cfg.train.ckpt_monitor_metric is not None:
             m_checkpoint = self.cfg.train.ckpt_monitor_metric
-            self.log(m_checkpoint, metrics[m_checkpoint], sync_dist=True)
+            self.log(m_checkpoint, self.metrics_logged[m_checkpoint], sync_dist=True)
+
+        if self.trainer.state.stage != RunningStage.SANITY_CHECKING:
+            self.on_logging_end()
 
 
     def test_step(self, batch, batch_idx):
@@ -181,9 +177,9 @@ class ImageClassificationTask(BaseTask):
         outputs = process_model_outputs(outputs, self.model)
         #preds = torch.argmax(outputs, dim=1)
                 
-        # Update loss
+        # Update losses
         test_loss = self.loss(outputs, batch["targets"])
-        self.test_step_outputs.append(test_loss)
+        self.update_losses(stage="test", losses={"test_loss": test_loss})
 
         # Update metrics
         self.metrics.update(
@@ -196,16 +192,15 @@ class ImageClassificationTask(BaseTask):
 
     def on_test_epoch_end(self):
 
-        metrics = self.init_metrics_dict(self.global_step)
+        self.on_logging_start()
 
-        # Compute loss
-        metrics["test_loss"] = torch.stack(self.test_step_outputs).mean().item()
-        self.test_step_outputs.clear()
+        # Compute losses
+        self.gather_and_store_losses(stage="test")
 
         # Compute metrics
         self.metrics.compute(
             stage = "test",
-            curr_metrics = metrics,
+            metrics_logged = self.metrics_logged,
             reset = True,
             **{
                 # `current_epoch` seems to be incremented after the last validation
@@ -214,8 +209,7 @@ class ImageClassificationTask(BaseTask):
                 "max_epochs": self.trainer.max_epochs,
             })
 
-        # Logging
-        self.logger.log_metrics(metrics)
+        self.on_logging_end()
 
 
 @TASK_REGISTRY.register_element()

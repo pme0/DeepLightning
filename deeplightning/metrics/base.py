@@ -97,7 +97,7 @@ class Metrics():
 
     def compute(self, 
         stage: str, 
-        curr_metrics: dict,
+        metrics_logged: dict,
         metric_names: List[str] = [],
         reset: bool = False, 
         **kwargs,
@@ -114,14 +114,14 @@ class Metrics():
                     "stage": stage,
                     "method_name": method_name,
                     "metric_name": metric_name,
-                    "curr_metrics": curr_metrics,
+                    "metrics_logged": metrics_logged,
                     "logging_key": logging_key,
                     **kwargs}
                 value = self._call_metric_method(**args)
                 if value is not None:
                     if isinstance(value, Tensor):
                         value = value.item()
-                    curr_metrics.update({logging_key: value})
+                    metrics_logged.update({logging_key: value})
             
             if reset:
                 self._call_metric_method(
