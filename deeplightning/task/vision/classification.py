@@ -186,9 +186,7 @@ class ImageClassificationTask(BaseTask):
             metric_tracker = self.metric_tracker,
             reset = True,
             **{
-                # `current_epoch` seems to be incremented after the last validation
-                # loop so it's 1 more than it should be during the testing loop
-                "epoch": self.current_epoch-1,
+                "epoch": self.current_epoch-1,  # `current_epoch` seems to be incremented after the last validation loop so it's 1 more than it should be during the testing loop
                 "max_epochs": self.trainer.max_epochs,
             })
 

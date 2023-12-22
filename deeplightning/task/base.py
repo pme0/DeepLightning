@@ -86,8 +86,8 @@ class BaseTask(pl.LightningModule):
         Callbacks EarlyStopping and ModelCheckpoint read from `self.log()`, not
         from `self.logger.log()`, so we must log there. The following keys must
         exist in `metric_tracker`:
-        - `self.cfg.train.early_stop_metric` for EarlyStopping;
-        - `self.cfg.train.ckpt_monitor_metric` for ModelCheckpoint;
+        > `m = self.cfg.train.early_stop_metric` for EarlyStopping;
+        > `m = self.cfg.train.ckpt_monitor_metric` for ModelCheckpoint;
         """
         if self.cfg.train.early_stop_metric is not None:
             m_earlystop = self.cfg.train.early_stop_metric
@@ -148,20 +148,21 @@ class BaseTask(pl.LightningModule):
         """Set the number of model parameters as attributes of the class.
         """
         self._num_trainable_params = sum(
-            p.numel() for p in self.model.parameters() if p.requires_grad
-        )
+            p.numel() for p in self.model.parameters() if p.requires_grad)
         self._num_nontrainable_params = sum(
-            p.numel() for p in self.model.parameters() if not p.requires_grad
-        )
+            p.numel() for p in self.model.parameters() if not p.requires_grad)
         self._num_total_params = self._num_trainable_params + self._num_nontrainable_params
 
     
     def print_num_model_params(self) -> None:
         """Print the number of model parameters.
         """
-        info_message("Trainable model parameters: {:,d}".format(self.num_trainable_params))
-        info_message("Non-trainable model parameters: {:,d}".format(self.num_nontrainable_params))
-        info_message("Total model parameters: {:,d}".format(self.num_total_params))
+        info_message(
+            f"Trainable model parameters: {self.num_trainable_params:,d}")
+        info_message(
+            f"Non-trainable model parameters: {self.num_nontrainable_params:,d}")
+        info_message(
+            f"Total model parameters: {self.num_total_params:,d}")
 
 
     def forward(self, x: Tensor) -> Tensor:
