@@ -32,8 +32,8 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		super().__init__(**args)
 
 	def draw(self,
-		stage: str,
-		metrics_logged: dict,
+		phase: str,
+		metric_tracker: dict,
 		logging_key: str,
 		epoch: int,
 		max_epochs: int,
@@ -41,8 +41,8 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		"""Draw Precision-Recall Curve as a figure, to be logged as artifact media
 
 		Args:
-			stage: trainer stage, one of {"train", "val", "test"}.
-			metrics_logged: dictionary of metrics logged.
+			phase: trainer phase, either "train", "val", or "test".
+			metric_tracker: dictionary of metrics logged.
 			key: name under which metric is logged.
 			epoch: current epoch, for labelling.
 			max_epochs: number of training epochs.
@@ -57,7 +57,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		figure = plt.figure()
 		for i in range(self.num_classes):
 			plt.plot(recall[i].cpu(), precision[i].cpu(), label=i)
-		plt.title(f"Precision-Recall Curve [{stage}, epoch {epoch+1}/{max_epochs}]")
+		plt.title(f"Precision-Recall Curve [{phase}, epoch {epoch+1}/{max_epochs}]")
 		plt.xlabel("Recall")
 		plt.ylabel("Precision")
 		if self.num_classes <= 10:
@@ -66,7 +66,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 
 		# Save figure
 		caption = f"Precision-Recall Curve [val, epoch {epoch+1}/{max_epochs}]"
-		metrics_logged[logging_key] = wandb.Image(figure, caption=caption)
+		metric_tracker[logging_key] = wandb.Image(figure, caption=caption)
 			
 
 @METRIC_REGISTRY.register_element()

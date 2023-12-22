@@ -294,12 +294,12 @@ class AudioClassification(pl.LightningModule):
                 "test_acc": acc}
 
 
-    def test_step_end(self, test_batch_losses):
+    def test_step_end(self, test_loss_tracker):
         """ Hook for test step_end.
 
         Parameters
         ----------
-        test_batch_losses : (dict, list[dict]) metrics 
+        test_loss_tracker : (dict, list[dict]) metrics 
             dictionary in single-device training, or list of 
             metrics dictionaries in multi-device training (one 
             element per device). The output from `test_step()`.
@@ -308,7 +308,7 @@ class AudioClassification(pl.LightningModule):
 
         # aggregate metrics across all devices.
         metrics = self.gather_on_step(
-            step_outputs = test_batch_losses, 
+            step_outputs = test_loss_tracker, 
             metrics = ["test_loss", "test_acc"], 
             average = False)
 

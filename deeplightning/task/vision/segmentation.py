@@ -78,11 +78,11 @@ class ImageSemanticSegmentationTask(BaseTask):
         # Update losses
         # Update losses
         train_loss = self.loss(outputs, batch["masks"])
-        self.update_losses(stage="train", losses={"train_loss": train_loss})
+        self.update_losses(phase="train", losses={"train_loss": train_loss})
 
         # Update metrics
         self.metrics.update(
-            stage = "train", 
+            phase = "train", 
             **{
                 "preds": outputs, 
                 "target": batch["masks"],
@@ -93,22 +93,18 @@ class ImageSemanticSegmentationTask(BaseTask):
             self.on_logging_start()
 
             # Compute losses
-            self.gather_and_store_losses(stage="train")
+            self.gather_losses(phase="train")
 
             # Compute metrics (batch only)
             self.metrics.compute(
-                stage = "train",
-                metrics_logged = self.metrics_logged,
+                phase = "train",
+                metric_tracker = self.metric_tracker,
                 reset = True,
                 **{})
            
             self.on_logging_end()
 
-        # the output is not used but returning None gives the following warning
-        # """lightning/pytorch/loops/optimization/automatic.py:129: 
-        # UserWarning: `training_step` returned `None`. If this was 
-        # on purpose, ignore this warning..."""
-        return {"loss": train_loss}
+        return {"loss": train_loss}  # see "training_step outputs" note in `BaseTask`
     
 
     def on_training_epoch_end(self):
@@ -137,11 +133,11 @@ class ImageSemanticSegmentationTask(BaseTask):
 
         # Update losses
         val_loss = self.loss(outputs, batch["masks"])
-        self.update_losses(stage="val", losses={"val_loss": val_loss})
+        self.update_losses(phase="val", losses={"val_loss": val_loss})
 
         # Update metrics
         self.metrics.update(
-            stage = "val",
+            phase = "val",
             **{
                 "preds": outputs, 
                 "target": batch["masks"],
@@ -153,12 +149,12 @@ class ImageSemanticSegmentationTask(BaseTask):
         self.on_logging_start()
 
         # Compute loss
-        self.gather_and_store_losses(stage="val")
+        self.gather_losses(phase="val")
 
         # Compute metrics
         self.metrics.compute(
-            stage = "val",
-            metrics_logged = self.metrics_logged,
+            phase = "val",
+            metric_tracker = self.metric_tracker,
             reset = True,
             **{
                 "epoch": self.current_epoch,
@@ -170,11 +166,11 @@ class ImageSemanticSegmentationTask(BaseTask):
         # [EarlyStopping] key `m = self.cfg.train.early_stop_metric` must exist in `metrics`
         if self.cfg.train.early_stop_metric is not None:
             m_earlystop = self.cfg.train.early_stop_metric
-            self.log(m_earlystop, self.metrics_logged[m_earlystop], sync_dist=True)
+            self.log(m_earlystop, self.metric_tracker[m_earlystop], sync_dist=True)
         # [ModelCheckpoint] key `m = self.cfg.train.ckpt_monitor_metric` must exist in `metrics`
         if self.cfg.train.ckpt_monitor_metric is not None:
             m_checkpoint = self.cfg.train.ckpt_monitor_metric
-            self.log(m_checkpoint, self.metrics_logged[m_checkpoint], sync_dist=True)
+            self.log(m_checkpoint, self.metric_tracker[m_checkpoint], sync_dist=True)
 
         if self.trainer.state.stage != RunningStage.SANITY_CHECKING:
             self.on_logging_end()
@@ -192,11 +188,11 @@ class ImageSemanticSegmentationTask(BaseTask):
                 
         # Update losses
         test_loss = self.loss(outputs, batch["masks"])
-        self.update_losses(stage="test", losses={"test_loss": test_loss})
+        self.update_losses(phase="test", losses={"test_loss": test_loss})
 
         # Update metrics
         self.metrics.update(
-            stage = "test",
+            phase = "test",
             **{
                 "preds": outputs, 
                 "target": batch["masks"],
@@ -208,12 +204,12 @@ class ImageSemanticSegmentationTask(BaseTask):
         self.on_logging_start()
 
         # Compute loss
-        self.gather_and_store_losses(stage="test")
+        self.gather_losses(phase="test")
 
         # Compute metrics
         self.metrics.compute(
-            stage = "test",
-            metrics_logged = self.metrics_logged,
+            phase = "test",
+            metric_tracker = self.metric_tracker,
             reset = True,
             **{
                 # `current_epoch` seems to be incremented after the last validation

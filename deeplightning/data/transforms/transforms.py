@@ -45,7 +45,7 @@ def load_transforms(
     cfg : the full experiment config
 
     subset : the data subset for which to load the transforms. 
-        It must be one of {"train","test"}
+        It must be either "train" or "test"
     
     """
 
@@ -54,7 +54,7 @@ def load_transforms(
     elif subset == "test":
         transforms_field = "test_transforms"
     else:
-        raise ValueError("`subset` must be one of {train,test}")
+        raise ValueError("`subset` must be either 'train' or 'test'.")
 
     trfs = [__TransformsDict__["totensor"]()]
 

@@ -21,7 +21,7 @@ class Metrics():
 
     Args:
         cfg: yaml configuration object
-        defaults: dictionary of default lists of metrics for each stage, for
+        defaults: dictionary of default lists of metrics for each phase, for
             example `{"train": ["m1"], "val": ["m2"], "test": ["m2", "m3"]}`.
 
     Attributes:
@@ -34,22 +34,22 @@ class Metrics():
         self.md = initialise_metrics(cfg=cfg, defaults=defaults)
 
 
-    def _all_metrics_if_unspecified(self, stage, metric_names) -> List[str]:
+    def _all_metrics_if_unspecified(self, phase, metric_names) -> List[str]:
         if not metric_names:
-            return self.md[stage].keys()
+            return self.md[phase].keys()
         return metric_names
     
 
-    def _get_logging_methods(self, stage: str, metric_name: str):
-        return self.md[stage][metric_name].logging_methods
+    def _get_logging_methods(self, phase: str, metric_name: str):
+        return self.md[phase][metric_name].logging_methods
 
 
-    def _get_logging_key(self, stage: str, metric_name: str):
-        return "{}_{}".format(stage, self.md[stage][metric_name].display_name)
+    def _get_logging_key(self, phase: str, metric_name: str):
+        return "{}_{}".format(phase, self.md[phase][metric_name].display_name)
 
 
     def _call_metric_method(self, 
-        stage: str, 
+        phase: str, 
         method_name: str, 
         metric_name: str,
         **kwargs
@@ -57,19 +57,19 @@ class Metrics():
         """Call metric method.
 
         Args:
-            stage: trainer stage, one of {"train", "val", "test"}.
+            phase: trainer phase, either "train", "val", or "test".
             method_name: name of method to call.
             metric_name: name of metric.
         """
-        assert stage in ["train", "val", "test"]
+        assert phase in ["train", "val", "test"]
         # Merge named args and kwargs
         all_args = {
-            "stage": stage, 
+            "phase": phase, 
             "method_name": method_name, 
             "metric_name": metric_name, 
             **kwargs}
         # Extract method
-        fn = getattr(self.md[stage][metric_name], method_name)
+        fn = getattr(self.md[phase][metric_name], method_name)
         # Determine arg names
         fn_arg_names = [p.name for p in inspect.signature(fn).parameters.values()]
         # Construct arg dict
@@ -79,16 +79,16 @@ class Metrics():
 
 
     def update(self, 
-        stage: str,
+        phase: str,
         metric_names: List[str] = [],
         **kwargs,
     ) -> None:
         """Update metrics accumulators using the corresponding `update` method.
         """
-        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(phase, metric_names)
         for metric_name in metric_names:
             args = {
-                "stage": stage,
+                "phase": phase,
                 "method_name": "update",
                 "metric_name": metric_name,
                 **kwargs}
@@ -96,56 +96,57 @@ class Metrics():
 
 
     def compute(self, 
-        stage: str, 
-        metrics_logged: dict,
+        phase: str, 
+        metric_tracker: dict,
         metric_names: List[str] = [],
         reset: bool = False, 
         **kwargs,
     ) -> None:
         """Compute metrics using the corresponding `compute` method.
         """
-        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(phase, metric_names)
         
         for metric_name in metric_names:
-            logging_methods = self._get_logging_methods(stage, metric_name)
-            logging_key = self._get_logging_key(stage, metric_name)
+            logging_methods = self._get_logging_methods(phase, metric_name)
+            logging_key = self._get_logging_key(phase, metric_name)
             for method_name in logging_methods:
                 args = {
-                    "stage": stage,
+                    "phase": phase,
                     "method_name": method_name,
                     "metric_name": metric_name,
-                    "metrics_logged": metrics_logged,
+                    "metric_tracker": metric_tracker,
                     "logging_key": logging_key,
                     **kwargs}
                 value = self._call_metric_method(**args)
                 if value is not None:
                     if isinstance(value, Tensor):
                         value = value.item()
-                    metrics_logged.update({logging_key: value})
+                    metric_tracker.update({logging_key: value})
             
             if reset:
                 self._call_metric_method(
-                    stage = stage,
+                    phase = phase,
                     method_name = "reset",
                     metric_name = metric_name,
                 )
 
-    '''
+
     def reset(self, 
-        stage: str, 
+        phase: str, 
         metric_names: List[str] = [],
          **kwargs,
     ) -> None:
         """Reset metrics accumulators using the corresponding `reset` method.
+
+        Currently not in use. Instead, metrics are reset inside `compute()`.
         """
-        metric_names = self._all_metrics_if_unspecified(stage, metric_names)
+        metric_names = self._all_metrics_if_unspecified(phase, metric_names)
         for metric_name in metric_names:
             self._call_metric_method(
-                stage = stage,
+                phase = phase,
                 method_name = "reset",
                 metric_name = metric_name,
             )
-    '''
 
 
 # Auxiliary 
@@ -153,19 +154,19 @@ class Metrics():
 
 def initialise_metrics(cfg: OmegaConf, defaults: dict = None) -> dict:
     metrics_dict = {}
-    for stage in ["train", "val", "test"]:
-        metrics_dict[stage] = {}
-        metrics_list = metrics_defaults(cfg, stage, defaults)
+    for phase in ["train", "val", "test"]:
+        metrics_dict[phase] = {}
+        metrics_list = metrics_defaults(cfg, phase, defaults)
         for metric_name in metrics_list:
-            metrics_dict[stage][metric_name] = METRIC_REGISTRY.get_element_instance(
+            metrics_dict[phase][metric_name] = METRIC_REGISTRY.get_element_instance(
                 name=metric_name, cfg=cfg)
     return metrics_dict
     
 
-def metrics_defaults(cfg: OmegaConf, stage: str, defaults: dict = None) -> list:
-    if defaults is None or isinstance(cfg.metrics[stage], ListConfig):
-        return cfg.metrics[stage]
-    elif cfg.metrics[stage] == "default":
-        return defaults[stage]
+def metrics_defaults(cfg: OmegaConf, phase: str, defaults: dict = None) -> list:
+    if defaults is None or isinstance(cfg.metrics[phase], ListConfig):
+        return cfg.metrics[phase]
+    elif cfg.metrics[phase] == "default":
+        return defaults[phase]
     else:
         raise ValueError

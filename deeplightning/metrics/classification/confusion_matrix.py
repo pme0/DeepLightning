@@ -36,8 +36,8 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 
 	def draw(self, 
-		stage: str,
-		metrics_logged: dict,
+		phase: str,
+		metric_tracker: dict,
 		logging_key: str,
 		epoch: int,
 		max_epochs: int,
@@ -45,8 +45,8 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 		"""Draw Confusion Matrix as a figure, to be logged as artifact media.
 
 		Args:
-			stage: trainer stage, one of {"train", "val", "test"}.
-			metrics_logged: dictionary of metrics logged.
+			phase: trainer phase, either "train", "val", or "test".
+			metric_tracker: dictionary of metrics logged.
 			key: name under which metric is logged.
 			epoch: current epoch, for labelling (0-indexed).
 			max_epochs: number of training epochs.
@@ -65,14 +65,14 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 			data = cm, 
 			annot=True, fmt="g", square=True, cmap="Blues", 
 			vmin=0, vmax=100, cbar_kws=cbar_args)
-		plt.title(f"Confusion Matrix [{stage}, epoch {epoch+1}/{max_epochs}]")
+		plt.title(f"Confusion Matrix [{phase}, epoch {epoch+1}/{max_epochs}]")
 		plt.xlabel("Predicted class")
 		plt.ylabel("True class")
 		plt.close()
 
 		# Save figure
 		caption = f"Confusion Matrix [val, epoch {epoch+1}/{max_epochs}]"
-		metrics_logged[logging_key] = wandb.Image(figure, caption=caption)
+		metric_tracker[logging_key] = wandb.Image(figure, caption=caption)
 
 
 @METRIC_REGISTRY.register_element()	
