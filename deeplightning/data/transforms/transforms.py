@@ -1,5 +1,6 @@
 from omegaconf import OmegaConf
 from torchvision import transforms as T
+import inspect
 
 from deeplightning.utils.messages import info_message, warning_message
 from deeplightning.data.transforms._affine import Affine
@@ -13,6 +14,7 @@ from deeplightning.data.transforms._perspective import Perspective
 from deeplightning.data.transforms._resize import Resize
 from deeplightning.data.transforms._rotation import Rotation
 from deeplightning.data.transforms._totensor import ToTensor
+from deeplightning.data.transforms._round import RoundToInteger
 
 
 __TransformsDict__ = {
@@ -30,31 +32,35 @@ __TransformsDict__ = {
     "rotation": Rotation,
     "totensor": ToTensor,
     "vflip": VerticalFlip,
+    "roundtointeger": RoundToInteger,
 }
 
 
-def load_transforms(
-    cfg: OmegaConf, 
-    subset: str, 
-    #transforms_dict: dict,
-    ) -> T.Compose:
+def get_num_params(fn):
+    args = inspect.getfullargspec(fn).args
+    n = len(args)
+    if "self" in args:
+        n -= 1
+    return n
+
+
+def load_transforms(cfg: OmegaConf, subset: str) -> T.Compose:
     """Load data transformations.
 
-    Parameters
-    ----------
-    cfg : the full experiment config
-
-    subset : the data subset for which to load the transforms. 
-        It must be either "train" or "test"
-    
+    Args:
+        cfg: configuration file.
+        subset: the data subset for which to load the transforms. It must be 
+        either "train", "test", or "mask".
     """
 
     if subset == "train":
         transforms_field = "train_transforms"
     elif subset == "test":
         transforms_field = "test_transforms"
+    elif subset == "mask":
+        transforms_field = "mask_transforms"
     else:
-        raise ValueError("`subset` must be either 'train' or 'test'.")
+        raise ValueError("Invalid subset for transforms")
 
     trfs = [__TransformsDict__["totensor"]()]
 
@@ -64,8 +70,12 @@ def load_transforms(
 
     if cfg.data[transforms_field] is not None:
         for key in cfg.data[transforms_field].keys():
-            params = cfg.data[transforms_field][key]
-            transform = __TransformsDict__[key](params)
+            fn = __TransformsDict__[key]
+            if get_num_params(fn) == 0:
+                transform = fn()
+            else:
+                params = cfg.data[transforms_field][key]
+                transform = fn(params)
             if transform is not None:
                 if isinstance(transform, list):
                     for x in transform:

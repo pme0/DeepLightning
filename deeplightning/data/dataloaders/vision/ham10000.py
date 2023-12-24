@@ -72,6 +72,11 @@ class HAM10000_dataset(Dataset):
         transform: Union[Optional[Callable],None] = None,
         mask_transform: Union[Optional[Callable],None] = None,
     ):
+        self.NORMALIZATION_CONSTANTS = {
+            "mean": [0.7639, 0.5463, 0.5703],
+            "std": [0.0870, 0.1155, 0.1295],
+        }
+
         self.task = cfg.task
         self.root = cfg.data.root
         self.transform = transform
@@ -114,11 +119,9 @@ class HAM10000_dataset(Dataset):
             sample["masks_paths"] = self.data.loc[idx, "masks"]
             sample["masks"] = Image.open(sample["masks_paths"])#.convert('RGB')
             if self.mask_transform:
-                # mask must be resized and converted to tensor 
-                # but no other transformations should be applied
                 sample["masks"] = self.mask_transform(sample["masks"])
-                # squeeze the channel dimension and convert to integer
-                sample["masks"] = sample["masks"].squeeze(0).long()
+                # squeeze the channel dimension
+                sample["masks"] = sample["masks"].squeeze(0)
 
         return sample
 
@@ -152,23 +155,31 @@ class HAM10000(pl.LightningDataModule):
         # define data transforms
         self.train_transforms = load_transforms(cfg=cfg, subset="train")
         self.test_transforms = load_transforms(cfg=cfg, subset="test")
+        self.mask_transform = load_transforms(cfg=cfg, subset="mask")
+        """
         self.mask_transform = T.Compose(T.ToTensor())
         resize = self.cfg.data.train_transforms.resize
         if resize is not None:
             self.mask_transform = T.Compose([Resize(resize), T.ToTensor()])
+        """
 
     def prepare_data(self) -> None:
         pass
 
     def setup(self, stage) -> None:
+        # load dataset
         ds = HAM10000_dataset(
             cfg = self.cfg,
             transform = self.test_transforms,
             mask_transform = self.mask_transform,
         )
+
+        # split dataset
         self.train_ds, self.val_ds = random_split(ds, [0.8, 0.2])
         self.test_ds = self.val_ds
-        self.train_ds.dataset.transform = self.train_transforms  # overwrite
+
+        # overwrite training transforms
+        self.train_ds.dataset.transform = self.train_transforms
 
         info_message("Training set size: {:,d}".format(len(self.train_ds)))
         info_message("Validation set size: {:,d}".format(len(self.val_ds)))
