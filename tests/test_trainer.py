@@ -6,8 +6,8 @@ import torch
 import lightning as pl
 import pytest
 
-from deeplightning.config.load import load_config
-from deeplightning.init.initializers import init_model, init_trainer
+from deeplightning.utils.config.load import load_config
+from deeplightning.utils.init.initializers import init_model, init_trainer
 from deeplightning.trainer.trainer import DLTrainer
 
 

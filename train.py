@@ -6,8 +6,8 @@ from omegaconf import DictConfig, OmegaConf
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 from deeplightning.utils.messages import info_message, warning_message, error_message, config_print
-from deeplightning.config.load import load_config
-from deeplightning.init.initializers import init_everything
+from deeplightning.utils.config.load import load_config
+from deeplightning.utils.init.initializers import init_everything
 
 
 def parse_command_line_arguments():

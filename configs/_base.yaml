@@ -9,10 +9,11 @@ data:
   root: 
   num_workers: 
   batch_size: 
-  module: 
+  dataset_size: 
+  module:
     target: 
-  train_transforms:
-  test_transforms:
+  train_transforms: 
+  test_transforms: 
  
 model:
   module: 

@@ -4,10 +4,10 @@ from deeplightning import MODEL_REGISTRY
 from deeplightning import METRIC_REGISTRY
 from deeplightning import DATA_REGISTRY
 
-import deeplightning.task
+import deeplightning.tasks
 import deeplightning.models
 import deeplightning.metrics
-import deeplightning.data
+import deeplightning.datasets
 
 
 if __name__ == "__main__":

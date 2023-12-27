@@ -18,7 +18,7 @@ After defining modules and configuration, training deep learning models is simpl
 
 <!--
 ```python
-from deeplightning.configure import load_config, init_module, init_trainer
+from deeplightning.utils.configure import load_config, init_module, init_trainer
 
 # load configuration
 cfg = load_config("cfg.yaml")
@@ -113,9 +113,9 @@ Example:
 ```yaml
 model:
   module:
-    target: deeplightning.task.image.classification.TaskModule
+    target: deeplightning.tasks.vision.classification.ImageClassificationTask
   network:
-    target: deeplightning.models.cnn.SymbolCNN
+    target: deeplightning.models.cnn.CNN
     params: 
       num_classes: 10
       num_channels: 1
