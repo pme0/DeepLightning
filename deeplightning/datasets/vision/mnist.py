@@ -2,8 +2,8 @@ from omegaconf import OmegaConf
 from torch.utils.data import DataLoader, random_split
 import lightning as pl
 
-from deeplightning.datasets.vision import mnist_torchvision as mnist  # replaces `from torchvision.datasets import mnist``
-from deeplightning.transforms import load_transforms
+from deeplightning.datasets.vision import mnist_torchvision as mnist
+from deeplightning.transforms.transforms import load_transforms
 from deeplightning.utils.messages import info_message
 
 

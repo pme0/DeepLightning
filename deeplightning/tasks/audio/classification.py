@@ -21,10 +21,8 @@ class AudioClassification(pl.LightningModule):
     `self.log()`) only allows scalars, not histograms, images, etc.
     Additionally, auto-logging doesn't log at step 0, which is useful.
 
-    Parameters
-    ----------
-    cfg : yaml configuration object
-    
+    Args:
+        cfg: yaml configuration object.
     """
 
     def __init__(self, cfg: OmegaConf):
@@ -97,15 +95,6 @@ class AudioClassification(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         """ Hook for training step.
-
-        Parameters
-        ----------
-        batch : object containing the data output by the dataloader. For custom 
-            datasets this is a dictionary with keys ["paths", "images", "labels"].
-            For torchvision datasets, the function `dictionarify_batch()` is used
-            to convert the native format to dictionary format
-        
-        batch_idx : index of batch
         """
 
         batch = dictionarify_batch(batch, self.dataset)

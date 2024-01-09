@@ -9,14 +9,13 @@ class Lion(Optimizer):
     def __init__(self, params, lr=1e-4, betas=(0.9, 0.99), weight_decay=0.0):
         """Initialize the hyperparameters.
 
-        Arguments
-        ---------
-        params (iterable): iterable of parameters to optimize or dicts defining
-            parameter groups
-        lr (float, optional): learning rate (default: 1e-4)
-        betas (Tuple[float, float], optional): coefficients used for computing
-            running averages of gradient and its square (default: (0.9, 0.99))
-        weight_decay (float, optional): weight decay coefficient (default: 0)
+        Args:
+            params (iterable): iterable of parameters to optimize or dicts defining
+                parameter groups
+            lr (float, optional): learning rate (default: 1e-4)
+            betas (Tuple[float, float], optional): coefficients used for computing
+                running averages of gradient and its square (default: (0.9, 0.99))
+            weight_decay (float, optional): weight decay coefficient (default: 0)
         """
 
         if not 0.0 <= lr:
@@ -33,14 +32,12 @@ class Lion(Optimizer):
     def step(self, closure=None):
         """Performs a single optimization step.
 
-        Arguments
-        ---------
-        closure (callable, optional): A closure that reevaluates the model
-            and returns the loss.
+        Args:
+            closure (callable, optional): A closure that reevaluates the model
+                and returns the loss.
 
-        Returns
-        ---------
-        the loss.
+        Returns:
+            the loss.
         """
 
         loss = None

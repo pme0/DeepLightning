@@ -10,13 +10,11 @@ from deeplightning.transforms.helpers import is_false_or_none, is_all_false_or_n
 def Pad(p: Union[float, Tuple[float]]):
     """Pad transformation. Pad borders by a number of pixels.
 
-    Parameters
-    ----------
-    p : configuration parameters for this transform, the 
+    Args:
+    p: configuration parameters for this transform, the 
         paddig values. This should be the subconfig of the 
         padding, that is `subcfg=cfg.data.transforms.pad`, 
         where `cfg` is the full experiment config.
-
     """   
 
     if is_false_or_none(p):
@@ -41,12 +39,11 @@ def Pad(p: Union[float, Tuple[float]]):
 def PadSquare(p):
     """Pad Square transformation. Pad borders to a square shape.
 
-    Parameters
-    ----------
-    p : configuration parameters for this transform, the 
-        paddig values. This should be the subconfig of the 
-        padding, that is `subcfg=cfg.data.transforms.squarepad`, 
-        where `cfg` is the full experiment config.
+    Args:
+        p: configuration parameters for this transform, the 
+            paddig values. This should be the subconfig of the 
+            padding, that is `subcfg=cfg.data.transforms.squarepad`, 
+            where `cfg` is the full experiment config.
 
     """
 

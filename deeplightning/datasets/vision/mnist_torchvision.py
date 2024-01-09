@@ -21,6 +21,11 @@ from torchvision.datasets.utils import _flip_byte_order, check_integrity, downlo
 from torchvision.datasets.vision import VisionDataset
 
 
+class NaNPath:
+    def __getitem__(self, idx):
+        return torch.tensor(float('nan'))
+    
+
 class MNIST(VisionDataset):
     """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
 
@@ -106,8 +111,8 @@ class MNIST(VisionDataset):
         if not self._check_exists():
             raise RuntimeError("Dataset not found. You can use download=True to download it")
 
-        #self.data, self.targets = self._load_data()
-        self.data, self.targets, self.paths = self._load_data()
+        self.data, self.targets = self._load_data()
+        #self.data, self.targets, self.paths = self._load_data()
 
     def _check_legacy_exist(self):
         processed_folder_exists = os.path.exists(self.processed_folder)
@@ -131,9 +136,10 @@ class MNIST(VisionDataset):
         label_file = f"{'train' if self.train else 't10k'}-labels-idx1-ubyte"
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
 
-        #return data, targets
-        return data, targets, os.path.join(self.raw_folder, image_file)
-
+        return data, targets
+        # images are stored in a packed format, so there are no image file paths
+        #return data, targets, NaNPath()  #os.path.join(self.raw_folder, image_file)
+    
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """
         Args:
@@ -142,8 +148,8 @@ class MNIST(VisionDataset):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        #img, target = self.data[index], int(self.targets[index])
-        img, target, path = self.data[index], int(self.targets[index]), self.paths[index]
+        img, target = self.data[index], int(self.targets[index])
+        #img, target, path = self.data[index], int(self.targets[index]), self.paths[index]
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
@@ -155,8 +161,8 @@ class MNIST(VisionDataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        #return img, target
-        return img, target, path
+        return img, target
+        #return img, target, path
 
     def __len__(self) -> int:
         return len(self.data)

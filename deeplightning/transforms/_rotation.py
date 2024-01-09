@@ -6,13 +6,11 @@ from deeplightning.transforms.helpers import is_false_or_none, is_all_false_or_n
 def Rotation(degrees: omegaconf.OmegaConf):
     """Rotation transformation.
 
-    Parameters
-    ----------
-    degrees : configuration parameters for this transform. This 
-        should be the subconfig of the transform, that is 
-        `subcfg=cfg.data.transforms.rotation`, where `cfg` 
-        is the full experiment config.
-
+    Args:
+        degrees: configuration parameters for this transform. This 
+            should be the subconfig of the transform, that is 
+            `subcfg=cfg.data.transforms.rotation`, where `cfg` 
+            is the full experiment config.
     """
      
     if is_false_or_none(degrees):

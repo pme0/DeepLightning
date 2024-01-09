@@ -34,9 +34,9 @@ class ImageClassificationTask(BaseTask):
         self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
         
         self.default_task_metrics = {
-            "train": ["classification_accuracy"],
-            "val": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"],
-            "test": ["classification_accuracy", "confusion_matrix", "precision_recall_curve"]}
+            "train": ["classification_accuracy", "auroc"],
+            "val": ["classification_accuracy", "auroc", "confusion_matrix", "precision_recall_curve"],
+            "test": ["classification_accuracy", "auroc", "confusion_matrix", "precision_recall_curve"]}
         self.metrics = Metrics(cfg=cfg, defaults=self.default_task_metrics)
 
         self.on_task_init_end()

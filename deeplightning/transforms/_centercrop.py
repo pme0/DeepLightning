@@ -11,13 +11,11 @@ pair = lambda x: x if isinstance(x, tuple) or isinstance(x, omegaconf.listconfig
 def CenterCrop(s: Union[int, Tuple[int, int]]):
     """CenterCrop transformation.
 
-    Parameters
-    ----------
-    s : configuration parameters for this transform, the crop 
-        dimensions. This should be the subconfig of the transform, 
-        that is `s=cfg.data.transforms.centercrop`, where `cfg` is the 
-        full experiment config
-
+    Args:
+        s: configuration parameters for this transform, the crop dimensions. 
+            This should be the subconfig of the transform, that is 
+            `s=cfg.data.transforms.centercrop`, where `cfg` is the 
+            full experiment config
     """     
     s = pair(s)
 

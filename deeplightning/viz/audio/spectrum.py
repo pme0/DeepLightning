@@ -7,14 +7,10 @@ from librosa.display import specshow
 def stft(path: str, n_fft: int, hop_length: int):
     """Display Short Term Fourier Transformation (STFT) in the time-frequency domain.
 
-    Parameters
-    ----------
-    path : path to the audio file.
-    
-    n_fft: length of the windowed signal after padding with zeros.
-    
-    hop_length: number of audio samples between adjacent STFT columns.
-
+    Args:
+        path: path to the audio file.
+        n_fft: length of the windowed signal after padding with zeros.
+        hop_length: number of audio samples between adjacent STFT columns.
     """    
     # load data
     signal, sample_rate = librosa.load(path)
@@ -38,10 +34,8 @@ def stft(path: str, n_fft: int, hop_length: int):
 def power_spectrum(path: str):
     """Display Power Spectrum.
 
-     Parameters
-    ----------
-    path : path to the audio file.
-
+    Args:
+        path: path to the audio file.
     """
 
     # load data
@@ -78,19 +72,18 @@ def specplot(
 ):
     """Display Mel Frequency Cepstral Coefficients.
 
-    Parameters
-    ----------
-    path : path to the audio file.
-    mode : the type of features to be shown in the spectrogram. 
-        Can be Short Time Fourier Transform (STFT) amplitude 
-        (`stft_ampl`) or decibels (`stft_db`); Log Mel spectrogram 
-        (logmel); Mel Frequency Cepstral Coefficients (`mfcc`)
-    scale : the y-axis scale. Can be `linear` or `log`. For 
-        `mode == "mfcc"` the scale is chosen automatically
-    n_fft : 
-    hop_length :
-    figsize : the figure size
-    x_axis : 
+    Args:
+        path: path to the audio file.
+        mode: the type of features to be shown in the spectrogram. 
+            Can be Short Time Fourier Transform (STFT) amplitude 
+            (`stft_ampl`) or decibels (`stft_db`); Log Mel spectrogram 
+            (logmel); Mel Frequency Cepstral Coefficients (`mfcc`)
+        scale: the y-axis scale. Can be `linear` or `log`. For 
+            `mode == "mfcc"` the scale is chosen automatically
+        n_fft: 
+        hop_length:
+        figsize: the figure size
+        x_axis: 
     """
     
     assert scale is None or scale in ["linear", "log"]

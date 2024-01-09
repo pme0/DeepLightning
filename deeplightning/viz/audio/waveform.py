@@ -17,18 +17,13 @@ def waveplot(
 ):
     """Display waveform in the time domain.
 
-    Parameters
-    ----------
-    path : path to the audio file
-
-    x_axis : type of x-axis (e.g. milliseconds, seconds, ...); 
-        see `librosa.display.waveshow()` for all options
-
-    save_plot : path to save the plot to; or `None` if
-        the plot is not to be saved
-
-    show_plot : whether to display plot
-
+    Args:
+        path: path to the audio file
+        x_axis: type of x-axis (e.g. milliseconds, seconds, ...); 
+            see `librosa.display.waveshow()` for all options
+        save_plot: path to save the plot to; or `None` if
+            the plot is not to be saved
+        show_plot: whether to display plot
     """    
 
     # read audio file

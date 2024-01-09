@@ -7,13 +7,11 @@ from deeplightning.transforms.helpers import is_false_or_none
 def HorizontalFlip(p: float):
     """ Horizontal Flip transformation.
     
-    Parameters
-    ----------
-    p : configuration parameter for this transform, the flip 
-        probability. This should be the subconfig of the transform, 
-        that is `subcfg=cfg.data.transforms.hflip`, where `cfg` is 
-        the full experiment config.
-
+    Args:
+        p: configuration parameter for this transform, the flip 
+            probability. This should be the subconfig of the transform, 
+            that is `subcfg=cfg.data.transforms.hflip`, where `cfg` is 
+            the full experiment config.
     """
 
     if is_false_or_none(p):
@@ -31,13 +29,11 @@ def HorizontalFlip(p: float):
 def VerticalFlip(p: float):
     """ Vertical Flip transformation.
     
-    Parameters
-    ----------
-    p : configuration parameter for this transform, the flip 
-        probability. This should be the subconfig of the transform, 
-        that is `subcfg=cfg.data.transforms.vflip`, where `cfg` is 
-        the full experiment config.
-
+    Args:
+        p: configuration parameter for this transform, the flip 
+            probability. This should be the subconfig of the transform, 
+            that is `subcfg=cfg.data.transforms.vflip`, where `cfg` is 
+            the full experiment config.
     """
     
     if is_false_or_none(p):

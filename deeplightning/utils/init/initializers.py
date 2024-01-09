@@ -40,7 +40,7 @@ def init_trainer(cfg: OmegaConf) -> DLTrainer:
     return DLTrainer(cfg, args)
 
 
-def init_everything(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
+def init_lightning_modules(cfg: OmegaConf) -> Tuple[LightningModule, LightningDataModule, DLTrainer]:
     """ Initialize main modules
     """
     model = init_model(cfg)

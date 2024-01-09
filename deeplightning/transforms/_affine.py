@@ -8,17 +8,15 @@ from deeplightning.transforms.helpers import is_false_or_none, is_all_false_or_n
 def Affine(subcfg: omegaconf.OmegaConf):
     """Affine transformation.
 
-    Parameters
-    ----------
-    subcfg : configuration parameters for this transform. This 
-        should be the subconfig of the transform, that is 
-        `subcfg=cfg.data.transforms.affine`, where `cfg` 
-        is the full experiment config. It must contain 
-        the following fields:
-            - `subcfg.degrees`
-            - `subcfg.translate`
-            - `subcfg.scale`
-
+    Args:
+        subcfg: configuration parameters for this transform. This 
+            should be the subconfig of the transform, that is 
+            `subcfg=cfg.data.transforms.affine`, where `cfg` 
+            is the full experiment config. It must contain 
+            the following fields:
+                - `subcfg.degrees`
+                - `subcfg.translate`
+                - `subcfg.scale`
     """   
 
     if is_false_or_none(subcfg):

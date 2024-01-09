@@ -148,10 +148,9 @@ class HAM10000(pl.LightningDataModule):
         self.DATASET = "HAM10000"
         self.IMAGE_SIZE = (600, 450)  # (width,height)
         self.NUM_CHANNELS = 3
-        self.NORMALIZATION_CONSTANTS = {
+        self.NORMALIZATION = {
             "mean": [0.7639, 0.5463, 0.5703],
             "std": [0.0870, 0.1155, 0.1295]}
-        
         self.validate_config_params(cfg)
 
         self.train_transforms = load_transforms(cfg=cfg, subset="train")
@@ -169,6 +168,12 @@ class HAM10000(pl.LightningDataModule):
             assert cfg.data.num_classes == 2
         else:
             raise ValueError
+        if "normalize" in cfg.data.train_transforms:
+            assert cfg.data.train_transforms.normalize.mean == self.NORMALIZATION["mean"]
+            assert cfg.data.train_transforms.normalize.std == self.NORMALIZATION["std"]
+        if "normalize" in cfg.data.test_transforms:
+            assert cfg.data.test_transforms.normalize.mean == self.NORMALIZATION["mean"]
+            assert cfg.data.test_transforms.normalize.std == self.NORMALIZATION["std"]
 
     def prepare_data(self) -> None:
         pass

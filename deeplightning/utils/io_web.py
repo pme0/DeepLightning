@@ -13,12 +13,10 @@ def download_video_from_youtube(url: str, savedir: str, savename: str):
     where `ss` is the start and `t` is the duration; in the 
     example, extract the first 5 seconds of the video.
 
-    Parameters
-    ----------
-    url : the YouTube URL of the video to be downloaded
-    savedir : the directory that the video is saved to
-    savename : the filename that the video is saved to
-    
+    Args:
+        url: the YouTube URL of the video to be downloaded
+        savedir: the directory that the video is saved to
+        savename: the filename that the video is saved to
     """
       
     try:

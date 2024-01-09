@@ -7,15 +7,13 @@ from deeplightning.transforms.helpers import is_false_or_none, is_all_false_or_n
 def RandomCrop(subcfg: omegaconf.OmegaConf):
     """ Random Crop transformation.
     
-    Parameters
-    ----------
-    subcfg : configuration parameters for this transform. This should 
-        be the subconfig `subcfg=cfg.data.transforms.crop`, where `cfg` 
-        is the full experiment config. It must contain the following 
-        fields:
-            - `subcfg.size`
-            - `subcfg.pad`
-            
+    Args:
+        subcfg: configuration parameters for this transform. This should 
+            be the subconfig `subcfg=cfg.data.transforms.crop`, where `cfg` 
+            is the full experiment config. It must contain the following 
+            fields:
+                - `subcfg.size`
+                - `subcfg.pad` 
     """
 
     if is_false_or_none(subcfg):

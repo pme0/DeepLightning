@@ -11,13 +11,11 @@ pair = lambda x: x if isinstance(x, tuple) or isinstance(x, omegaconf.listconfig
 def Resize(s: Union[int, Tuple[int, int]]):
     """Resize transformation.
 
-    Parameters
-    ----------
-    s : configuration parameters for this transform, the resize 
-        dimensions. This should be the subconfig of the transform, 
-        that is `s=cfg.data.transforms.resize`, where `cfg` is the 
-        full experiment config
-
+    Args:
+        s: configuration parameters for this transform, the resize 
+            dimensions. This should be the subconfig of the transform, 
+            that is `s=cfg.data.transforms.resize`, where `cfg` is the 
+            full experiment config
     """     
     s = pair(s)
 

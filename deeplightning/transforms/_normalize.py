@@ -10,15 +10,13 @@ def Normalize(subcfg: omegaconf.OmegaConf):
     use `deeplightning.utils.data.compute_dataset_mean_and_stdev()` to
     obtain the dataset statistics
 
-    Parameters
-    ----------
-    subcfg : configuration parameters for this transform. This should
-        be the subconfig `subcfg=cfg.data.transforms.normalize`, 
-        where `cfg` is the full experiment config. It must contain 
-        the following fields:
-            - `subcfg.mean`
-            - `subcfg.std`
-
+    Args:
+        subcfg: configuration parameters for this transform. This should
+            be the subconfig `subcfg=cfg.data.transforms.normalize`, 
+            where `cfg` is the full experiment config. It must contain 
+            the following fields:
+                - `subcfg.mean`
+                - `subcfg.std`
     """
 
     if is_false_or_none(subcfg):

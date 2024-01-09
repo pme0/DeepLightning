@@ -15,18 +15,17 @@ def plot_resized_image(
     display_size: Tuple[int,int] = None,
     channel: int = None,
     channel_cmap: str = None,
-    save_fp : str = None,
+    save_fp: str = None,
 ):
     """Plot resized image & saves with new exact pixel size.
     
-    Parameters
-    ----------
-    image_fp : input image filepath
-    resize : resize image to (width, height), in pixels; also used 
-        to save the image with that exact pixel size (no borders)
-    display_image : whether to display image
-    display_size : size of displayed image, in inches (width, height)
-    save_fp : output image save filepath
+    Args:
+        image_fp: input image filepath
+        resize: resize image to (width, height), in pixels; also used 
+            to save the image with that exact pixel size (no borders)
+        display_image: whether to display image
+        display_size: size of displayed image, in inches (width, height)
+        save_fp: output image save filepath
     """
     assert resize is None or isinstance(resize, tuple) and len(resize) == 2
     if resize is None:
