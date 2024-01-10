@@ -9,7 +9,7 @@ import lightning as pl
 from PIL import Image
 
 #from deeplightning.utils.io_local import read_image
-from deeplightning.transforms import load_transforms
+from deeplightning.transforms.transforms import load_transforms
 from deeplightning.utils.messages import info_message
 
 

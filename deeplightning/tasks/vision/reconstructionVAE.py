@@ -22,8 +22,8 @@ class ImageReconstructionVAE(pl.LightningModule):
     def __init__(self, cfg: OmegaConf):
         super().__init__()
         self.cfg = cfg
-        self.num_tokens = cfg.model.network.params.num_tokens
-        self.kl_weight = cfg.model.network.params.kl_div_loss_weight
+        self.num_tokens = cfg.model.network.args.num_tokens
+        self.kl_weight = cfg.model.network.args.kl_div_loss_weight
 
         self.loss = init_obj_from_config(cfg.model.loss)
         self.model = init_obj_from_config(cfg.model.network)

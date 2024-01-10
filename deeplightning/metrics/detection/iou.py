@@ -22,7 +22,7 @@ class IntersectionOverUnion(MulticlassJaccardIndex):
         self.display_name = "iou"
         self.logging_methods = ["compute"]
 
-        self.num_classes = cfg.model.network.params.num_classes
+        self.num_classes = cfg.model.network.args.num_classes
         args = {"num_classes": self.num_classes}
         super().__init__(**args)
 

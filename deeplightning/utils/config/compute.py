@@ -17,7 +17,7 @@ def search_config(config: OmegaConf, value: Any = "AUTO", prepath=()):
 def get_runtime_param(cfg: OmegaConf, cfg_path: str):
     """Compute runtime parameter
     """
-    if cfg_path == "model.scheduler.params.T_max":
+    if cfg_path == "model.scheduler.args.T_max":
         target = "torch.optim.lr_scheduler.CosineAnnealingLR"
         assert OmegaConf.select(cfg, "model.scheduler.target") == target, f"invalid param `T_max` for scheduler `{target}`"
         num_batches = cfg.data.num_training_samples // cfg.data.batch_size + 1  #ceiling

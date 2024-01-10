@@ -20,7 +20,7 @@ def get_instance(cfg: OmegaConf) -> Any:
     """ Get an instance of the target class.
     """
     reference = get_reference(cfg)
-    return reference(**cfg.params) if exists(cfg.params) else reference()
+    return reference(**cfg.args) if exists(cfg.args) else reference()
 
 
 def init_module(short_cfg: OmegaConf, cfg: OmegaConf) -> Any:
@@ -34,7 +34,7 @@ def init_module(short_cfg: OmegaConf, cfg: OmegaConf) -> Any:
 def init_obj_from_config(cfg: OmegaConf, main_param: Any = None) -> Any:
     """ Initialize module from target (str) in config.
     """
-    p = cfg.params
+    p = cfg.args
     reference = get_reference(cfg)
     if main_param is None:
         instance = reference(**p) if exists(p) else reference()

@@ -120,6 +120,7 @@ class ImageSemanticSegmentationTask(BaseTask):
         outputs = self.model(batch["inputs"])
         outputs = process_model_outputs(outputs, self.model)
         
+        """
         preds = torch.argmax(outputs, dim=1)
         folder = "/Users/pme/Downloads/segm"
         if not os.path.exists(folder):
@@ -130,6 +131,7 @@ class ImageSemanticSegmentationTask(BaseTask):
                 tensor = preds[i].unsqueeze(0).float(), 
                 fp = os.path.join(folder, f"{batch['masks_paths'][i].split('/')[-1]}_pred_step{self.global_step}.png")
             )
+        """
 
         # Update losses
         val_loss = self.loss(outputs, batch["masks"])

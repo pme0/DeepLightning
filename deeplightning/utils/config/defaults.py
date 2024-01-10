@@ -30,22 +30,22 @@ model_defaults = \
             type: null
         network:
             type: null
-            params: 
+            args: 
                 num_classes: null
                 num_channels: null
         optimizer:
             type: null
-            params:
+            args:
                 lr: null
         scheduler:
             type: null
-            params:
+            args:
             call:
                 interval: epoch
                 frequency: 1
         loss:
             type: null
-            params:
+            args:
     """
 
 engine_defaults = \
@@ -75,7 +75,7 @@ logger_defaults = \
     """
     logger:
         type: pytorch_lightning.loggers.MLFlowLogger
-        params:
+        args:
             experiment_name: Default
             tracking_uri: mlruns
         log_every_n_steps: 10

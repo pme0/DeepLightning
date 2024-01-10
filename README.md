@@ -116,7 +116,7 @@ model:
     target: deeplightning.tasks.vision.classification.ImageClassificationTask
   network:
     target: deeplightning.models.cnn.CNN
-    params: 
+    args: 
       num_classes: 10
       num_channels: 1
 ```

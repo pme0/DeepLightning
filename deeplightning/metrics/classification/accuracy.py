@@ -21,7 +21,7 @@ class ClassificationAccuracy(MulticlassAccuracy):
         self.display_name = "accuracy"
         self.logging_methods = ["compute"]
 
-        self.num_classes = cfg.model.network.params.num_classes
+        self.num_classes = cfg.model.network.args.num_classes
         args = {"num_classes": self.num_classes}
         super().__init__(**args)
 

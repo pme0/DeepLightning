@@ -38,7 +38,7 @@ class AudioClassification(pl.LightningModule):
         self.sanity_check = True # to avoid logging sanity check metrics
 
         # metrics to use during training
-        self.num_classes = cfg.model.network.params.num_classes
+        self.num_classes = cfg.model.network.args.num_classes
         self.classif_task = "binary" if self.num_classes == 2 else "multiclass"
         self.accuracy = metric_accuracy # TODO create superclass from `torchmetrics.Accuracy()`
         self.confusion_matrix = MetricsConfusionMatrix(cfg) # TODO check that `torchmetrics.ConfusionMatrix()` gathers from multiple gpus

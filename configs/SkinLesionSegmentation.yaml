@@ -8,8 +8,8 @@ data:
   dataset: HAM10000
   root: /Users/pme/research/data/HAM10000
   num_workers: 4
-  batch_size: 64
-  dataset_size: 200  # maximum number of samples; useful for debugging
+  batch_size: 128
+  dataset_size:  # maximum number of samples; useful for debugging
   module: 
     target: deeplightning.datasets.vision.ham10000.HAM10000
   image_size: [600, 450]
@@ -19,36 +19,36 @@ data:
     normalize:
       mean: [0.7639, 0.5463, 0.5703]
       std: [0.0870, 0.1155, 0.1295]
-    resize: [64, 64]
+    resize: [96, 96]
   test_transforms:
     normalize:
       mean: [0.7639, 0.5463, 0.5703]
       std: [0.0870, 0.1155, 0.1295]
-    resize: [64, 64]
+    resize: [96, 96]
   mask_transforms:
-    resize: [64, 64]
+    resize: [96, 96]
     roundtointeger:
  
 model:
-  module: 
+  module:
     target: deeplightning.tasks.vision.segmentation.ImageSemanticSegmentationTask
   network:
     target: torchvision.models.segmentation.deeplabv3_resnet50
-    params: 
+    args:
       num_classes: 2
   optimizer:
     target: deeplightning.optimizers.lion.Lion
-    params:
+    args:
   scheduler:
     target: torch.optim.lr_scheduler.ExponentialLR
-    params:
+    args:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
     target: torch.nn.CrossEntropyLoss
-    params:
+    args:
 
 engine:
   accelerator: cpu
@@ -63,7 +63,7 @@ metrics:
   test: default
   
 train:
-  num_epochs: 10
+  num_epochs: 20
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1

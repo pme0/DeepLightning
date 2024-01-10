@@ -11,7 +11,7 @@ data:
   batch_size: 256
   module:
     target: tests.helpers.dummies.DummyDataset
-    params:
+    args:
       length: 5
       size: 8
 
@@ -20,25 +20,25 @@ model:
     target: tests.helpers.dummies.DummyModel
   network:
     type: null
-    params: 
+    args: 
       num_classes: 10
       num_channels: 1
   optimizer:
     target: torch.optim.SGD
-    params:
+    args:
       lr: 0.01
       weight_decay: 0.01
       momentum: 0.9
   scheduler:
     target: torch.optim.lr_scheduler.ExponentialLR
-    params:
+    args:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
     target: torch.nn.CrossEntropyLoss
-    params:
+    args:
 
 engine:
   accelerator: cpu
