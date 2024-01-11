@@ -5,7 +5,7 @@ import omegaconf
 import torch
 import pytest
 
-from deeplightning.data.transforms.transforms import __TransformsDict__
+from deeplightning.transforms.transforms import __TransformsDict__
 
 
 CFG = omegaconf.OmegaConf.create(

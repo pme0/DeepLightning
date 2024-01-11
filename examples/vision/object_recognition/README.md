@@ -17,7 +17,7 @@ Object Recognition
 
 
 |  Model  | Parameters   | Setting |
-|:--------|:------------:|:--------|
+|:--------|:---:|:--------|
 | ResNet18 | 11.2M | |
 | EfficientNet_B0 | 4.0M | |
 | MLPMixer | 1.7M | dim=512, depth=6, patch_size=4 |

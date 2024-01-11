@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 from lightning import LightningModule
 
-from deeplightning.init.imports import get_reference 
+from deeplightning.utils.init.imports import get_reference 
 
 
 parser = argparse.ArgumentParser()

@@ -16,14 +16,12 @@ def read_video(
 ) -> Tuple[np.ndarray, str, int]:
     """Read video from file into a numpy array.
     
-    Parameters
-    ----------
-    video_path: path to video.
+    Args:
+        video_path: path to video.
     
-    Returns
-    -------
-    tuple `(video, name, frames)` where `video` is the video array; 
-        `name` is the original video name; `frames` is the number of frames.
+    Returns:
+        tuple `(video, name, frames)` where `video` is the video array; 
+            `name` is the original video name; `frames` is the number of frames.
     """
     assert isinstance(video_path, str), "Video path must be a string type"
 

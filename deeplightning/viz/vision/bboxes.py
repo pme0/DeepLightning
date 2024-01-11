@@ -71,8 +71,8 @@ def plot_image_and_bboxes(
             box = {
                 "x_LowerLeft": bbox["box"][0] - bbox["box"][2]/2,
                 "y_LowerLeft": bbox["box"][1] - bbox["box"][3]/2,
-                "width" : bbox["box"][2],
-                "height" : bbox["box"][3],
+                "width": bbox["box"][2],
+                "height": bbox["box"][3],
             }
             if resize is not None:
                 box["x_LowerLeft"] = box["x_LowerLeft"] * resize / img_w

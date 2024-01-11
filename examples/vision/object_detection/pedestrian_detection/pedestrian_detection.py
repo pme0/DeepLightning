@@ -30,12 +30,10 @@ class PedestrianDetector(ObjectDetector):
     
     This class inherits from `ObjectDetector` class.
 
-    Parameters
-    ----------
-    model_flavour : model name
-    model_cfg : path to model configuration
-    model_ckpt : path to model checkpoint
-
+    Args:
+        model_flavour: model name
+        model_cfg: path to model configuration
+        model_ckpt: path to model checkpoint
     """
     def __init__(self, model_flavour, model_cfg, model_ckpt):
         super().__init__(model_flavour, model_cfg, model_ckpt)

@@ -11,10 +11,10 @@ from lightning.pytorch.callbacks import (GradientAccumulationScheduler,
 from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBarTheme
 from lightning.pytorch.loggers import WandbLogger
 
-from deeplightning.config.defaults import __ConfigGroups__
-from deeplightning.config.load import log_config
-from deeplightning.logger.helpers import add_logger_params_to_config
-from deeplightning.logger.wandb import init_wandb_metrics
+from deeplightning.utils.config.defaults import __ConfigGroups__
+from deeplightning.utils.config.load import log_config
+from deeplightning.utils.logger.helpers import add_logger_params_to_config
+from deeplightning.utils.logger.wandb import init_wandb_metrics
 from deeplightning.utils.messages import config_print
 from deeplightning.utils.python_utils import flatten_dict
 
@@ -82,7 +82,7 @@ class DLTrainer(Trainer):
 
             # intialize step label for each metrics
             logger.step_label = init_wandb_metrics(
-                metric_names = [f"{x}_{y}" for x in cfg.metrics for y in cfg.metrics[x]],  #__HooksRegistry__[cfg.task]["LOGGED_METRICS_NAMES"],
+                metric_names = [f"{x}_{y}" for x in cfg.metrics for y in cfg.metrics[x]],
                 step_label = "iteration",
             )
 
@@ -132,7 +132,7 @@ class DLTrainer(Trainer):
             every_n_epochs = cfg.train.ckpt_every_n_epochs,
             save_last = False,
             save_top_k = cfg.train.ckpt_save_top_k,
-            monitor = "val_acc",
+            monitor = cfg.train.ckpt_monitor_metric,
             mode = "max",
             filename = "{epoch}-{step}-{val_acc:.4f}",  #TODO put filename_metric here
             save_on_train_epoch_end = False # False: save at validation_epoch_end

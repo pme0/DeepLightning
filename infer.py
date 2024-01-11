@@ -1,10 +1,7 @@
 import os
-import sys
 import argparse
 
-from deeplightning.utils.messages import info_message, warning_message, error_message
-from deeplightning.config.load import load_config
-from deeplightning.init.initializers import init_everything
+from deeplightning.utils.config.load import load_config
 
 
 def parse_command_line_arguments():

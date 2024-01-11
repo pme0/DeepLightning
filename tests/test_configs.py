@@ -4,7 +4,7 @@ from omegaconf import OmegaConf
 from omegaconf.listconfig import ListConfig
 from omegaconf.dictconfig import DictConfig
 
-from deeplightning.config.load import load_config
+from deeplightning.utils.config.load import load_config
 
 
 def check_all_keys_exist(cfg_base, cfg):

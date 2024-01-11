@@ -9,29 +9,30 @@ data:
   root: 
   num_workers: 
   batch_size: 
-  module: 
+  dataset_size: 
+  module:
     target: 
-  train_transforms:
-  test_transforms:
+  train_transforms: 
+  test_transforms: 
  
 model:
   module: 
     target: 
   network:
     target: 
-    params: 
+    args: 
   optimizer:
     target: 
-    params:
+    args:
   scheduler:
     target: 
-    params:
+    args:
     call:
       interval: 
       frequency: 
   loss:
     target: 
-    params:
+    args:
 
 engine:
   accelerator: 

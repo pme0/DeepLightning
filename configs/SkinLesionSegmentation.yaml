@@ -1,4 +1,4 @@
-task: SemanticSegmentation
+task: image_semantic_segmentation
 
 modes: 
   train: true
@@ -8,42 +8,47 @@ data:
   dataset: HAM10000
   root: /Users/pme/research/data/HAM10000
   num_workers: 4
-  batch_size: 64
+  batch_size: 128
+  dataset_size:  # maximum number of samples; useful for debugging
   module: 
-    target: deeplightning.data.dataloaders.vision.ham10000.HAM10000
+    target: deeplightning.datasets.vision.ham10000.HAM10000
   image_size: [600, 450]
   num_channels: 3
   num_classes: 2  # segmentation classes
   train_transforms:
-    normalize: # use `deeplightning.utils.data.compute_dataset_mean_and_stdev()`
-      mean: [0., 0., 0.]
-      std: [1., 1., 1.]
-    resize: [128, 128]
+    normalize:
+      mean: [0.7639, 0.5463, 0.5703]
+      std: [0.0870, 0.1155, 0.1295]
+    resize: [96, 96]
   test_transforms:
     normalize:
-      mean: [0., 0., 0.]
-      std: [1., 1., 1.]
+      mean: [0.7639, 0.5463, 0.5703]
+      std: [0.0870, 0.1155, 0.1295]
+    resize: [96, 96]
+  mask_transforms:
+    resize: [96, 96]
+    roundtointeger:
  
 model:
-  module: 
-    target: deeplightning.task.vision.segmentation.SemanticSegmentationTask
+  module:
+    target: deeplightning.tasks.vision.segmentation.ImageSemanticSegmentationTask
   network:
     target: torchvision.models.segmentation.deeplabv3_resnet50
-    params: 
+    args:
       num_classes: 2
   optimizer:
-    target: deeplightning.optimizer.lion.Lion
-    params:
+    target: deeplightning.optimizers.lion.Lion
+    args:
   scheduler:
     target: torch.optim.lr_scheduler.ExponentialLR
-    params:
+    args:
       gamma: 0.99
     call:
       interval: "epoch"
       frequency: 1
   loss:
     target: torch.nn.CrossEntropyLoss
-    params:
+    args:
 
 engine:
   accelerator: cpu
@@ -63,7 +68,7 @@ train:
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
   ckpt_resume_path: null
-  ckpt_monitor_metric: val_acc  # used in `ModelCheckpoint` callback
+  ckpt_monitor_metric: val_accuracy  # used in `ModelCheckpoint` callback
   ckpt_every_n_epochs: 1
   ckpt_save_top_k: 1
   early_stop_metric: null
