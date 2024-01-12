@@ -18,27 +18,31 @@ def parse_command_line_arguments():
 
 
 def train_hook(cfg, trainer, model, data):
-    info_message("Performing training and validation.") 
+    ckpt_path = cfg.train.ckpt_resume_path
+    if ckpt_path is None:
+        info_message("Starting training from scratch.")
+    else:
+        info_message(f"Resuming training from checkpoint '{ckpt_path}'.")
     trainer.fit(
         model = model,
         datamodule = data,
-        ckpt_path = cfg.train.ckpt_resume_path)
-    
-
-def test_best_hook(cfg, trainer, model, data):
-    info_message("Performing testing with the best model")
-    trainer.test(
-        model = model,
-        ckpt_path = "best",
-        datamodule = data)
+        ckpt_path = ckpt_path)
     
 
 def test_ckpt_hook(cfg, trainer, model, data):
     ckpt_path = cfg.test.ckpt_test_path
-    info_message(f"Performing testing with checkpoint '{ckpt_path}'.")
+    info_message(f"Starting testing from checkpoint '{ckpt_path}'.")
     trainer.test(
         model = model,
-        ckpt_path = cfg.test.ckpt_test_path,
+        ckpt_path = ckpt_path,
+        datamodule = data)
+    
+
+def test_best_hook(cfg, trainer, model, data):
+    info_message("Starting testing with the best model.")
+    trainer.test(
+        model = model,
+        ckpt_path = "best",
         datamodule = data)
 
 
