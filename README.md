@@ -1,5 +1,3 @@
-<<< in active development >>>
-
 <h1 align="center">
   <b>Deep Lightning</b><br>
 </h1>
