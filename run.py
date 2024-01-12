@@ -34,7 +34,8 @@ def test_best_hook(cfg, trainer, model, data):
     
 
 def test_ckpt_hook(cfg, trainer, model, data):
-    info_message("Performing testing with checkpoint '{cfg.test.ckpt_test_path}'.")
+    ckpt_path = cfg.test.ckpt_test_path
+    info_message(f"Performing testing with checkpoint '{ckpt_path}'.")
     trainer.test(
         model = model,
         ckpt_path = cfg.test.ckpt_test_path,

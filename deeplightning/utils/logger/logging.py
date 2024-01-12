@@ -29,15 +29,17 @@ def check_image_format(name: str):
 # mains
 
 def log_config(cfg: OmegaConf, path: str) -> None:
-    """ Save configuration (.yaml)
+    """ Save configuration file (.yaml). Weights & Biases stores `config.yaml`
+    containing trainer information, so use `cfg.yaml` here to avoid overwriting.
     """
     if not OmegaConf.is_config(cfg):
         error_message(
-            "Attempting to save a config artifact but the object "
-            "provided is not of type omegaconf.dictconfig.DictConfig.")
+            "Attempting to save a config artifact but the object provided is "
+            "not of type omegaconf.dictconfig.DictConfig.")
     
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
+        
     OmegaConf.save(cfg, f = os.path.join(path, "cfg.yaml"))
 
 
