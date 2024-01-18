@@ -189,6 +189,9 @@ class ImageSemanticSegmentationTask(BaseTask):
             **{
                 "preds": outputs, 
                 "target": batch["masks"],
+                "image_fps": batch['inputs_paths'],
+                "true_mask_fps": batch['masks_paths'],
+                "resize": (200, 200),
             })
 
 

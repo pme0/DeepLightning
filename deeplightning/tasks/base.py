@@ -42,9 +42,10 @@ class BaseTask(pl.LightningModule):
         self.cfg = cfg  #TODO check if this contains logger runtime params
         self.step_label = "iteration"
 
-        # initialise metrics dictionary (to log)
+        # accumulates metrics to log
         self.metric_tracker = {}
-        # initialise loss accumulators (to store losses through steps)
+
+        # accumulates losses through iterations
         self.loss_tracker = {"train": {}, "val": {}, "test": {}}
 
 
