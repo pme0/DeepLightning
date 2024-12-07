@@ -45,7 +45,7 @@ class DLTrainer(Trainer):
         """ Initialize logger
         """
 
-        if cfg.logger.name == "wandb":
+        if cfg.logger.provider == "wandb":
             logger = WandbLogger(
                 project = cfg.logger.project_name,
                 notes = cfg.logger.notes,
@@ -89,10 +89,10 @@ class DLTrainer(Trainer):
             log_config(cfg=cfg, path=logger.artifact_path)
             config_print(OmegaConf.to_yaml(cfg))
 
-        elif cfg.logger.name == "neptune":
+        elif cfg.logger.provider == "neptune":
             raise NotImplementedError
         else:
-            raise NotImplementedError(f"Logger not supported (cfg.logger.name='{cfg.logger.name}' )")
+            raise NotImplementedError(f"Logger not supported (cfg.logger.provider='{cfg.logger.provider}' )")
 
         # ensure all required attributes have been initialised
         attributes = ["run_id", "run_name", "run_dir", "artifact_path"]

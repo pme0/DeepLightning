@@ -1,7 +1,7 @@
 from typing import Any, Union, Tuple, Optional, List
 ConfigElement = Union[str, int, float, None]
 import os
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig, ListConfig
 import torch
 
 from deeplightning import TASK_REGISTRY
@@ -13,17 +13,30 @@ from deeplightning.utils.messages import (info_message,
                                           config_print,)
 
 
-def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
+def resolve_config(cfg: DictConfig) -> DictConfig:
     """ Load configuration from .yaml file.
     An updated artifact `cfg.yaml` is saved in `init_trainer()`
     to the logger's artifact storage path.
     """
-    cfg = OmegaConf.load(config_file)
     cfg = merge_defaults(cfg)
+    cfg = expand_home_directories(cfg)
     #cfg = check_consistency(cfg)
     cfg = runtime_compute(cfg)
     OmegaConf.resolve(cfg)
-    #config_print(OmegaConf.to_yaml(cfg))
+    return cfg
+
+
+def expand_home_directories(cfg: DictConfig) -> DictConfig:
+    """Expand home directories specified with '~/' into absolute paths."""
+    if isinstance(cfg, DictConfig):
+        for key, value in cfg.items():
+            cfg[key] = expand_home_directories(value)
+    elif isinstance(cfg, ListConfig):
+        for index, item in enumerate(cfg):
+            cfg[index] = expand_home_directories(item)
+    elif isinstance(cfg, str):
+        if cfg.startswith("~/"):
+            return os.path.expanduser(cfg)
     return cfg
 
 
@@ -55,9 +68,9 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
         )
         raise ValueError
     
-    if cfg.logger.name != "wandb":
+    if cfg.logger.provider != "wandb":
         error_message(
-            f"Logger (cfg.logger.name={cfg.logger.name}) not implemented."
+            f"Logger (cfg.logger.provider={cfg.logger.provider}) not implemented."
         )
         raise NotImplementedError
     '''

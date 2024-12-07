@@ -14,24 +14,6 @@ After defining modules and configuration, training deep learning models is simpl
   <img src="media/code.gif" alt=""  width="600" />
 </p>
 
-<!--
-```python
-from deeplightning.utils.configure import load_config, init_module, init_trainer
-
-# load configuration
-cfg = load_config("cfg.yaml")
-
-# load modules
-model = init_module(cfg, "model")
-data = init_module(cfg, "data")
-trainer = init_trainer(cfg)
-
-# train model
-trainer.fit(model, data)
-```
--->
-
-
 ### Contents
 * [Overview](#overview)
 * [Installation](#installation)
@@ -62,8 +44,8 @@ cd DeepLightning
 
 Create conda environment:
 ```bash
-conda env create -f conda_env.yaml
-conda activate deeplightning
+conda env create -f env.yaml
+conda activate dl
 ```
 
 # Usage
@@ -72,9 +54,9 @@ conda activate deeplightning
 
 for model **training** use
 ```bash
-python train.py --cfg configs/base.yaml
+python run.py --config-path CONFIG_PATH.yaml --config-name CONFIG_NAME.yaml
 ```
-where `cfg` is the configuration YAML file;
+where `config-path` defaults to `configs/` and `config-name` is the config filename;
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
 
 **2. Monitor the training progress:**

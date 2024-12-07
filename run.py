@@ -1,20 +1,29 @@
-import sys
 import argparse
+import sys
+
+import hydra
+from omegaconf import OmegaConf, DictConfig
 import wandb
-#import hydra
 
 from deeplightning.utils.messages import info_message, warning_message
-from deeplightning.utils.config.load import load_config
+from deeplightning.utils.config.load import resolve_config
 from deeplightning.utils.init.initializers import init_lightning_modules
+from deeplightning.utils.messages import config_print
 
 
-def parse_command_line_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cfg", type=str, help="Path to YAML configuration file.")
-    #parser.add_argument("--config-path", type=str, default="configs", help="Directory of YAML configuration file. Overwrites `config_path` in hydra.main().")
-    #parser.add_argument("--config-name", type=str, help="Filename of YAML configuration file. Overwrites `config_name` in hydra.main().")
-    args = parser.parse_args()
-    return args
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--config-path", 
+    type=str, 
+    default="configs", 
+    help="Directory of YAML configuration file. Overwrites `config_path` in hydra.main()."
+)
+parser.add_argument(
+    "--config-name", 
+    type=str, 
+    help="Filename of YAML configuration file. Overwrites `config_name` in hydra.main()."
+)
+args = parser.parse_args()
 
 
 def train_hook(cfg, trainer, model, data):
@@ -46,23 +55,23 @@ def test_best_hook(cfg, trainer, model, data):
         datamodule = data)
 
 
-#@hydra.main(version_base=None, config_path="", config_name="")
-def main():
-
-    args = parse_command_line_arguments()
+@hydra.main(version_base=None, config_path=args.config_path, config_name=args.config_name)
+def _main(cfg: DictConfig) -> None:
 
     # Load config
     # NOTE The following config is incomplete. The complete one --- which 
     # includes logger runtime parameters like artifact path --- is updated 
     # inside the LightningModule (from where is gets printed and logged) and 
     # retrieved bellow.
-    cfg = load_config(config_file = args.cfg)
+    cfg = resolve_config(cfg)
 
     # Initialise: model, dataset, trainer
     model, data, trainer = init_lightning_modules(cfg)
 
     # Retrieve config augmented with runtime parameters
     cfg = trainer.cfg
+    config_print(OmegaConf.to_yaml(cfg))
+    #raise
 
     # run training & testing
     try:
@@ -83,4 +92,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()

@@ -6,7 +6,7 @@ modes:
   
 data:
   dataset: HAM10000
-  root: /Users/pme/research/data/HAM10000
+  root: ~/data/HAM10000
   num_workers: 4
   batch_size: 128
   dataset_size:  # maximum number of samples; useful for debugging
@@ -79,8 +79,13 @@ test:
   ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
 
 logger:
-  name: wandb
+  provider: wandb
   project_name: skin-lesion-segmentation
   tags: ["_"] # cannot be empty
   notes: null
   log_every_n_steps: 20
+  runtime:
+    run_id: null
+    run_name: null
+    run_dir: null
+    artifact_path: null

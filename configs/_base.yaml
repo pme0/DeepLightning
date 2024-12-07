@@ -63,7 +63,7 @@ test:
   ckpt_test_path:
 
 logger:
-  name: 
+  provider: 
   project_name: 
   tags: 
   notes: 
