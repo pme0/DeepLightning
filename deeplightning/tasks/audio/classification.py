@@ -5,11 +5,10 @@ from torch import Tensor
 import lightning as pl
 import wandb
 
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.utils.imports import init_obj_from_config
 from deeplightning.utils.messages import info_message
-#from deeplightning.utils.metrics import metric_accuracy, MetricsConfusionMatrix | OBSOLETE - use `deeplightning.metrics`
-from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
-from deeplightning.trainer.batch import dictionarify_batch
+from deeplightning.core.gather import gather_on_step, gather_on_epoch
+from deeplightning.core.batch import dictionarify_batch
 from deeplightning.utils.logger.wandb import init_wandb_metrics
 
 

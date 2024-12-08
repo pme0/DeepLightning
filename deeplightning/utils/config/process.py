@@ -1,27 +1,31 @@
-from typing import Any, Union, Tuple, Optional, List
-ConfigElement = Union[str, int, float, None]
 import os
+
 from omegaconf import OmegaConf, DictConfig, ListConfig
-import torch
 
 from deeplightning import TASK_REGISTRY
 from deeplightning.utils.config.compute import runtime_compute
 from deeplightning.utils.config.defaults import __ConfigGroups__
-from deeplightning.utils.messages import (info_message, 
-                                          warning_message,
-                                          error_message,
-                                          config_print,)
+from deeplightning.utils.messages import (
+    info_message,
+    warning_message,
+    error_message,
+)
+
+
+def load_config(config_file: str = "configs/base.yaml") -> DictConfig:
+    cfg = OmegaConf.load(config_file)
+    cfg = merge_defaults(cfg)
+    #cfg = check_consistency(cfg)
+    cfg = runtime_compute(cfg)
+    OmegaConf.resolve(cfg)
+    return cfg
 
 
 def resolve_config(cfg: DictConfig) -> DictConfig:
-    """ Load configuration from .yaml file.
-    An updated artifact `cfg.yaml` is saved in `init_trainer()`
-    to the logger's artifact storage path.
-    """
     cfg = merge_defaults(cfg)
     cfg = expand_home_directories(cfg)
     #cfg = check_consistency(cfg)
-    cfg = runtime_compute(cfg)
+    #cfg = runtime_compute(cfg)
     OmegaConf.resolve(cfg)
     return cfg
 
@@ -40,8 +44,8 @@ def expand_home_directories(cfg: DictConfig) -> DictConfig:
     return cfg
 
 
-def merge_defaults(user_config: OmegaConf) -> OmegaConf:
-    """ Merge provided config with default config.
+def merge_defaults(user_config: DictConfig) -> DictConfig:
+    """Merge provided config with default config.
     The default parameters are overwritten if present
     in the user config provided.
     """
@@ -58,7 +62,7 @@ def merge_defaults(user_config: OmegaConf) -> OmegaConf:
     
 
 def check_consistency(cfg: OmegaConf) -> OmegaConf:
-    """ Perform parameter checks and modify where inconsistent.
+    """Perform parameter checks and modify where inconsistent.
     """
     
     if cfg.task is None or cfg.task not in TASK_REGISTRY.get_element_names():
@@ -104,9 +108,10 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
     return cfg
 
 
-def log_config(cfg: OmegaConf, path: str) -> None:
-    """ Save configuration (.yaml)
-    """
+def log_config(cfg: DictConfig):
+    """Save configuration."""
+    path = cfg.logger.runtime.artifact_path
+
     if not OmegaConf.is_config(cfg):
         error_message(
             "Attempting to save a config artifact but the object "

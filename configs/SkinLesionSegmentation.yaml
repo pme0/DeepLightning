@@ -1,20 +1,16 @@
-task: image_semantic_segmentation
-
 modes: 
   train: true
-  test: false
+  eval: false
   
 data:
   dataset: HAM10000
   root: ~/data/HAM10000
-  num_workers: 4
+  num_workers: 8
+  persistent_workers: true
   batch_size: 128
-  dataset_size:  # maximum number of samples; useful for debugging
+  dataset_size: 200 # maximum number of samples (debug)
   module: 
     target: deeplightning.datasets.vision.ham10000.HAM10000
-  image_size: [600, 450]
-  num_channels: 3
-  num_classes: 2  # segmentation classes
   train_transforms:
     normalize:
       mean: [0.7639, 0.5463, 0.5703]
@@ -28,13 +24,14 @@ data:
   mask_transforms:
     resize: [96, 96]
     roundtointeger:
- 
+
 model:
-  module:
-    target: deeplightning.tasks.vision.segmentation.ImageSemanticSegmentationTask
+  task: ImageSemanticSegmentation
   network:
     target: torchvision.models.segmentation.deeplabv3_resnet50
     args:
+      # num_classes = 7 for "image_classification" task;
+      # num_classes = 2 for "image_semantic_segmentation" task;
       num_classes: 2
   optimizer:
     target: deeplightning.optimizers.lion.Lion
@@ -56,6 +53,7 @@ engine:
   devices: auto
   num_nodes: 1
   precision: 32
+  seed: 101
 
 metrics:
   train: default
@@ -63,7 +61,7 @@ metrics:
   test: default
   
 train:
-  num_epochs: 20
+  num_epochs: 3
   val_every_n_epoch: 1
   grad_accum_from_epoch: 0
   grad_accum_every_n_batches: 1
@@ -83,7 +81,7 @@ logger:
   project_name: skin-lesion-segmentation
   tags: ["_"] # cannot be empty
   notes: null
-  log_every_n_steps: 20
+  log_every_n_steps: 1
   runtime:
     run_id: null
     run_name: null

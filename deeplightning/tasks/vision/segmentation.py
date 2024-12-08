@@ -1,16 +1,13 @@
-from typing import Any, Tuple
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
+from lightning.pytorch.trainer.states import RunningStage
 import torch
 from torch import Tensor
-from torchvision.utils import save_image
-from lightning.pytorch.trainer.states import RunningStage
-import os
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.core.batch import dictionarify_batch
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
-from deeplightning.trainer.batch import dictionarify_batch
+from deeplightning.utils.imports import init_obj_from_config
 
 
 def process_model_outputs(outputs, model):
@@ -25,12 +22,8 @@ def process_model_outputs(outputs, model):
 
 
 class ImageSemanticSegmentationTask(BaseTask):
-    """ Task module for Image Semantic Segmentation. 
-
-    Args:
-        cfg: yaml configuration object
-    """
-    def __init__(self, cfg: OmegaConf):
+    def __init__(self, cfg: DictConfig):
+        """Task module for Image Semantic Segmentation."""
         super().__init__(cfg=cfg)
         
         self.loss = init_obj_from_config(cfg.model.loss)
@@ -53,7 +46,7 @@ class ImageSemanticSegmentationTask(BaseTask):
         return self.model(x)
 
 
-    def configure_optimizers(self) -> Tuple[dict]:
+    def configure_optimizers(self) -> tuple[dict]:
         """ Configure optimizers and schedulers.
         """
         return ({
@@ -212,6 +205,6 @@ class ImageSemanticSegmentationTask(BaseTask):
         self.on_logging_end(phase="test")
 
 
-@TASK_REGISTRY.register_element()
-def image_semantic_segmentation(**kwargs: Any) -> ImageSemanticSegmentationTask:
+@TASK_REGISTRY.register_element(name="ImageSemanticSegmentation")
+def ImageSemanticSegmentationBuilder(**kwargs) -> ImageSemanticSegmentationTask:
     return ImageSemanticSegmentationTask(**kwargs)

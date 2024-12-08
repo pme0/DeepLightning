@@ -43,7 +43,7 @@ class Registry:
         """
         return self.get_element_reference(name)(**params)
     
-    def get_element_names(self) -> List:
+    def get_element_names(self) -> list:
         """Get names of all registered elements
         """
         return sorted(list(self.elements_dict.keys()))

@@ -2,7 +2,7 @@ task:
 
 modes: 
   train: 
-  test: 
+  eval: 
   
 data:
   dataset: 
@@ -40,6 +40,7 @@ engine:
   devices: 
   num_nodes: 
   precision: 
+  seed: 
 
 metrics:
   train: 
@@ -68,3 +69,8 @@ logger:
   tags: 
   notes: 
   log_every_n_steps: 
+  runtime:
+    run_id: null
+    run_name: null
+    run_dir: null
+    artifact_path: null

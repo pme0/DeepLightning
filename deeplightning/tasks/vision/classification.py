@@ -4,10 +4,10 @@ from torch import Tensor
 from lightning.pytorch.trainer.states import RunningStage
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.utils.imports import init_obj_from_config
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
-from deeplightning.trainer.batch import dictionarify_batch
+from deeplightning.core.batch import dictionarify_batch
 
 
 def process_model_outputs(outputs, model):

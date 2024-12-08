@@ -5,9 +5,9 @@ from torch import Tensor
 from torchvision import transforms
 import lightning as pl
 
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.utils.imports import init_obj_from_config
 from deeplightning.utils.messages import info_message
-from deeplightning.trainer.gather import gather_on_step, gather_on_epoch
+from deeplightning.core.gather import gather_on_step, gather_on_epoch
 
 
 class ImageReconstructionGAN(pl.LightningModule):

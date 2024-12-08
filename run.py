@@ -1,14 +1,11 @@
 import argparse
-import sys
 
 import hydra
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig
 import wandb
 
-from deeplightning.utils.messages import info_message, warning_message
-from deeplightning.utils.config.load import resolve_config
-from deeplightning.utils.init.initializers import init_lightning_modules
-from deeplightning.utils.messages import config_print
+from deeplightning.core.pipeline import DeepLightningPipeline
+from deeplightning.utils.context import train_context, eval_context
 
 
 parser = argparse.ArgumentParser()
@@ -26,69 +23,26 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def train_hook(cfg, trainer, model, data):
-    ckpt_path = cfg.train.ckpt_resume_path
-    if ckpt_path is None:
-        info_message("Starting training from scratch.")
-    else:
-        info_message(f"Resuming training from checkpoint '{ckpt_path}'.")
-    trainer.fit(
-        model = model,
-        datamodule = data,
-        ckpt_path = ckpt_path)
-    
-
-def test_ckpt_hook(cfg, trainer, model, data):
-    ckpt_path = cfg.test.ckpt_test_path
-    info_message(f"Starting testing from checkpoint '{ckpt_path}'.")
-    trainer.test(
-        model = model,
-        ckpt_path = ckpt_path,
-        datamodule = data)
-    
-
-def test_best_hook(cfg, trainer, model, data):
-    info_message("Starting testing with the best model.")
-    trainer.test(
-        model = model,
-        ckpt_path = "best",
-        datamodule = data)
-
-
-@hydra.main(version_base=None, config_path=args.config_path, config_name=args.config_name)
+@hydra.main(
+    config_path=args.config_path, 
+    config_name=args.config_name,
+)
 def _main(cfg: DictConfig) -> None:
+    """Main function running initializations, training and evaluation."""
 
-    # Load config
-    # NOTE The following config is incomplete. The complete one --- which 
-    # includes logger runtime parameters like artifact path --- is updated 
-    # inside the LightningModule (from where is gets printed and logged) and 
-    # retrieved bellow.
-    cfg = resolve_config(cfg)
+    pipeline = DeepLightningPipeline(cfg)
 
-    # Initialise: model, dataset, trainer
-    model, data, trainer = init_lightning_modules(cfg)
-
-    # Retrieve config augmented with runtime parameters
-    cfg = trainer.cfg
-    config_print(OmegaConf.to_yaml(cfg))
-    #raise
-
-    # run training & testing
-    try:
+    with train_context(cfg.engine.seed):
         if cfg.modes.train:
-            train_hook(cfg, trainer, model, data)
-            if cfg.modes.test:
-                test_best_hook(cfg, trainer, model, data)
-        else:
-            if cfg.modes.test:
-                test_ckpt_hook(cfg, trainer, model, data)
+            pipeline.train()
+  
+    with eval_context(cfg.engine.seed):
+        if cfg.modes.train:
+            pipeline.eval("best")
+        elif cfg.modes.test:
+            pipeline.eval("config")
 
-    except KeyboardInterrupt as e:
-        warning_message("Interrupted by user.")
-        sys.exit()
-
-    finally:
-        wandb.finish()
+    wandb.finish()
 
 
 if __name__ == "__main__":
