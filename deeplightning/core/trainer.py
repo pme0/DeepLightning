@@ -44,7 +44,7 @@ class DeepLightningTrainer(Trainer):
 
         if cfg.logger.provider == "wandb":
             logger = WandbLogger(
-                project = cfg.logger.project_name,
+                project = cfg.logger.project,
                 notes = cfg.logger.notes,
                 tags = cfg.logger.tags,
                 log_model = "all",

@@ -62,7 +62,7 @@ class HAM10000_dataset(Dataset):
         transforms: T.Compose | None = None,
         mask_transforms: T.Compose | None = None,
     ):
-        self.task = cfg.model.task
+        self.task = cfg.task.name
         self.root = cfg.data.root
         self.transforms = transforms
         self.mask_transforms = mask_transforms
@@ -171,10 +171,10 @@ class HAM10000(pl.LightningDataModule):
         self.mask_transforms = load_transforms(cfg=cfg, subset="mask")
 
     def validate_config_params(self):
-        if self.cfg.model.task == "ImageClassification":
-            assert self.cfg.model.network.args.num_classes == 7
-        elif self.cfg.model.task == "ImageSemanticSegmentation":
-            assert self.cfg.model.network.args.num_classes == 2
+        if self.cfg.task.name == "ImageClassification":
+            assert self.cfg.task.model.args.num_classes == 7
+        elif self.cfg.task.name == "ImageSemanticSegmentation":
+            assert self.cfg.task.model.args.num_classes == 2
         else:
             raise ValueError
         if "normalize" in self.cfg.data.train_transforms:
@@ -213,6 +213,7 @@ class HAM10000(pl.LightningDataModule):
             shuffle = True,
             num_workers = self.cfg.data.num_workers,
             persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -222,6 +223,7 @@ class HAM10000(pl.LightningDataModule):
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
             persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -231,5 +233,6 @@ class HAM10000(pl.LightningDataModule):
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
             persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
     

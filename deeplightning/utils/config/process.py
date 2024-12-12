@@ -98,11 +98,11 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
 
     if cfg.engine.strategy is not None:
         if "deepspeed" in cfg.engine.strategy and \
-            cfg.model.optimizer.target != "deepspeed.ops.adam.FusedAdam":
+            cfg.task.optimizer.target != "deepspeed.ops.adam.FusedAdam":
             warning_message(
                 "PytorchLightning recommends FusedAdam optimizer "
                 "when using DeepSpeed parallel backend "
-                "(currently using '{}')".format(cfg.model.optimizer.target)
+                "(currently using '{}')".format(cfg.task.optimizer.target)
             )
 
     return cfg

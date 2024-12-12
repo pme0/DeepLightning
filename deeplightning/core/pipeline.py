@@ -80,11 +80,9 @@ class DeepLightningPipeline():
         """Initialize LightningModule.
         This contains the task and training logic."""
         return TASK_REGISTRY.get_element_instance(
-            name = cfg.model.task, 
+            name = cfg.task.name, 
             **{"cfg": cfg},
         )
-        #s = cfg.model.task
-        #return init_module(short_cfg = s, cfg = cfg)
 
     def _init_trainer(self, cfg: DictConfig) -> DeepLightningTrainer:
         """Initialize DeepLightning Trainer."""

@@ -1,12 +1,13 @@
 modes: 
   train: true
-  eval: false
+  test: false
   
 data:
   dataset: HAM10000
   root: ~/data/HAM10000
   num_workers: 8
   persistent_workers: true
+  pin_memory: true
   batch_size: 128
   dataset_size: 200 # maximum number of samples (debug)
   module: 
@@ -25,9 +26,9 @@ data:
     resize: [96, 96]
     roundtointeger:
 
-model:
-  task: ImageSemanticSegmentation
-  network:
+task:
+  name: ImageSemanticSegmentation
+  model:
     target: torchvision.models.segmentation.deeplabv3_resnet50
     args:
       # num_classes = 7 for "image_classification" task;
@@ -78,12 +79,12 @@ test:
 
 logger:
   provider: wandb
-  project_name: skin-lesion-segmentation
-  tags: ["_"] # cannot be empty
-  notes: null
+  project: skin-lesion-segmentation
   log_every_n_steps: 1
   runtime:
     run_id: null
     run_name: null
     run_dir: null
     artifact_path: null
+  tags: ["_"] # cannot be empty
+  notes: null

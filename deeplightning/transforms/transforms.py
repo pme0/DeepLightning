@@ -1,42 +1,13 @@
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
 from torchvision import transforms as T
 import inspect
 
 from deeplightning.utils.messages import info_message, warning_message
-from deeplightning.transforms._affine import Affine
-from deeplightning.transforms._centercrop import CenterCrop
-from deeplightning.transforms._colorjitter import ColorJitter
-from deeplightning.transforms._crop import RandomCrop, RandomResizedCrop
-from deeplightning.transforms._flip import HorizontalFlip, VerticalFlip
-from deeplightning.transforms._normalize import Normalize
-from deeplightning.transforms._pad import Pad, PadSquare
-from deeplightning.transforms._perspective import Perspective
-from deeplightning.transforms._resize import Resize
-from deeplightning.transforms._rotation import Rotation
-from deeplightning.transforms._totensor import ToTensor
-from deeplightning.transforms._round import RoundToInteger
+from deeplightning.transforms.ops import __all__ as TransformsDict
 
 
-__TransformsDict__ = {
-    "affine": Affine,
-    "centercrop": CenterCrop,
-    "colorjitter": ColorJitter,
-    "crop": RandomCrop,
-    "hflip": HorizontalFlip,
-    "normalize": Normalize,
-    "pad": Pad,
-    "padsquare": PadSquare,
-    "perspective": Perspective,
-    "resize": Resize,
-    "resizedcrop": RandomResizedCrop,
-    "rotation": Rotation,
-    "roundtointeger": RoundToInteger,
-    "totensor": ToTensor,
-    "vflip": VerticalFlip,
-}
 
-
-def get_num_params(fn):
+def get_num_args(fn):
     args = inspect.getfullargspec(fn).args
     n = len(args)
     if "self" in args:
@@ -44,7 +15,7 @@ def get_num_params(fn):
     return n
 
 
-def load_transforms(cfg: OmegaConf, subset: str) -> T.Compose:
+def load_transforms(cfg: DictConfig, subset: str) -> T.Compose:
     """Load data transformations.
 
     Args:
@@ -55,12 +26,12 @@ def load_transforms(cfg: OmegaConf, subset: str) -> T.Compose:
 
     transforms_field = f"{subset}_transforms"
 
-    trfs = [__TransformsDict__["totensor"]()]
+    trfs = [TransformsDict["totensor"]()]
 
     if cfg.data[transforms_field] is not None:
         for key in cfg.data[transforms_field].keys():
-            fn = __TransformsDict__[key]
-            if get_num_params(fn) == 0:
+            fn = TransformsDict[key]
+            if get_num_args(fn) == 0:
                 transform = fn()
             else:
                 params = cfg.data[transforms_field][key]

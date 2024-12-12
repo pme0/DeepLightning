@@ -1,5 +1,7 @@
-from omegaconf import DictConfig
+from dataclasses import dataclass
+
 from lightning.pytorch.trainer.states import RunningStage
+from omegaconf import DictConfig
 import torch
 from torch import Tensor
 
@@ -8,6 +10,12 @@ from deeplightning.core.batch import dictionarify_batch
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
 from deeplightning.utils.imports import init_obj_from_config
+
+
+@dataclass
+class ImageSemanticSegmentationConfig:
+    """Configuration for `ImageSemanticSegmentation` task."""
+    pass
 
 
 def process_model_outputs(outputs, model):
@@ -26,10 +34,10 @@ class ImageSemanticSegmentationTask(BaseTask):
         """Task module for Image Semantic Segmentation."""
         super().__init__(cfg=cfg)
         
-        self.loss = init_obj_from_config(cfg.model.loss)
-        self.model = init_obj_from_config(cfg.model.network)
-        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
+        self.loss = init_obj_from_config(cfg.task.loss)
+        self.model = init_obj_from_config(cfg.task.model)
+        self.optimizer = init_obj_from_config(cfg.task.optimizer, self.model.parameters())
+        self.scheduler = init_obj_from_config(cfg.task.scheduler, self.optimizer)
         
         self.default_metrics_dict = {
             "train": ["classification_accuracy"],
@@ -53,8 +61,8 @@ class ImageSemanticSegmentationTask(BaseTask):
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": self.scheduler,
-                "interval": self.cfg.model.scheduler.call.interval,
-                "frequency": self.cfg.model.scheduler.call.frequency,
+                "interval": self.cfg.task.scheduler.call.interval,
+                "frequency": self.cfg.task.scheduler.call.frequency,
             },
         })
 

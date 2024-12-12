@@ -54,7 +54,7 @@ conda activate dl
 
 for model **training** use
 ```bash
-python run.py --config-path CONFIG_PATH.yaml --config-name CONFIG_NAME.yaml
+python run.py CONFIG_PATH.yaml [CONFIG_NAME.yaml]
 ```
 where `config-path` defaults to `configs/` and `config-name` is the config filename;
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
@@ -106,7 +106,7 @@ model:
 > Make sure you're familiar with the [configuration logic](#logic).
 
 Beyond changing parameters values in existing configs, you can customize the following according to your needs:
-- **custom model**: put your model in `models/customnet.py`, and update the config field `model.network.target` and any required parameters to point to your new model;
+- **custom model**: put your model in `models/customnet.py`, and update the config field `task.model.target` and any required parameters to point to your new model;
 - **custom task**: duplicate the task module `lightning/model/classification.py`, rename it `lightning/model/customtask.py`, make the required modifications to run your task, and update the config field `model.module.target` to point to your new task module;
 - **custom dataset**: duplicate the data module `lightning/data/mnist.py`, rename it `lightning/data/customdataset.py`, make the required modifications to load your dataset, and update the config field `data.module.target` to point to your new data module;
 

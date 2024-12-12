@@ -25,7 +25,7 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 		self.display_name = "precision_recall"
 		self.logging_methods = ["draw"]
 
-		self.num_classes = cfg.model.network.args.num_classes
+		self.num_classes = cfg.task.model.args.num_classes
 		args = {"num_classes": self.num_classes}
 		super().__init__(**args)
 

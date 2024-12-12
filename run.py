@@ -10,20 +10,21 @@ from deeplightning.utils.context import train_context, eval_context
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
+    "--config-name", 
+    type=str, 
+    help="Filename of YAML configuration file. Overwrites `config_name` in hydra.main()."
+)
+parser.add_argument(
     "--config-path", 
     type=str, 
     default="configs", 
     help="Directory of YAML configuration file. Overwrites `config_path` in hydra.main()."
 )
-parser.add_argument(
-    "--config-name", 
-    type=str, 
-    help="Filename of YAML configuration file. Overwrites `config_name` in hydra.main()."
-)
 args = parser.parse_args()
 
 
 @hydra.main(
+    version_base=None,
     config_path=args.config_path, 
     config_name=args.config_name,
 )
