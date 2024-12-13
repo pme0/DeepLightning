@@ -14,24 +14,6 @@ After defining modules and configuration, training deep learning models is simpl
   <img src="media/code.gif" alt=""  width="600" />
 </p>
 
-<!--
-```python
-from deeplightning.utils.configure import load_config, init_module, init_trainer
-
-# load configuration
-cfg = load_config("cfg.yaml")
-
-# load modules
-model = init_module(cfg, "model")
-data = init_module(cfg, "data")
-trainer = init_trainer(cfg)
-
-# train model
-trainer.fit(model, data)
-```
--->
-
-
 ### Contents
 * [Overview](#overview)
 * [Installation](#installation)
@@ -62,8 +44,8 @@ cd DeepLightning
 
 Create conda environment:
 ```bash
-conda env create -f conda_env.yaml
-conda activate deeplightning
+conda env create -f env.yaml
+conda activate dl
 ```
 
 # Usage
@@ -72,9 +54,11 @@ conda activate deeplightning
 
 for model **training** use
 ```bash
-python train.py --cfg configs/base.yaml
+python run.py \
+  --config-name CONFIG_NAME.yaml \
+  --config-path CONFIG_PATH.yaml \
 ```
-where `cfg` is the configuration YAML file;
+where `config-path` defaults to `configs/` and `config-name` is the config filename;
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
 
 **2. Monitor the training progress:**
@@ -124,7 +108,7 @@ model:
 > Make sure you're familiar with the [configuration logic](#logic).
 
 Beyond changing parameters values in existing configs, you can customize the following according to your needs:
-- **custom model**: put your model in `models/customnet.py`, and update the config field `model.network.target` and any required parameters to point to your new model;
+- **custom model**: put your model in `models/customnet.py`, and update the config field `task.model.target` and any required parameters to point to your new model;
 - **custom task**: duplicate the task module `lightning/model/classification.py`, rename it `lightning/model/customtask.py`, make the required modifications to run your task, and update the config field `model.module.target` to point to your new task module;
 - **custom dataset**: duplicate the data module `lightning/data/mnist.py`, rename it `lightning/data/customdataset.py`, make the required modifications to load your dataset, and update the config field `data.module.target` to point to your new data module;
 

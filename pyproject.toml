@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools >= 64.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["deeplightning"]
+
+[project]
+name = "deeplightning"
+version = "0.1"
+dependencies = []

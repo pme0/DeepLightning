@@ -1,4 +1,5 @@
 from deeplightning.registry import __REGISTRIES__
+
 from deeplightning import TASK_REGISTRY
 from deeplightning import MODEL_REGISTRY
 from deeplightning import METRIC_REGISTRY
@@ -8,7 +9,6 @@ import deeplightning.tasks
 import deeplightning.models
 import deeplightning.metrics
 import deeplightning.datasets
-
 
 if __name__ == "__main__":
 

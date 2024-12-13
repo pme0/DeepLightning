@@ -1,34 +1,51 @@
-from typing import Any, Union, Tuple, Optional, List
-ConfigElement = Union[str, int, float, None]
 import os
-from omegaconf import OmegaConf
-import torch
+
+from omegaconf import OmegaConf, DictConfig, ListConfig
 
 from deeplightning import TASK_REGISTRY
 from deeplightning.utils.config.compute import runtime_compute
 from deeplightning.utils.config.defaults import __ConfigGroups__
-from deeplightning.utils.messages import (info_message, 
-                                          warning_message,
-                                          error_message,
-                                          config_print,)
+from deeplightning.utils.messages import (
+    info_message,
+    warning_message,
+    error_message,
+)
 
 
-def load_config(config_file: str = "configs/base.yaml") -> OmegaConf:
-    """ Load configuration from .yaml file.
-    An updated artifact `cfg.yaml` is saved in `init_trainer()`
-    to the logger's artifact storage path.
-    """
+def load_config(config_file: str = "configs/base.yaml") -> DictConfig:
     cfg = OmegaConf.load(config_file)
     cfg = merge_defaults(cfg)
     #cfg = check_consistency(cfg)
     cfg = runtime_compute(cfg)
     OmegaConf.resolve(cfg)
-    #config_print(OmegaConf.to_yaml(cfg))
     return cfg
 
 
-def merge_defaults(user_config: OmegaConf) -> OmegaConf:
-    """ Merge provided config with default config.
+def resolve_config(cfg: DictConfig) -> DictConfig:
+    cfg = merge_defaults(cfg)
+    cfg = expand_home_directories(cfg)
+    #cfg = check_consistency(cfg)
+    #cfg = runtime_compute(cfg)
+    OmegaConf.resolve(cfg)
+    return cfg
+
+
+def expand_home_directories(cfg: DictConfig) -> DictConfig:
+    """Expand home directories specified with '~/' into absolute paths."""
+    if isinstance(cfg, DictConfig):
+        for key, value in cfg.items():
+            cfg[key] = expand_home_directories(value)
+    elif isinstance(cfg, ListConfig):
+        for index, item in enumerate(cfg):
+            cfg[index] = expand_home_directories(item)
+    elif isinstance(cfg, str):
+        if cfg.startswith("~/"):
+            return os.path.expanduser(cfg)
+    return cfg
+
+
+def merge_defaults(user_config: DictConfig) -> DictConfig:
+    """Merge provided config with default config.
     The default parameters are overwritten if present
     in the user config provided.
     """
@@ -45,7 +62,7 @@ def merge_defaults(user_config: OmegaConf) -> OmegaConf:
     
 
 def check_consistency(cfg: OmegaConf) -> OmegaConf:
-    """ Perform parameter checks and modify where inconsistent.
+    """Perform parameter checks and modify where inconsistent.
     """
     
     if cfg.task is None or cfg.task not in TASK_REGISTRY.get_element_names():
@@ -55,9 +72,9 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
         )
         raise ValueError
     
-    if cfg.logger.name != "wandb":
+    if cfg.logger.provider != "wandb":
         error_message(
-            f"Logger (cfg.logger.name={cfg.logger.name}) not implemented."
+            f"Logger (cfg.logger.provider={cfg.logger.provider}) not implemented."
         )
         raise NotImplementedError
     '''
@@ -81,19 +98,20 @@ def check_consistency(cfg: OmegaConf) -> OmegaConf:
 
     if cfg.engine.strategy is not None:
         if "deepspeed" in cfg.engine.strategy and \
-            cfg.model.optimizer.target != "deepspeed.ops.adam.FusedAdam":
+            cfg.task.optimizer.target != "deepspeed.ops.adam.FusedAdam":
             warning_message(
                 "PytorchLightning recommends FusedAdam optimizer "
                 "when using DeepSpeed parallel backend "
-                "(currently using '{}')".format(cfg.model.optimizer.target)
+                "(currently using '{}')".format(cfg.task.optimizer.target)
             )
 
     return cfg
 
 
-def log_config(cfg: OmegaConf, path: str) -> None:
-    """ Save configuration (.yaml)
-    """
+def log_config(cfg: DictConfig):
+    """Save configuration."""
+    path = cfg.logger.runtime.artifact_path
+
     if not OmegaConf.is_config(cfg):
         error_message(
             "Attempting to save a config artifact but the object "

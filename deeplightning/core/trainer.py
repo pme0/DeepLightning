@@ -1,30 +1,27 @@
-from typing import Any, Union, Tuple, Optional, List
-ConfigElement = Union[str, int, float, None]
 import time
-from omegaconf import OmegaConf
+
+from omegaconf import DictConfig
 from lightning import Trainer
-from lightning.pytorch.callbacks import (GradientAccumulationScheduler,
-                                         LearningRateMonitor,
-                                         ModelCheckpoint,
-                                         EarlyStopping,
-                                         RichProgressBar)
+from lightning.pytorch.callbacks.callback import Callback
+from lightning.pytorch.callbacks import (
+    GradientAccumulationScheduler,
+    LearningRateMonitor,
+    ModelCheckpoint,
+    EarlyStopping,
+    RichProgressBar,
+)
 from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBarTheme
 from lightning.pytorch.loggers import WandbLogger
 
 from deeplightning.utils.config.defaults import __ConfigGroups__
-from deeplightning.utils.config.load import log_config
 from deeplightning.utils.logger.helpers import add_logger_params_to_config
 from deeplightning.utils.logger.wandb import init_wandb_metrics
-from deeplightning.utils.messages import config_print
 from deeplightning.utils.python_utils import flatten_dict
 
 
-class DLTrainer(Trainer):
-    """ Deep Lightning Trainer.
-
-    Inherits from `lightning.Trainer`
-    """
-    def __init__(self, cfg: OmegaConf, args: dict) -> None:
+class DeepLightningTrainer(Trainer):
+    def __init__(self, cfg: DictConfig, args: dict) -> None:
+        """ Deep Lightning Trainer."""
 
         # Initialise logger and updated config with logger runtime parameters
         self.cfg, logger = self.init_logger(cfg)
@@ -32,22 +29,22 @@ class DLTrainer(Trainer):
         # Initialise callbacks
         callbacks = self.init_callbacks(self.cfg, logger.artifact_path)
 
-        # Initialise parent class
+        # Initialise parent class `lightning.Trainer`
         args = {
             **args, 
             "logger": logger, 
-            "callbacks": callbacks
+            "callbacks": callbacks,
+            "deterministic": self.cfg.engine.seed is not None,
         }
         super().__init__(**args)
 
 
-    def init_logger(self, cfg: OmegaConf) -> None:
-        """ Initialize logger
-        """
+    def init_logger(self, cfg: DictConfig) -> None:
+        """ Initialize logger."""
 
-        if cfg.logger.name == "wandb":
+        if cfg.logger.provider == "wandb":
             logger = WandbLogger(
-                project = cfg.logger.project_name,
+                project = cfg.logger.project,
                 notes = cfg.logger.notes,
                 tags = cfg.logger.tags,
                 log_model = "all",
@@ -68,7 +65,7 @@ class DLTrainer(Trainer):
             logger.artifact_path = logger.experiment.dir
             logger.run_dir = logger.experiment.dir.replace("/files", "")
 
-            # add logger params to config - so that it can be stored with the runtime parameters
+            # Add logger params to config - so that it can be stored with the runtime parameters
             cfg = add_logger_params_to_config(
                 cfg = cfg,
                 run_id = logger.run_id,
@@ -77,24 +74,21 @@ class DLTrainer(Trainer):
                 artifact_path = logger.artifact_path,
             )
 
-            # store config parameters - used in W&B for filtering experiments
+            # Store config parameters - used in W&B for filtering experiments
             logger.experiment.config.update(flatten_dict(cfg))
 
-            # intialize step label for each metrics
+            # Intialize step label for each metrics
             logger.step_label = init_wandb_metrics(
                 metric_names = [f"{x}_{y}" for x in cfg.metrics for y in cfg.metrics[x]],
                 step_label = "iteration",
             )
 
-            log_config(cfg=cfg, path=logger.artifact_path)
-            config_print(OmegaConf.to_yaml(cfg))
-
-        elif cfg.logger.name == "neptune":
+        elif cfg.logger.provider == "neptune":
             raise NotImplementedError
         else:
-            raise NotImplementedError(f"Logger not supported (cfg.logger.name='{cfg.logger.name}' )")
+            raise NotImplementedError(f"Logger not supported (cfg.logger.provider='{cfg.logger.provider}' )")
 
-        # ensure all required attributes have been initialised
+        # Ensure all required attributes have been initialised
         attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
         for attribute in attributes:
             if not hasattr(logger, attribute):
@@ -103,14 +97,13 @@ class DLTrainer(Trainer):
         return cfg, logger
 
 
-    def init_callbacks(self, cfg: OmegaConf, artifact_path: str) -> List[Any]:
-        """ Initialize callback functions
-        """
+    def init_callbacks(self, cfg: DictConfig, artifact_path: str) -> list[Callback]:
+        """ Initialize callback functions."""
         self.callbacks_dict = {}
 
-        # ACCUMULATE GRADIENTS: scheduling={X: Y} means start 
-        # accumulating from epoch X (0-indexed) and accumulate 
-        # every Y batches
+        # ACCUMULATE GRADIENTS
+        # scheduling={X: Y} means start accumulating from epoch X (0-indexed) 
+        # and accumulate every Y batches
         accumulator = GradientAccumulationScheduler(
             scheduling={
                 cfg.train.grad_accum_from_epoch: 
@@ -118,14 +111,15 @@ class DLTrainer(Trainer):
         )
         self.callbacks_dict["accumulator"] = accumulator
 
-        # TRACK LEARNING RATE: logged at the same frequency 
-        # as `log_every_n_steps` in Trainer()
+        # TRACK LEARNING RATE
+        # logged at the same frequency as `log_every_n_steps` in Trainer
         lr_monitor = LearningRateMonitor(
             logging_interval="step",
         )
         self.callbacks_dict["lr_monitor"] = lr_monitor
 
-        # MODEL CHECKPOINTING: save model `every_n_epochs`
+        # MODEL CHECKPOINTING
+        # save model `every_n_epochs`
         filename_metric = "" #TODO make this user-configurable OR set automatically from task
         checkpoint = ModelCheckpoint(
             dirpath = artifact_path,
@@ -139,7 +133,8 @@ class DLTrainer(Trainer):
         )
         self.callbacks_dict["checkpoint"] = checkpoint
 
-        # EARLY STOPPING: stop training when 'monitor' metric asymptotes
+        # EARLY STOPPING
+        # stop training when 'monitor' metric asymptotes
         if cfg.train.early_stop_metric is not None:
             earlystopping = EarlyStopping(
                 monitor = cfg.train.early_stop_metric,
@@ -147,11 +142,11 @@ class DLTrainer(Trainer):
                 patience = cfg.train.early_stop_patience,
                 check_on_train_epoch_end = False # False: check at validation_epoch_end
             )
-            self.callbacks_dict["earlystopping"] = earlystopping
+            self.callbacks_dict["earlystopping"] = earlystopping  
 
-        # PROGRESS BAR: customize progress bar
-        # to customize use:
-        # ```
+        # PROGRESS BAR
+        # customize progress bar with:
+        # ````
         # RichProgressBar(
         #   theme=RichProgressBarTheme(
         #       description = "green_yellow",
@@ -164,7 +159,6 @@ class DLTrainer(Trainer):
         #       metrics = "grey82"))
         # ```
         progressbar = RichProgressBar()
-        self.callbacks_dict["progressbar"] = progressbar
-        
+        self.callbacks_dict["progressbar"] = progressbar      
 
         return list(self.callbacks_dict.values())  # Trainer takes a list

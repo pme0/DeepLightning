@@ -2,13 +2,13 @@ task: classification
 
 modes: 
   train: 
-  test: 
+  eval: 
 
 data:
-  root: /Users/pme12/data/
-  dataset: MNIST
+  root: null
+  dataset: null
   num_workers: 4
-  batch_size: 256
+  batch_size: 16
   module:
     target: tests.helpers.dummies.DummyDataset
     args:
@@ -46,6 +46,7 @@ engine:
   devices: auto
   num_nodes: 1
   precision: 32
+  seed: 9999
 
 metrics:
   train: default
@@ -69,8 +70,13 @@ test:
   ckpt_test_path:
   
 logger:
-  name: wandb
+  provider: wandb
   project_name: unittests
   tags: ["_"] # cannot be empty
   notes: null
   log_every_n_steps: 20
+  runtime:
+    run_id: null
+    run_name: null
+    run_dir: null
+    artifact_path: null

@@ -3,16 +3,18 @@ from torch.utils.data import DataLoader, Dataset
 import lightning as pl
 
 
-class DummyDataset(Dataset):
-    def __init__(self, size, length):
-        self.len = length
+class DummyDataset(pl.LightningDataModule):
+    def __init__(self, cfg):
+        self.cfg = cfg
+        length = cfg.data.module.args.length
+        size = cfg.data.module.args.size
         self.data = torch.randn(length, size)
 
     def __getitem__(self, index):
         return self.data[index]
 
     def __len__(self):
-        return self.len
+        return self.cfg.data.module.args.length
 
 
 class DummyModel(pl.LightningModule):

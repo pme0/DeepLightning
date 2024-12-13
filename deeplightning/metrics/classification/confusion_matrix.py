@@ -27,7 +27,7 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 		self.display_name = "confusion_matrix"
 		self.logging_methods = ["draw"]
 
-		self.num_classes = cfg.model.network.args.num_classes
+		self.num_classes = cfg.task.model.args.num_classes
 		args = {
 			"num_classes": self.num_classes,
 			"normalize": "true",  # 'true' normalizes over true labels (targets)

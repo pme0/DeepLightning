@@ -1,16 +1,21 @@
-from typing import Any, Tuple
-from omegaconf import OmegaConf
+from dataclasses import dataclass
+
+from lightning.pytorch.trainer.states import RunningStage
+from omegaconf import DictConfig
 import torch
 from torch import Tensor
-from torchvision.utils import save_image
-from lightning.pytorch.trainer.states import RunningStage
-import os
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.core.batch import dictionarify_batch
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
-from deeplightning.trainer.batch import dictionarify_batch
+from deeplightning.utils.imports import init_obj_from_config
+
+
+@dataclass
+class ImageSemanticSegmentationConfig:
+    """Configuration for `ImageSemanticSegmentation` task."""
+    pass
 
 
 def process_model_outputs(outputs, model):
@@ -25,18 +30,14 @@ def process_model_outputs(outputs, model):
 
 
 class ImageSemanticSegmentationTask(BaseTask):
-    """ Task module for Image Semantic Segmentation. 
-
-    Args:
-        cfg: yaml configuration object
-    """
-    def __init__(self, cfg: OmegaConf):
+    def __init__(self, cfg: DictConfig):
+        """Task module for Image Semantic Segmentation."""
         super().__init__(cfg=cfg)
         
-        self.loss = init_obj_from_config(cfg.model.loss)
-        self.model = init_obj_from_config(cfg.model.network)
-        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
+        self.loss = init_obj_from_config(cfg.task.loss)
+        self.model = init_obj_from_config(cfg.task.model)
+        self.optimizer = init_obj_from_config(cfg.task.optimizer, self.model.parameters())
+        self.scheduler = init_obj_from_config(cfg.task.scheduler, self.optimizer)
         
         self.default_metrics_dict = {
             "train": ["classification_accuracy"],
@@ -53,15 +54,15 @@ class ImageSemanticSegmentationTask(BaseTask):
         return self.model(x)
 
 
-    def configure_optimizers(self) -> Tuple[dict]:
+    def configure_optimizers(self) -> tuple[dict]:
         """ Configure optimizers and schedulers.
         """
         return ({
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": self.scheduler,
-                "interval": self.cfg.model.scheduler.call.interval,
-                "frequency": self.cfg.model.scheduler.call.frequency,
+                "interval": self.cfg.task.scheduler.call.interval,
+                "frequency": self.cfg.task.scheduler.call.frequency,
             },
         })
 
@@ -212,6 +213,6 @@ class ImageSemanticSegmentationTask(BaseTask):
         self.on_logging_end(phase="test")
 
 
-@TASK_REGISTRY.register_element()
-def image_semantic_segmentation(**kwargs: Any) -> ImageSemanticSegmentationTask:
+@TASK_REGISTRY.register_element(name="ImageSemanticSegmentation")
+def ImageSemanticSegmentationBuilder(**kwargs) -> ImageSemanticSegmentationTask:
     return ImageSemanticSegmentationTask(**kwargs)

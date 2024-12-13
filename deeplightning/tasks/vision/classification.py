@@ -4,10 +4,10 @@ from torch import Tensor
 from lightning.pytorch.trainer.states import RunningStage
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.utils.init.imports import init_obj_from_config
+from deeplightning.utils.imports import init_obj_from_config
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
-from deeplightning.trainer.batch import dictionarify_batch
+from deeplightning.core.batch import dictionarify_batch
 
 
 def process_model_outputs(outputs, model):
@@ -28,10 +28,10 @@ class ImageClassificationTask(BaseTask):
     def __init__(self, cfg: OmegaConf):
         super().__init__(cfg=cfg)
         
-        self.loss = init_obj_from_config(cfg.model.loss)
-        self.model = init_obj_from_config(cfg.model.network)
-        self.optimizer = init_obj_from_config(cfg.model.optimizer, self.model.parameters())
-        self.scheduler = init_obj_from_config(cfg.model.scheduler, self.optimizer)
+        self.loss = init_obj_from_config(cfg.task.loss)
+        self.model = init_obj_from_config(cfg.task.model)
+        self.optimizer = init_obj_from_config(cfg.task.optimizer, self.model.parameters())
+        self.scheduler = init_obj_from_config(cfg.task.scheduler, self.optimizer)
         
         self.default_task_metrics = {
             "train": ["classification_accuracy", "auroc"],
@@ -55,8 +55,8 @@ class ImageClassificationTask(BaseTask):
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": self.scheduler,
-                "interval": self.cfg.model.scheduler.call.interval,
-                "frequency": self.cfg.model.scheduler.call.frequency,
+                "interval": self.cfg.task.scheduler.call.interval,
+                "frequency": self.cfg.task.scheduler.call.frequency,
             },
         })
 

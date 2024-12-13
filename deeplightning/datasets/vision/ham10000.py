@@ -1,26 +1,34 @@
-from typing import List, Union, Optional, Callable
 import os
-from omegaconf import OmegaConf
+from typing import Optional, Callable
+
+from omegaconf import DictConfig
 import pandas as pd
-import torch
-from torch.utils.data import Dataset, DataLoader, random_split
-from torchvision import transforms as T
 import lightning as pl
 from PIL import Image
+import torch
+from torchvision import transforms as T
+from torch.utils.data import Dataset, DataLoader, random_split
 
-#from deeplightning.utils.io_local import read_image
+from deeplightning import TASK_REGISTRY
 from deeplightning.transforms.transforms import load_transforms
 from deeplightning.utils.messages import info_message
 
 
-def _extract_classes(df: pd.DataFrame, labels_str: List[str], label2index: dict) -> List[int]:
+def _extract_classes(
+    df: pd.DataFrame, 
+    labels_str: list[str], 
+    label2index: dict,
+) -> list[int]:
     """Extract the class indices."""
     classes = df.loc[:, labels_str].apply(lambda x: x.idxmax(), axis=1)
     classes = [label2index[k] for k in classes]
     return classes
 
 
-def _extract_masks(df: pd.DataFrame, root: str) -> List[str]:
+def _extract_masks(
+    df: pd.DataFrame, 
+    root: str,
+) -> list[str]:
     """Extract the mask paths."""
     masks = ["{}".format(
         os.path.join(root, "masks", f"{df.loc[i,'image']}_segmentation.png"))
@@ -28,7 +36,10 @@ def _extract_masks(df: pd.DataFrame, root: str) -> List[str]:
     return masks
 
 
-def _trim_dataset(df: pd.DataFrame, cfg: OmegaConf) -> pd.DataFrame:
+def _trim_dataset(
+    df: pd.DataFrame, 
+    cfg: DictConfig,
+) -> pd.DataFrame:
     """Trim the dataset to a specified number of samples."""
     trim = False
     if "dataset_size" in cfg.data:
@@ -47,11 +58,11 @@ def _trim_dataset(df: pd.DataFrame, cfg: OmegaConf) -> pd.DataFrame:
 
 class HAM10000_dataset(Dataset):
     def __init__(self, 
-        cfg: OmegaConf,
-        transforms: Union[Optional[Callable],None] = None,
-        mask_transforms: Union[Optional[Callable],None] = None,
+        cfg: DictConfig,
+        transforms: T.Compose | None = None,
+        mask_transforms: T.Compose | None = None,
     ):
-        self.task = cfg.task
+        self.task = cfg.task.name
         self.root = cfg.data.root
         self.transforms = transforms
         self.mask_transforms = mask_transforms
@@ -64,9 +75,9 @@ class HAM10000_dataset(Dataset):
         class_labels_str = list(self.label2index.keys())
         self.data = pd.DataFrame()
         self.data["images"] = images
-        if self.task == "image_classification":
+        if self.task == "ImageClassification":
             self.data["labels"] = _extract_classes(metadata, class_labels_str, self.label2index)
-        elif self.task == "image_semantic_segmentation":
+        elif self.task == "ImageSemanticSegmentation":
             self.data["masks"] = _extract_masks(metadata, self.root)
 
         # trim dataset (useful for debugging)
@@ -89,9 +100,9 @@ class HAM10000_dataset(Dataset):
             sample["inputs"] = self.transforms(sample["inputs"])
         
         # Process targets (labels or masks)
-        if self.task == "image_classification":
+        if self.task == "ImageClassification":
             sample["labels"] = self.data.loc[idx, "labels"]
-        elif self.task == "image_semantic_segmentation":
+        elif self.task == "ImageSemanticSegmentation":
             sample["masks_paths"] = self.data.loc[idx, "masks"]
             sample["masks"] = Image.open(sample["masks_paths"])
             if self.mask_transforms:
@@ -141,7 +152,7 @@ class HAM10000(pl.LightningDataModule):
     Args:
         cfg: configuration object.
     """
-    def __init__(self, cfg: OmegaConf):
+    def __init__(self, cfg: DictConfig):
         super().__init__()
         self.cfg = cfg
         
@@ -150,30 +161,28 @@ class HAM10000(pl.LightningDataModule):
         self.NUM_CHANNELS = 3
         self.NORMALIZATION = {
             "mean": [0.7639, 0.5463, 0.5703],
-            "std": [0.0870, 0.1155, 0.1295]}
-        self.validate_config_params(cfg)
+            "std": [0.0870, 0.1155, 0.1295],
+        }
+
+        self.validate_config_params()
 
         self.train_transforms = load_transforms(cfg=cfg, subset="train")
         self.test_transforms = load_transforms(cfg=cfg, subset="test")
         self.mask_transforms = load_transforms(cfg=cfg, subset="mask")
 
-    def validate_config_params(self, cfg):
-        assert cfg.data.dataset == self.DATASET
-        assert cfg.data.image_size[0] == self.IMAGE_SIZE[0]
-        assert cfg.data.image_size[1] == self.IMAGE_SIZE[1]
-        assert cfg.data.num_channels == self.NUM_CHANNELS
-        if cfg.task == "image_classification":
-            assert cfg.data.num_classes == 7
-        elif cfg.task == "image_semantic_segmentation":
-            assert cfg.data.num_classes == 2
+    def validate_config_params(self):
+        if self.cfg.task.name == "ImageClassification":
+            assert self.cfg.task.model.args.num_classes == 7
+        elif self.cfg.task.name == "ImageSemanticSegmentation":
+            assert self.cfg.task.model.args.num_classes == 2
         else:
             raise ValueError
-        if "normalize" in cfg.data.train_transforms:
-            assert cfg.data.train_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert cfg.data.train_transforms.normalize.std == self.NORMALIZATION["std"]
-        if "normalize" in cfg.data.test_transforms:
-            assert cfg.data.test_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert cfg.data.test_transforms.normalize.std == self.NORMALIZATION["std"]
+        if "normalize" in self.cfg.data.train_transforms:
+            assert self.cfg.data.train_transforms.normalize.mean == self.NORMALIZATION["mean"]
+            assert self.cfg.data.train_transforms.normalize.std == self.NORMALIZATION["std"]
+        if "normalize" in self.cfg.data.test_transforms:
+            assert self.cfg.data.test_transforms.normalize.mean == self.NORMALIZATION["mean"]
+            assert self.cfg.data.test_transforms.normalize.std == self.NORMALIZATION["std"]
 
     def prepare_data(self) -> None:
         pass
@@ -203,6 +212,8 @@ class HAM10000(pl.LightningDataModule):
             batch_size = self.cfg.data.batch_size,
             shuffle = True,
             num_workers = self.cfg.data.num_workers,
+            persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -211,6 +222,8 @@ class HAM10000(pl.LightningDataModule):
             batch_size = self.cfg.data.batch_size,
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
+            persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -219,5 +232,7 @@ class HAM10000(pl.LightningDataModule):
             batch_size = self.cfg.data.batch_size,
             shuffle = False,
             num_workers = self.cfg.data.num_workers,
+            persistent_workers = self.cfg.data.persistent_workers,
+            pin_memory = self.cfg.data.pin_memory,
         )
     
