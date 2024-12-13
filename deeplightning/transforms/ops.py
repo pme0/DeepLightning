@@ -97,34 +97,31 @@ def ColorJitter(
 
 #======================
 
+from deeplightning.transforms._crop import RandomCrop, RandomResizedCrop
+from deeplightning.transforms._flip import HorizontalFlip, VerticalFlip
 from deeplightning.transforms._normalize import Normalize
-from deeplightning.transforms._totensor import ToTensor
+from deeplightning.transforms._pad import Pad, PadSquare
+from deeplightning.transforms._perspective import Perspective
 from deeplightning.transforms._resize import Resize
+from deeplightning.transforms._rotation import Rotation
 from deeplightning.transforms._round import RoundToInteger
+from deeplightning.transforms._totensor import ToTensor
 
 __all__ = {
     "affine": RandomAffine,
     "centercrop": CenterCrop,
     "colorjitter": ColorJitter,
     #===
-    "normalize": Normalize,
-    "totensor": ToTensor,
-    "resize": Resize,
-    "roundtointeger": RoundToInteger
-
-}
-
-'''
-    "crop": RandomCrop,
     "hflip": HorizontalFlip,
     "normalize": Normalize,
     "pad": Pad,
     "padsquare": PadSquare,
     "perspective": Perspective,
+    "randomcrop": RandomCrop,
+    "randomresizedcrop": RandomResizedCrop,
     "resize": Resize,
-    "resizedcrop": RandomResizedCrop,
     "rotation": Rotation,
     "roundtointeger": RoundToInteger,
     "totensor": ToTensor,
     "vflip": VerticalFlip,
-    '''
+}
