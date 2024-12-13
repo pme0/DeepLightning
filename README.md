@@ -54,7 +54,9 @@ conda activate dl
 
 for model **training** use
 ```bash
-python run.py CONFIG_PATH.yaml [CONFIG_NAME.yaml]
+python run.py \
+  --config-name CONFIG_NAME.yaml \
+  --config-path CONFIG_PATH.yaml \
 ```
 where `config-path` defaults to `configs/` and `config-name` is the config filename;
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
