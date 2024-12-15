@@ -4,7 +4,8 @@ import hydra
 from omegaconf import DictConfig
 import wandb
 
-from deeplightning.core.pipeline import DeepLightningPipeline
+from deeplightning.config.dlconfig import DeepLightningConfig
+from deeplightning.core.dlpipeline import DeepLightningPipeline
 from deeplightning.utils.context import train_context, eval_context
 
 
@@ -28,19 +29,32 @@ args = parser.parse_args()
     config_path=args.config_path, 
     config_name=args.config_name,
 )
-def _main(cfg: DictConfig) -> None:
+def _main(config: DictConfig) -> None:
     """Main function running initializations, training and evaluation."""
+    
+    # The following config is incomplete. When initializing the trainer within
+    # the Pipeline, the config will be updated with runtime info (e.g. run id,
+    # created by the logger). Below we will retrieve the complete config.
+    cfg = DeepLightningConfig(config)
+    cfg.print_config()
 
+    # Instantiate pipeline.
     pipeline = DeepLightningPipeline(cfg)
 
+    # Retrieve config updated with runtime info.
+    cfg = pipeline.cfg
+    cfg.print_config()
+    cfg.log_config()
+    
+
     with train_context(cfg.engine.seed):
-        if cfg.modes.train:
+        if cfg.stages.train.active:
             pipeline.train()
   
     with eval_context(cfg.engine.seed):
-        if cfg.modes.train:
+        if cfg.stages.train.active:
             pipeline.eval("best")
-        elif cfg.modes.test:
+        elif cfg.stages.test.active:
             pipeline.eval("config")
 
     wandb.finish()

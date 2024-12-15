@@ -42,17 +42,17 @@ def _trim_dataset(
 ) -> pd.DataFrame:
     """Trim the dataset to a specified number of samples."""
     trim = False
-    if "dataset_size" in cfg.data:
-        if cfg.data.dataset_size is not None:
-            if cfg.data.dataset_size > 0:
+    if "debug_batch_size" in cfg.data:
+        if cfg.data.debug_batch_size is not None:
+            if cfg.data.debug_batch_size > 0:
                 trim = True
     if trim:
         size_before = df.shape[0]
-        df = df.iloc[:cfg.data.dataset_size, :]
+        df = df.iloc[:cfg.data.debug_batch_size, :]
         size_after = df.shape[0]
         info_message(
             f"Dataset trimmed from {size_before} to {size_after} "
-            f"samples (cfg.data.dataset_size={cfg.data.dataset_size}).")
+            f"samples (cfg.data.debug_batch_size={cfg.data.debug_batch_size}).")
     return df
 
 
@@ -177,12 +177,12 @@ class HAM10000(pl.LightningDataModule):
             assert self.cfg.task.model.args.num_classes == 2
         else:
             raise ValueError
-        if "normalize" in self.cfg.data.train_transforms:
-            assert self.cfg.data.train_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert self.cfg.data.train_transforms.normalize.std == self.NORMALIZATION["std"]
-        if "normalize" in self.cfg.data.test_transforms:
-            assert self.cfg.data.test_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert self.cfg.data.test_transforms.normalize.std == self.NORMALIZATION["std"]
+        if "normalize" in self.cfg.data.transforms.train:
+            assert self.cfg.data.transforms.train.normalize.mean == self.NORMALIZATION["mean"]
+            assert self.cfg.data.transforms.train.normalize.std == self.NORMALIZATION["std"]
+        if "normalize" in self.cfg.data.transforms.test:
+            assert self.cfg.data.transforms.test.normalize.mean == self.NORMALIZATION["mean"]
+            assert self.cfg.data.transforms.test.normalize.std == self.NORMALIZATION["std"]
 
     def prepare_data(self) -> None:
         pass

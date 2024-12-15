@@ -1,18 +1,17 @@
 import time
 
-from omegaconf import DictConfig
 from lightning import Trainer
 from lightning.pytorch.callbacks.callback import Callback
 from lightning.pytorch.callbacks import (
+    EarlyStopping,
     GradientAccumulationScheduler,
     LearningRateMonitor,
     ModelCheckpoint,
-    EarlyStopping,
     RichProgressBar,
 )
-from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBarTheme
 from lightning.pytorch.loggers import WandbLogger
 
+from deeplightning.config.dlconfig import DeepLightningConfig
 from deeplightning.utils.config.defaults import __ConfigGroups__
 from deeplightning.utils.logger.helpers import add_logger_params_to_config
 from deeplightning.utils.logger.wandb import init_wandb_metrics
@@ -20,26 +19,20 @@ from deeplightning.utils.python_utils import flatten_dict
 
 
 class DeepLightningTrainer(Trainer):
-    def __init__(self, cfg: DictConfig, args: dict) -> None:
+    def __init__(self, cfg: DeepLightningConfig, args: dict) -> None:
         """ Deep Lightning Trainer."""
 
-        # Initialise logger and updated config with logger runtime parameters
-        self.cfg, logger = self.init_logger(cfg)
-
-        # Initialise callbacks
-        callbacks = self.init_callbacks(self.cfg, logger.artifact_path)
-
-        # Initialise parent class `lightning.Trainer`
-        args = {
+        self._passback_cfg, logger = self.init_logger(cfg)
+        callbacks = self.init_callbacks(cfg, logger.artifact_path)
+        super().__init__(**{
             **args, 
             "logger": logger, 
             "callbacks": callbacks,
-            "deterministic": self.cfg.engine.seed is not None,
-        }
-        super().__init__(**args)
+            "deterministic": cfg.engine.seed is not None,
+        })
+        
 
-
-    def init_logger(self, cfg: DictConfig) -> None:
+    def init_logger(self, cfg: DeepLightningConfig) -> None:
         """ Initialize logger."""
 
         if cfg.logger.provider == "wandb":
@@ -55,7 +48,10 @@ class DeepLightningTrainer(Trainer):
             timeout = 0
             while not isinstance(logger.experiment.dir, str):
                 if timeout > 5:
-                    print("\n`logger.experiment.dir` is function instead of string: {}\n\n".format(logger.experiment.dir))
+                    print(
+                        "\n`logger.experiment.dir` is function instead of "
+                        "string: {}\n\n".format(logger.experiment.dir)
+                    )
                     raise AttributeError
                 time.sleep(1)
                 timeout += 1
@@ -79,25 +75,31 @@ class DeepLightningTrainer(Trainer):
 
             # Intialize step label for each metrics
             logger.step_label = init_wandb_metrics(
-                metric_names = [f"{x}_{y}" for x in cfg.metrics for y in cfg.metrics[x]],
+                metric_names = [f"{x}_{y}" for x in cfg.task.metrics for y in cfg.task.metrics[x]],
                 step_label = "iteration",
             )
 
-        elif cfg.logger.provider == "neptune":
-            raise NotImplementedError
         else:
-            raise NotImplementedError(f"Logger not supported (cfg.logger.provider='{cfg.logger.provider}' )")
+            raise NotImplementedError(
+                f"Logger '{cfg.logger.provider}' not supported."
+            )
 
         # Ensure all required attributes have been initialised
-        attributes = ["run_id", "run_name", "run_dir", "artifact_path"]
+        attributes = [
+            "run_id",
+            "run_name",
+            "run_dir",
+            "artifact_path",
+        ]
         for attribute in attributes:
             if not hasattr(logger, attribute):
-                raise AttributeError(f"Attribute '{attribute}' has not been set in DLLoger")
+                raise AttributeError(
+                    f"Attribute '{attribute}' has not been set.")
             
         return cfg, logger
 
 
-    def init_callbacks(self, cfg: DictConfig, artifact_path: str) -> list[Callback]:
+    def init_callbacks(self, cfg: DeepLightningConfig, artifact_path: str) -> list[Callback]:
         """ Initialize callback functions."""
         self.callbacks_dict = {}
 
@@ -106,8 +108,8 @@ class DeepLightningTrainer(Trainer):
         # and accumulate every Y batches
         accumulator = GradientAccumulationScheduler(
             scheduling={
-                cfg.train.grad_accum_from_epoch: 
-                cfg.train.grad_accum_every_n_batches}
+                cfg.stages.train.grad_accum_from_epoch: 
+                cfg.stages.train.grad_accum_every_n_batches}
         )
         self.callbacks_dict["accumulator"] = accumulator
 
@@ -123,10 +125,10 @@ class DeepLightningTrainer(Trainer):
         filename_metric = "" #TODO make this user-configurable OR set automatically from task
         checkpoint = ModelCheckpoint(
             dirpath = artifact_path,
-            every_n_epochs = cfg.train.ckpt_every_n_epochs,
+            every_n_epochs = cfg.stages.train.ckpt_every_n_epochs,
             save_last = False,
-            save_top_k = cfg.train.ckpt_save_top_k,
-            monitor = cfg.train.ckpt_monitor_metric,
+            save_top_k = cfg.stages.train.ckpt_save_top_k,
+            monitor = cfg.stages.train.ckpt_monitor_metric,
             mode = "max",
             filename = "{epoch}-{step}-{val_acc:.4f}",  #TODO put filename_metric here
             save_on_train_epoch_end = False # False: save at validation_epoch_end
@@ -135,11 +137,11 @@ class DeepLightningTrainer(Trainer):
 
         # EARLY STOPPING
         # stop training when 'monitor' metric asymptotes
-        if cfg.train.early_stop_metric is not None:
+        if cfg.stages.train.early_stop_metric is not None:
             earlystopping = EarlyStopping(
-                monitor = cfg.train.early_stop_metric,
-                min_delta = cfg.train.early_stop_delta,
-                patience = cfg.train.early_stop_patience,
+                monitor = cfg.stages.train.early_stop_metric,
+                min_delta = cfg.stages.train.early_stop_delta,
+                patience = cfg.stages.train.early_stop_patience,
                 check_on_train_epoch_end = False # False: check at validation_epoch_end
             )
             self.callbacks_dict["earlystopping"] = earlystopping  
@@ -147,6 +149,7 @@ class DeepLightningTrainer(Trainer):
         # PROGRESS BAR
         # customize progress bar with:
         # ````
+        # from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBarTheme
         # RichProgressBar(
         #   theme=RichProgressBarTheme(
         #       description = "green_yellow",

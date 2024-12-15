@@ -86,14 +86,14 @@ class BaseTask(pl.LightningModule):
         Callbacks EarlyStopping and ModelCheckpoint read from `self.log()`, not
         from `self.logger.log()`, so we must log there. The following keys must
         exist in `metric_tracker`:
-        > `m = self.cfg.train.early_stop_metric` for EarlyStopping;
-        > `m = self.cfg.train.ckpt_monitor_metric` for ModelCheckpoint;
+        > `m = self.cfg.stages.train.early_stop_metric` for EarlyStopping;
+        > `m = self.cfg.stages.train.ckpt_monitor_metric` for ModelCheckpoint;
         """
-        if self.cfg.train.early_stop_metric is not None:
-            m_earlystop = self.cfg.train.early_stop_metric
+        if self.cfg.stages.train.early_stop_metric is not None:
+            m_earlystop = self.cfg.stages.train.early_stop_metric
             self.log(m_earlystop, self.metric_tracker[m_earlystop], sync_dist=True)
-        if self.cfg.train.ckpt_monitor_metric is not None:
-            m_checkpoint = self.cfg.train.ckpt_monitor_metric
+        if self.cfg.stages.train.ckpt_monitor_metric is not None:
+            m_checkpoint = self.cfg.stages.train.ckpt_monitor_metric
             self.log(m_checkpoint, self.metric_tracker[m_checkpoint], sync_dist=True)
 
 

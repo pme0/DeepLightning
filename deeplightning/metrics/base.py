@@ -164,9 +164,9 @@ def initialise_metrics(cfg: OmegaConf, defaults: dict = None) -> dict:
     
 
 def metrics_defaults(cfg: OmegaConf, phase: str, defaults: dict = None) -> list:
-    if defaults is None or isinstance(cfg.metrics[phase], ListConfig):
-        return cfg.metrics[phase]
-    elif cfg.metrics[phase] == "default":
+    if defaults is None or isinstance(cfg.task.metrics[phase], ListConfig):
+        return cfg.task.metrics[phase]
+    elif cfg.task.metrics[phase] == "default":
         return defaults[phase]
     else:
         raise ValueError

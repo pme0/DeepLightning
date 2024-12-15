@@ -1,30 +1,45 @@
-modes: 
-  train: true
-  test: false
-  
+stages: 
+  train: 
+    active: true
+    num_epochs: 3
+    val_every_n_epoch: 1
+    grad_accum_from_epoch: 0
+    grad_accum_every_n_batches: 1
+    ckpt_resume_path: null
+    ckpt_monitor_metric: val_iou  # used in `ModelCheckpoint` callback
+    ckpt_every_n_epochs: 1
+    ckpt_save_top_k: 1
+    early_stop_metric: null
+    early_stop_delta: 0.001
+    early_stop_patience: 3
+  test: 
+    active: false
+    ckpt_test_path: null  # only used when `stages.test.active` is true
+
 data:
   dataset: HAM10000
   root: ~/data/HAM10000
+  batch_size: 128
+  debug_batch_size: 200 # maximum number of samples (debug)
   num_workers: 8
   persistent_workers: true
   pin_memory: true
-  batch_size: 128
-  dataset_size: 200 # maximum number of samples (debug)
   module: 
     target: deeplightning.datasets.vision.ham10000.HAM10000
-  train_transforms:
-    normalize:
-      mean: [0.7639, 0.5463, 0.5703]
-      std: [0.0870, 0.1155, 0.1295]
-    resize: [96, 96]
-  test_transforms:
-    normalize:
-      mean: [0.7639, 0.5463, 0.5703]
-      std: [0.0870, 0.1155, 0.1295]
-    resize: [96, 96]
-  mask_transforms:
-    resize: [96, 96]
-    roundtointeger:
+  transforms:
+    train:
+      normalize:
+        mean: [0.7639, 0.5463, 0.5703]
+        std: [0.0870, 0.1155, 0.1295]
+      resize: [96, 96]
+    test:
+      normalize:
+        mean: [0.7639, 0.5463, 0.5703]
+        std: [0.0870, 0.1155, 0.1295]
+      resize: [96, 96]
+    mask:
+      resize: [96, 96]
+      roundtointeger:
 
 task:
   name: ImageSemanticSegmentation
@@ -47,6 +62,10 @@ task:
   loss:
     target: torch.nn.CrossEntropyLoss
     args:
+  metrics:
+    train: default
+    val: default
+    test: default
 
 engine:
   accelerator: cpu
@@ -55,28 +74,7 @@ engine:
   num_nodes: 1
   precision: 32
   seed: 101
-
-metrics:
-  train: default
-  val: default
-  test: default
   
-train:
-  num_epochs: 3
-  val_every_n_epoch: 1
-  grad_accum_from_epoch: 0
-  grad_accum_every_n_batches: 1
-  ckpt_resume_path: null
-  ckpt_monitor_metric: val_iou  # used in `ModelCheckpoint` callback
-  ckpt_every_n_epochs: 1
-  ckpt_save_top_k: 1
-  early_stop_metric: null
-  early_stop_delta: 0.001
-  early_stop_patience: 3
-
-test:
-  ckpt_test_path: /PATH_TO_CKPT # used only when `modes.test=True`
-
 logger:
   provider: wandb
   project: skin-lesion-segmentation
