@@ -1,13 +1,10 @@
-from typing import Any, Union, Tuple, Optional, List
-ConfigElement = Union[str, int, float, None]
+from typing import Any
 from omegaconf import OmegaConf
 import importlib
 
+from deeplightning.utils.python_utils import exists, public_attributes
 
-def exists(x: ConfigElement) -> bool:
-    return x is not None
 
-    
 def get_reference(cfg: OmegaConf) -> Any:
     """ Get a reference of the target class.
     """
@@ -35,12 +32,15 @@ def init_obj_from_config(cfg: OmegaConf, main_param: Any = None) -> Any:
     """ Initialize module from target (str) in config.
     """
     p = cfg.args
+    if exists(p) and not isinstance(p, dict):
+        p = public_attributes(p)
+
     reference = get_reference(cfg)
+
     if main_param is None:
-        instance = reference(**p) if exists(p) else reference()
+        return reference(**p) if exists(p) else reference()
     else:
-        instance = reference(main_param, **p) if exists(p) else reference(main_param)
-    return instance
+        return reference(main_param, **p) if exists(p) else reference(main_param)
 
 
 def init_obj_from_target(target: str) -> Any:

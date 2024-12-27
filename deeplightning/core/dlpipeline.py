@@ -2,9 +2,7 @@ from omegaconf import DictConfig
 from lightning import LightningModule, LightningDataModule
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.core.trainer import DeepLightningTrainer, DeepLightningConfig
-import deeplightning.tasks
-from deeplightning.utils.config.process import log_config
+from deeplightning.core.dltrainer import DeepLightningTrainer, DeepLightningConfig
 from deeplightning.utils.imports import init_module
 from deeplightning.utils.messages import info_message, warning_message
 

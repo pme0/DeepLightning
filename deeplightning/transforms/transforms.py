@@ -1,12 +1,15 @@
-from omegaconf import DictConfig
 from torchvision import transforms as T
 
+from deeplightning.core.dlconfig import DeepLightningConfig
+from deeplightning.transforms.ops import TRANSFORMS_MAP
 from deeplightning.utils.messages import info_message, warning_message
-from deeplightning.transforms.ops import __all__ as TRANSFORMS_MAP
-from deeplightning.transforms.helpers import get_num_args
+from deeplightning.utils.python_utils import get_num_args
 
 
-def load_transforms(cfg: DictConfig, subset: str) -> T.Compose:
+def load_transforms(
+    cfg: DeepLightningConfig,
+    subset: str,
+) -> T.Compose:
     """Load data transformations.
 
     Args:
@@ -17,14 +20,19 @@ def load_transforms(cfg: DictConfig, subset: str) -> T.Compose:
 
     trfs = [TRANSFORMS_MAP["totensor"]()]
 
-    if cfg.data.transforms[subset] is not None:
-        for key in cfg.data.transforms[subset]:
+    trfs_elems = getattr(cfg.data.transforms, subset)
+    if trfs_elems:
+        for key in trfs_elems:
             fn = TRANSFORMS_MAP[key]
             if get_num_args(fn) == 0:
                 transform = fn()
             else:
-                params = cfg.data.transforms[subset][key]
-                transform = fn(params)
+                params = trfs_elems[key]
+                if isinstance(params, dict):
+                    transform = fn(**params)
+                else:
+                    transform = fn(params)
+        
             if transform is not None:
                 if isinstance(transform, list):
                     trfs.extend(transform)
@@ -35,9 +43,9 @@ def load_transforms(cfg: DictConfig, subset: str) -> T.Compose:
                     f"Transform '{key}' present in cfg.data.transforms.{subset}' "
                     f"but unused due to unsuitable parameters "
                     f"({cfg.data.transforms[subset][key]}).")
-        
-        print_transforms(subset, trfs)
-        return T.Compose(trfs)
+            
+    print_transforms(subset, trfs)
+    return T.Compose(trfs)
 
 
 def print_transforms(subset, transforms):

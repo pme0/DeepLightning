@@ -7,13 +7,8 @@ import numpy as np
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning import METRIC_REGISTRY
-
-
-__all__ = [
-    "SemanticSegmentationMaskContour",
-    "segmentation_mask_contour",
-]
 
 
 class SemanticSegmentationMaskContour():
@@ -23,14 +18,15 @@ class SemanticSegmentationMaskContour():
         display_name: name used by the logger when displaying the metric.
         logging_methods: metric methods called by the logger.
     """
-    def __init__(self, cfg: OmegaConf):
+    def __init__(self, cfg: DeepLightningConfig):
         self.display_name = "segmentation_contour"
         self.logging_methods = ["draw"]
 
         self.colors = {
             "red": [255, 0, 0],
             "green": [0, 255, 0],
-            "blue": [0, 0, 255], }
+            "blue": [0, 0, 255],
+        }
 
     
     def draw(self, preds, masks, images):
@@ -38,5 +34,5 @@ class SemanticSegmentationMaskContour():
 
 
 @METRIC_REGISTRY.register_element()
-def segmentation_mask_contour(cfg: OmegaConf) -> SemanticSegmentationMaskContour:
+def segmentation_mask_contour(cfg: DeepLightningConfig) -> SemanticSegmentationMaskContour:
     return SemanticSegmentationMaskContour(cfg)

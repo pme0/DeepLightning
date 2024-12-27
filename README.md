@@ -2,9 +2,9 @@
   <b>Deep Lightning</b><br>
 </h1>
 <p align="center">
-    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.10-brightgreen" /></a>
-    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.0-yellow" /></a>
-    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/Lightning-2.0-orange" /></a>
+    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.12-brightgreen" /></a>
+    <a href= "https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.5.1-yellow" /></a>
+    <a href= "https://www.pytorchlightning.ai"><img src="https://img.shields.io/badge/Lightning-2.4.0-orange" /></a>
 </p>
 
 **Deep Lightning** is a configuration-based wrapper for training Deep Learning models with focus on parallel training, cross-platform compatibility and reproducibility. The philosophy is simple: from configuration to trackable and reproducible deep learning.
@@ -19,17 +19,21 @@ After defining modules and configuration, training deep learning models is simpl
 * [Installation](#installation)
 * [Usage](#usage)
   * [Run](#run)
+    * [Train](#train)
+    * [Test](#test)
+    * [Monitor](#monitor)
+    * [Deploy](#deploy)
   * [Configure](#configure)
-  * [Customize](#customize)
-* [Examples](#examples)
+    * [Logic](#logic)
+    * [Customize](#customize)
 
 # Overview
 
 ### Features
 - Simplified trainer with **PyTorch-Lightning**
 - Experiment tracking and logging with **Weights and Biases**
+- Deployment (prediction API) with **FastAPI**
 - Memory-efficinet parallel training with **DeepSpeed**
-- Deployment (prediction API) with **Flask**
 - Implementations of popular tasks/models with [**Examples**](https://github.com/pme0/DeepLightning/tree/master/examples)
 
 # Installation
@@ -52,68 +56,67 @@ conda activate dl
 
 ## Run
 
-for model **training** use
+### Train
+
+For model **training** set `stages.train.active: True` in the config and use
 ```bash
 python run.py \
   --config-name CONFIG_NAME.yaml \
   --config-path CONFIG_PATH.yaml \
 ```
-where `config-path` defaults to `configs/` and `config-name` is the config filename;
+where `config-path` defaults to `configs/` and `config-name` is the config filename.
+For example, `python run.py --config-name SymbolRecognition.yaml`.
+
 To create your own config follow the [Configuration guidelines](#configure) or see [Examples](#examples).
 
-**2. Monitor the training progress:**
+### Test
 
-When a training run has been initiated, a link will be displayed in the terminal; clicking it will open the Weights & Biases web interface. There you will be able to monitor the relevant metrics during training/testing and compare multiple runs:
+For model **testing** use the same command as training but set `stages.test.active: True` and provide a path to the model weights in `stages.test.ckpt_test_path`.
+
+### Monitor
+
+Monitor training run and evaluation metrics on W&B web interface:
 
 <img src="media/wandb.png" width="700">
 
-**3. Deploy the model:**
+### Deploy
+
+Deploy the model with
 ```bash
-./deploy.sh <artifact-storage-path>
-
-# Example:
-# ./deploy.sh /mlruns/0/6ff30d9bc5b74c019071d575fec86a19/artifacts
+python -m api.<app-name> <run-dir>
 ```
-- `artifact-storage-path` is the path where artifacts were stored during training, which contains the train config (`cfg.yaml`) and model checkpoint (`last.ckpt`);
+where `app-name` is the application script filename and `run-dir` is the wandb run directory containing training artifacts inside folder `files` (run config and model weights). 
+For example, `python -m api.image_classification_app wandb/run-20230224_215446-6raddysk`.
 
-**4. Predict using the API:**
+Then use the API as follows
 ```bash
-./predict.sh <image>
-
-# Example:
-# ./predict.sh image.jpg
+curl -X 'POST' 'http://127.0.0.1:5000/predict/' -F 'file=@<path-to-image>'
 ```
-- `image` is the path to the image to be predicted;
 
 ## Configure
 
 ### Logic
-All config fields labelled `type` correspond to target classes. The format is `MODULE.CLASS` and the code will load class `CLASS` from `MODULE.py` (relative path). Note that `MODULE` can itself be composite, `X.Y.Z`, in which case the class `CLASS` will be loaded from `X/Y/Z.py`. 
+All config fields labelled `target` correspond to target classes. The format is `MODULE.CLASS` and the code will load class `CLASS` from `MODULE.py` (relative path). Note that `MODULE` can itself be composite, `X.Y.Z`, in which case the class `CLASS` will be loaded from `X/Y/Z.py`. 
 For example, `model.optimizer.target` could be existing `deepspeed.ops.adam.FusedAdam` or user-defined in `losses.custom.MyLoss`.
- 
-Example:
+
+For example, the following config would initialise `AwesomeCNN` model from `deeplightning.models.cnn` module with arguments `num_classes=100` and `num_channels=3`:
 ```yaml
-model:
-  module:
-    target: deeplightning.tasks.vision.classification.ImageClassificationTask
-  network:
-    target: deeplightning.models.cnn.CNN
-    args: 
-      num_classes: 10
-      num_channels: 1
+task:
+  name: image_classification
+  model:
+    target: deeplightning.models.cnn.AwesomeCNN
+    args:
+      num_classes: 100
+      num_channels: 3
 ```
 
 ### Customize
 
 > Make sure you're familiar with the [configuration logic](#logic).
 
-Beyond changing parameters values in existing configs, you can customize the following according to your needs:
-- **custom model**: put your model in `models/customnet.py`, and update the config field `task.model.target` and any required parameters to point to your new model;
-- **custom task**: duplicate the task module `lightning/model/classification.py`, rename it `lightning/model/customtask.py`, make the required modifications to run your task, and update the config field `model.module.target` to point to your new task module;
-- **custom dataset**: duplicate the data module `lightning/data/mnist.py`, rename it `lightning/data/customdataset.py`, make the required modifications to load your dataset, and update the config field `data.module.target` to point to your new data module;
+Beyond changing parameters values for existing pipelines, you can customize the pipeline. For example:
+- **custom task**: put your task module in `deeplightning/tasks/`, and update the config field `task.name`. This must be a `lightning.LightningModule` class defining the task training logic.
+- **custom dataset**: put your data module in `deeplightning/datasets/`, and update the config field `data.module.target` to point to your data module. This must be a `lightning.LightningDataModule` class defining the dataset processing logic.
+- **custom model**: put your model in `deeplightning/models/`, and update the config field `task.model.target` and any required parameters to point to your new model. This must be a `torch.nn.Module` class.
 
-
-# Examples
-
-See [`examples`](https://github.com/pme0/DeepLightning/tree/master/examples) for details.
-
+And similarly for loss function, optimizer, scheduler, etc.

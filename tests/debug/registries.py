@@ -1,19 +1,34 @@
-from deeplightning.registry import __REGISTRIES__
+import json
 
-from deeplightning import TASK_REGISTRY
-from deeplightning import MODEL_REGISTRY
-from deeplightning import METRIC_REGISTRY
 from deeplightning import DATA_REGISTRY
+from deeplightning import METRIC_REGISTRY
+from deeplightning import MODEL_REGISTRY
+from deeplightning import TASK_REGISTRY
 
-import deeplightning.tasks
-import deeplightning.models
-import deeplightning.metrics
 import deeplightning.datasets
+import deeplightning.metrics
+import deeplightning.models
+import deeplightning.tasks
+
 
 if __name__ == "__main__":
 
-    print(f"TASK_REGISTRY = {sorted(TASK_REGISTRY.get_element_names())}")
-    print(f"MODEL_REGISTRY = {sorted(MODEL_REGISTRY.get_element_names())}")
-    print(f"METRIC_REGISTRY = {sorted(METRIC_REGISTRY.get_element_names())}")
-    print(f"DATA_REGISTRY = {sorted(DATA_REGISTRY.get_element_names())}")
-    
+    REGISTRIES = [
+        DATA_REGISTRY,
+        METRIC_REGISTRY,
+        MODEL_REGISTRY,
+        TASK_REGISTRY
+    ]
+
+    ind = 4
+
+    for registry in REGISTRIES:
+
+        print(
+            "{} = {}".format(
+                registry.registry_type.upper(),
+                json.dumps(
+                    sorted(registry.get_element_names()), indent=ind,
+                ),
+            )
+        )

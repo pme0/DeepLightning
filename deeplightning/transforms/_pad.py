@@ -7,7 +7,7 @@ import omegaconf
 from deeplightning.transforms.helpers import is_false_or_none, is_all_false_or_none, is_all_constant
 
 
-def Pad(p: Union[float, Tuple[float]]):
+def Pad(p):
     """Pad transformation. Pad borders by a number of pixels.
 
     Args:

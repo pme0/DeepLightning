@@ -6,7 +6,7 @@ stages:
     grad_accum_from_epoch: 0
     grad_accum_every_n_batches: 1
     ckpt_resume_path: null
-    ckpt_monitor_metric: val_iou  # used in `ModelCheckpoint` callback
+    ckpt_monitor_metric: val_classification_accuracy  # used in `ModelCheckpoint` callback
     ckpt_monitor_mode: max  # used in `ModelCheckpoint` callback
     ckpt_every_n_epochs: 1
     ckpt_save_top_k: 1
@@ -18,38 +18,32 @@ stages:
     ckpt_test_path: null  # only used when `stages.test.active` is true
 
 data:
-  dataset: HAM10000
-  root: ~/data/HAM10000
+  dataset: MNIST
+  root: ~/data/MNIST
   batch_size: 128
   debug_batch_size: null # maximum number of samples (debug)
   num_workers: 8
   persistent_workers: true
   pin_memory: true
   module: 
-    target: deeplightning.datasets.vision.ham10000.HAM10000
+    target: deeplightning.datasets.vision.mnist.MNIST
   transforms:
     train:
       normalize:
-        mean: [0.7639, 0.5463, 0.5703]
-        std: [0.0870, 0.1155, 0.1295]
-      resize: [96, 96]
+        mean: [0.1307]
+        std: [0.3081]
     test:
       normalize:
-        mean: [0.7639, 0.5463, 0.5703]
-        std: [0.0870, 0.1155, 0.1295]
-      resize: [96, 96]
-    mask:
-      resize: [96, 96]
-      roundtointeger:
+        mean: [0.1307]
+        std: [0.3081]
 
 task:
-  name: image_semantic_segmentation
+  name: image_classification
   model:
-    target: torchvision.models.segmentation.deeplabv3_resnet50
+    target: deeplightning.models.cnn.MiniCNN
     args:
-      # num_classes = 7 for "image_classification" task
-      # num_classes = 2 for "image_semantic_segmentation" task
-      num_classes: 2
+      num_classes: 10
+      num_channels: 1
   optimizer:
     target: deeplightning.optimizers.lion.Lion
     args:
@@ -65,8 +59,8 @@ task:
     args:
   metrics:
     train: ["classification_accuracy"]
-    val: ["classification_accuracy", "confusion_matrix", "precision_recall_curve", "iou"]
-    test: ["classification_accuracy", "confusion_matrix", "precision_recall_curve", "iou"]
+    val: ["classification_accuracy", "confusion_matrix", "precision_recall_curve"]
+    test: ["classification_accuracy", "confusion_matrix", "precision_recall_curve"]
 
 engine:
   accelerator: cpu
@@ -78,7 +72,7 @@ engine:
   
 logger:
   provider: wandb
-  project: skin-lesion-segmentation
+  project: digit-classification
   log_every_n_steps: 1
   runtime:
     run_id: null

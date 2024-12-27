@@ -4,19 +4,15 @@ from torch import Tensor
 from lightning.pytorch.trainer.states import RunningStage
 
 from deeplightning import TASK_REGISTRY
-from deeplightning.utils.imports import init_obj_from_config
+from deeplightning.core.dlconfig import DeepLightningConfig
+from deeplightning.core.batch import dictionarify_batch
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
-from deeplightning.core.batch import dictionarify_batch
+from deeplightning.utils.imports import init_obj_from_config
 
 
 def process_model_outputs(outputs, model):
-    """Processes model outouts and selects the appropriate elements
-    """
-    if model.__class__.__name__ == "someModel":
-        return outputs["someThing"]
-    else:
-        return outputs
+    return outputs
 
 
 class ImageClassificationTask(BaseTask):
@@ -194,5 +190,5 @@ class ImageClassificationTask(BaseTask):
 
 
 @TASK_REGISTRY.register_element()
-def image_classification(**kwargs: Any) -> ImageClassificationTask:
-    return ImageClassificationTask(**kwargs)
+def image_classification(cfg: DeepLightningConfig) -> ImageClassificationTask:
+    return ImageClassificationTask(cfg)

@@ -8,43 +8,40 @@ from deeplightning.utils.messages import info_message
 
 
 class BaseTask(pl.LightningModule):
-    """Base task module.
-
-    Args:
-        cfg: yaml configuration object
-
-    Attributes:
-        cfg: (OmegaConf) yaml configuration object.
-        step_label: (str) label to track/log metrics against.
-        metric_tracker: (dict) to store metrics.
-        loss_tracker: (dict[dict]) to store losses.
-
-    Notes:
-        logging: Manual logging `self.logger.log()` is used. This is more 
-            flexible as Lightning automatic logging `self.log()`) only 
-            allows scalars, not histograms, images, etc. Additionally, 
-            auto-logging doesn't log at step 0, which is useful.
-        
-        hooks: For *training*, the input to `training_epoch_end()` is the 
-            set of outputs from `training_step()`. For *validation*, the 
-            input to `validation_epoch_end()` is the output from 
-            `validation_step_end()` and the input to `validation_step_end()` 
-            is the output from `validation_step()`. See 
-            <https://github.com/PyTorchLightning/pytorch-lightning/issues/9811>
-        
-        training_step outputs: If `return None`: "UserWarning: `training_step` 
-            returned `None`. If this was on purpose, ignore this warning".
-            If `return {}`: "MisconfigurationException: when `training_step` 
-            returns a dict, the 'loss' key needs to be present".
-    """
     def __init__(self, cfg: OmegaConf) -> None:
-        super().__init__()
-        self.cfg = cfg  #TODO check if this contains logger runtime params
-        self.step_label = "iteration"
+        """Base task module.
 
-        # initialise metrics dictionary (to log)
+        Args:
+            cfg: yaml configuration object
+
+        Attributes:
+            cfg: (OmegaConf) yaml configuration object.
+            step_label: (str) label to track/log metrics against.
+            metric_tracker: (dict) to store metrics.
+            loss_tracker: (dict[dict]) to store losses.
+
+        Notes:
+            logging: Manual logging `self.logger.log()` is used. This is more 
+                flexible as Lightning automatic logging `self.log()`) only 
+                allows scalars, not histograms, images, etc. Additionally, 
+                auto-logging doesn't log at step 0, which is useful.
+            
+            hooks: For *training*, the input to `training_epoch_end()` is the 
+                set of outputs from `training_step()`. For *validation*, the 
+                input to `validation_epoch_end()` is the output from 
+                `validation_step_end()` and the input to `validation_step_end()` 
+                is the output from `validation_step()`. See 
+                <https://github.com/PyTorchLightning/pytorch-lightning/issues/9811>
+            
+            training_step outputs: If `return None`: "UserWarning: `training_step` 
+                returned `None`. If this was on purpose, ignore this warning".
+                If `return {}`: "MisconfigurationException: when `training_step` 
+                returns a dict, the 'loss' key needs to be present".
+        """
+        super().__init__()
+        self.cfg = cfg
+        self.step_label = "iteration"
         self.metric_tracker = {}
-        # initialise loss accumulators (to store losses through steps)
         self.loss_tracker = {"train": {}, "val": {}, "test": {}}
 
 
@@ -88,13 +85,16 @@ class BaseTask(pl.LightningModule):
         exist in `metric_tracker`:
         > `m = self.cfg.stages.train.early_stop_metric` for EarlyStopping;
         > `m = self.cfg.stages.train.ckpt_monitor_metric` for ModelCheckpoint;
+        Additionally, log `val_loss` to be used in checkpoint filename.
         """
         if self.cfg.stages.train.early_stop_metric is not None:
             m_earlystop = self.cfg.stages.train.early_stop_metric
             self.log(m_earlystop, self.metric_tracker[m_earlystop], sync_dist=True)
+        
         if self.cfg.stages.train.ckpt_monitor_metric is not None:
             m_checkpoint = self.cfg.stages.train.ckpt_monitor_metric
             self.log(m_checkpoint, self.metric_tracker[m_checkpoint], sync_dist=True)
+            self.log("val_loss", self.metric_tracker["val_loss"], sync_dist=True)
 
 
     def update_losses(self, phase: str, losses: dict) -> None:

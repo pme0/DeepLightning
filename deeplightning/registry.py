@@ -1,5 +1,6 @@
-from typing import Any, Callable, List, Type, TypeVar
-T = TypeVar('T')
+from typing import Any, Callable, Type, TypeVar
+
+T = TypeVar("T")
 
 
 __REGISTRIES__ = [
@@ -11,13 +12,15 @@ __REGISTRIES__ = [
 
 
 class Registry:
-    """Registers all elements and prevents multiple elements with the same name
-    """
     def __init__(self, registry_type: str):
-        assert registry_type in __REGISTRIES__
+        """Registries class."""
+        if registry_type not in __REGISTRIES__:
+            raise ValueError(
+                f"Found 'registry type={registry_type}', "
+                f"expected {__REGISTRIES__}."
+            )
         self.registry_type = registry_type
         self.elements_dict = {}
-        
 
     def register_element(self, name: str = None) -> Callable:
         """Register an element
@@ -38,7 +41,7 @@ class Registry:
         """
         return self.elements_dict[name]
     
-    def get_element_instance(self, name: str, **params: Any) -> Callable:
+    def get_element_instance(self, name: str, **params: Any) -> T:
         """Get element instance from its name and parameters
         """
         return self.get_element_reference(name)(**params)

@@ -4,7 +4,7 @@ import hydra
 from omegaconf import DictConfig
 import wandb
 
-from deeplightning.config.dlconfig import DeepLightningConfig
+from deeplightning.core.dlconfig import reload_config
 from deeplightning.core.dlpipeline import DeepLightningPipeline
 from deeplightning.utils.context import train_context, eval_context
 
@@ -13,30 +13,28 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--config-name", 
     type=str, 
-    help="Filename of YAML configuration file. Overwrites `config_name` in hydra.main()."
+    help="Filename of YAML configuration. Overwrites `config_name` in hydra."
 )
 parser.add_argument(
     "--config-path", 
     type=str, 
     default="configs", 
-    help="Directory of YAML configuration file. Overwrites `config_path` in hydra.main()."
+    help="Directory of YAML configuration. Overwrites `config_path` in hydra."
 )
 args = parser.parse_args()
 
 
 @hydra.main(
-    version_base=None,
-    config_path=args.config_path, 
-    config_name=args.config_name,
+    version_base = None,
+    config_path = args.config_path, 
+    config_name = args.config_name,
 )
 def _main(config: DictConfig) -> None:
-    """Main function running initializations, training and evaluation."""
     
     # The following config is incomplete. When initializing the trainer within
     # the Pipeline, the config will be updated with runtime info (e.g. run id,
     # created by the logger). Below we will retrieve the complete config.
-    cfg = DeepLightningConfig(config)
-    cfg.print_config()
+    cfg = reload_config(config)
 
     # Instantiate pipeline.
     pipeline = DeepLightningPipeline(cfg)
@@ -45,13 +43,12 @@ def _main(config: DictConfig) -> None:
     cfg = pipeline.cfg
     cfg.print_config()
     cfg.log_config()
-    
 
-    with train_context(cfg.engine.seed):
+    with train_context(seed=cfg.engine.seed):
         if cfg.stages.train.active:
             pipeline.train()
   
-    with eval_context(cfg.engine.seed):
+    with eval_context(seed=cfg.engine.seed):
         if cfg.stages.train.active:
             pipeline.eval("best")
         elif cfg.stages.test.active:
