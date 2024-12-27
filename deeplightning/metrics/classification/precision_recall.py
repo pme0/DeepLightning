@@ -1,17 +1,9 @@
-from omegaconf import OmegaConf
-from torch import Tensor
 from torchmetrics.classification.precision_recall_curve import MulticlassPrecisionRecallCurve
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import wandb
 
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning import METRIC_REGISTRY
-
-
-__all__ = [
-	"PrecisionRecallCurve", 
-	"precision_recall_curve",
-]
 
 
 class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
@@ -21,11 +13,11 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
         display_name: name used by the logger when displaying the metric.
         logging_methods: metric methods called by the logger.
 	"""
-	def __init__(self, cfg: OmegaConf):
+	def __init__(self, cfg: DeepLightningConfig):
 		self.display_name = "precision_recall"
 		self.logging_methods = ["draw"]
 
-		self.num_classes = cfg.task.model.args.num_classes
+		self.num_classes = cfg.task.model.args["num_classes"]
 		args = {"num_classes": self.num_classes}
 		super().__init__(**args)
 
@@ -68,5 +60,5 @@ class PrecisionRecallCurve(MulticlassPrecisionRecallCurve):
 			
 
 @METRIC_REGISTRY.register_element()
-def precision_recall_curve(cfg) -> PrecisionRecallCurve:
+def precision_recall_curve(cfg: DeepLightningConfig) -> PrecisionRecallCurve:
     return PrecisionRecallCurve(cfg)

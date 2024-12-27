@@ -1,13 +1,7 @@
-from omegaconf import OmegaConf
 from torchmetrics.classification import MulticlassAUROC
 
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning import METRIC_REGISTRY
-
-
-__all__ = [
-    "AUROC",
-    "auroc",
-]
 
 
 class AUROC(MulticlassAUROC):
@@ -17,7 +11,7 @@ class AUROC(MulticlassAUROC):
         display_name: name used by the logger when displaying the metric.
         logging_methods: metric methods called by the logger.
     """
-    def __init__(self, cfg: OmegaConf):
+    def __init__(self, cfg: DeepLightningConfig):
         self.display_name = "auroc"
         self.logging_methods = ["compute"]
 
@@ -27,5 +21,5 @@ class AUROC(MulticlassAUROC):
 
 
 @METRIC_REGISTRY.register_element()
-def auroc(cfg: OmegaConf) -> AUROC:
+def auroc(cfg: DeepLightningConfig) -> AUROC:
     return AUROC(cfg)

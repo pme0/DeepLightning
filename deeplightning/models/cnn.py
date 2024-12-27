@@ -1,19 +1,17 @@
-from typing import Any
-import torch
 import torch.nn as nn
 
 from deeplightning import MODEL_REGISTRY
 
 
 __all__ = [
-    "SymbolCNN",
-    "symbol_cnn",
+    "MiniCNN",
+    "mini_cnn",
     "SpectrogramCNN",
     "spectrogram_cnn",
 ]
 
 
-class SymbolCNN(nn.Module):
+class MiniCNN(nn.Module):
     def __init__(self, num_classes: int, num_channels: int):
         super().__init__()
         self.num_classes = num_classes
@@ -77,10 +75,10 @@ class SpectrogramCNN(nn.Module):
     
 
 @MODEL_REGISTRY.register_element()
-def symbol_cnn(**kwargs: Any) -> SymbolCNN:
-    return SymbolCNN(**kwargs)
+def mini_cnn(**kwargs) -> MiniCNN:
+    return MiniCNN(**kwargs)
 
 
 @MODEL_REGISTRY.register_element()
-def spectrogram_cnn(**kwargs: Any) -> SpectrogramCNN:
+def spectrogram_cnn(**kwargs) -> SpectrogramCNN:
     return SpectrogramCNN(**kwargs)

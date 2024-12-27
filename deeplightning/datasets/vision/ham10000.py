@@ -9,8 +9,10 @@ import torch
 from torchvision import transforms as T
 from torch.utils.data import Dataset, DataLoader, random_split
 
-from deeplightning import TASK_REGISTRY
+from deeplightning import DATA_REGISTRY
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning.transforms.transforms import load_transforms
+from deeplightning.utils.data import do_trim
 from deeplightning.utils.messages import info_message
 
 
@@ -41,18 +43,13 @@ def _trim_dataset(
     cfg: DictConfig,
 ) -> pd.DataFrame:
     """Trim the dataset to a specified number of samples."""
-    trim = False
-    if "dataset_size" in cfg.data:
-        if cfg.data.dataset_size is not None:
-            if cfg.data.dataset_size > 0:
-                trim = True
-    if trim:
+    if do_trim(cfg):
         size_before = df.shape[0]
-        df = df.iloc[:cfg.data.dataset_size, :]
+        df = df.iloc[:cfg.data.debug_batch_size, :]
         size_after = df.shape[0]
         info_message(
             f"Dataset trimmed from {size_before} to {size_after} "
-            f"samples (cfg.data.dataset_size={cfg.data.dataset_size}).")
+            f"samples (cfg.data.debug_batch_size={cfg.data.debug_batch_size}).")
     return df
 
 
@@ -73,13 +70,20 @@ class HAM10000_dataset(Dataset):
             for i in range(metadata.shape[0])
         ]
         class_labels_str = list(self.label2index.keys())
+        
         self.data = pd.DataFrame()
         self.data["images"] = images
-        if self.task == "ImageClassification":
+        
+        if self.task == "image_classification":
             self.data["labels"] = _extract_classes(metadata, class_labels_str, self.label2index)
-        elif self.task == "ImageSemanticSegmentation":
+        elif self.task == "image_semantic_segmentation":
             self.data["masks"] = _extract_masks(metadata, self.root)
-
+        else:
+            raise ValueError(
+                f"Expected task to be one of ['image_classification', "
+                f"'image_semantic_segmentation'], found '{self.task}'."
+            )
+                
         # trim dataset (useful for debugging)
         self.data = _trim_dataset(self.data, cfg)
 
@@ -100,15 +104,17 @@ class HAM10000_dataset(Dataset):
             sample["inputs"] = self.transforms(sample["inputs"])
         
         # Process targets (labels or masks)
-        if self.task == "ImageClassification":
+        if self.task == "image_classification":
             sample["labels"] = self.data.loc[idx, "labels"]
-        elif self.task == "ImageSemanticSegmentation":
+        elif self.task == "image_semantic_segmentation":
             sample["masks_paths"] = self.data.loc[idx, "masks"]
             sample["masks"] = Image.open(sample["masks_paths"])
             if self.mask_transforms:
                 sample["masks"] = self.mask_transforms(sample["masks"])
                 # squeeze the channel dimension
                 sample["masks"] = sample["masks"].squeeze(0)
+        else:
+            raise ValueError(_unexpected_task(self.task))
 
         return sample
 
@@ -171,18 +177,12 @@ class HAM10000(pl.LightningDataModule):
         self.mask_transforms = load_transforms(cfg=cfg, subset="mask")
 
     def validate_config_params(self):
-        if self.cfg.task.name == "ImageClassification":
+        if self.cfg.task.name == "image_classification":
             assert self.cfg.task.model.args.num_classes == 7
-        elif self.cfg.task.name == "ImageSemanticSegmentation":
-            assert self.cfg.task.model.args.num_classes == 2
+        elif self.cfg.task.name == "image_semantic_segmentation":
+            assert self.cfg.task.model.args["num_classes"] == 2
         else:
             raise ValueError
-        if "normalize" in self.cfg.data.train_transforms:
-            assert self.cfg.data.train_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert self.cfg.data.train_transforms.normalize.std == self.NORMALIZATION["std"]
-        if "normalize" in self.cfg.data.test_transforms:
-            assert self.cfg.data.test_transforms.normalize.mean == self.NORMALIZATION["mean"]
-            assert self.cfg.data.test_transforms.normalize.std == self.NORMALIZATION["std"]
 
     def prepare_data(self) -> None:
         pass
@@ -236,3 +236,7 @@ class HAM10000(pl.LightningDataModule):
             pin_memory = self.cfg.data.pin_memory,
         )
     
+
+@DATA_REGISTRY.register_element()
+def ham10000(cfg: DeepLightningConfig) -> HAM10000:
+    return HAM10000(cfg)

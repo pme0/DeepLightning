@@ -1,7 +1,6 @@
 import pytest
 
 from deeplightning.transforms.helpers import (
-    ErrCode,
     none_or_zero, 
     all_none_or_zero,
 )
@@ -15,10 +14,8 @@ from deeplightning.transforms.helpers import (
     ]
 )
 def test_none_or_zero_error(value):
-    try:
+    with pytest.raises(ValueError) as e_info:
         none_or_zero(value)
-    except ValueError as e:
-        assert str(e).startswith(ErrCode)
 
 
 @pytest.mark.parametrize(

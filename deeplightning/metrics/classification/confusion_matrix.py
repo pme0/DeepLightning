@@ -7,6 +7,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import wandb
 
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning import METRIC_REGISTRY
 
 
@@ -23,11 +24,11 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
         display_name: name used by the logger when displaying the metric.
         logging_methods: metric methods called by the logger.
 	"""
-	def __init__(self, cfg: OmegaConf):
+	def __init__(self, cfg: DeepLightningConfig):
 		self.display_name = "confusion_matrix"
 		self.logging_methods = ["draw"]
 
-		self.num_classes = cfg.task.model.args.num_classes
+		self.num_classes = cfg.task.model.args["num_classes"]
 		args = {
 			"num_classes": self.num_classes,
 			"normalize": "true",  # 'true' normalizes over true labels (targets)
@@ -76,5 +77,5 @@ class ConfusionMatrix(MulticlassConfusionMatrix):
 
 
 @METRIC_REGISTRY.register_element()	
-def confusion_matrix(cfg) -> ConfusionMatrix:
+def confusion_matrix(cfg: DeepLightningConfig) -> ConfusionMatrix:
     return ConfusionMatrix(cfg)

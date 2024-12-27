@@ -152,7 +152,11 @@ class Metrics():
 # Auxiliary 
 
 
-def initialise_metrics(cfg: OmegaConf, defaults: dict = None) -> dict:
+def initialise_metrics(
+    cfg: OmegaConf, 
+    defaults: dict = None,
+) -> dict:
+    
     metrics_dict = {}
     for phase in ["train", "val", "test"]:
         metrics_dict[phase] = {}
@@ -163,10 +167,16 @@ def initialise_metrics(cfg: OmegaConf, defaults: dict = None) -> dict:
     return metrics_dict
     
 
-def metrics_defaults(cfg: OmegaConf, phase: str, defaults: dict = None) -> list:
-    if defaults is None or isinstance(cfg.metrics[phase], ListConfig):
-        return cfg.metrics[phase]
-    elif cfg.metrics[phase] == "default":
+def metrics_defaults(
+    cfg: OmegaConf, 
+    phase: str,
+    defaults: dict = None,
+) -> list:
+    
+    metrics_obj = getattr(cfg.task.metrics, phase)
+    if defaults is None or isinstance(metrics_obj, list):
+        return metrics_obj
+    elif cfg.task.metrics[phase] == "default":
         return defaults[phase]
     else:
         raise ValueError

@@ -3,7 +3,6 @@ import sys
 
 from lightning.pytorch import seed_everything
 import torch
-import wandb
 
 from deeplightning.utils.messages import warning_message
 

@@ -1,26 +1,16 @@
-from dataclasses import dataclass
-
 from lightning.pytorch.trainer.states import RunningStage
-from omegaconf import DictConfig
 import torch
 from torch import Tensor
 
 from deeplightning import TASK_REGISTRY
+from deeplightning.core.dlconfig import DeepLightningConfig
 from deeplightning.core.batch import dictionarify_batch
 from deeplightning.metrics.base import Metrics
 from deeplightning.tasks.base import BaseTask
 from deeplightning.utils.imports import init_obj_from_config
 
 
-@dataclass
-class ImageSemanticSegmentationConfig:
-    """Configuration for `ImageSemanticSegmentation` task."""
-    pass
-
-
 def process_model_outputs(outputs, model):
-    """Processes model outouts and selects the appropriate elements
-    """
     if model.__class__.__name__ == "DeepLabV3":
         # `DeepLabV3` returns a dictionaty with keys `out` (segmentation 
         # mask) and optionally `aux` if an auxiliary classifier is used.
@@ -30,7 +20,7 @@ def process_model_outputs(outputs, model):
 
 
 class ImageSemanticSegmentationTask(BaseTask):
-    def __init__(self, cfg: DictConfig):
+    def __init__(self, cfg: DeepLightningConfig):
         """Task module for Image Semantic Segmentation."""
         super().__init__(cfg=cfg)
         
@@ -213,6 +203,6 @@ class ImageSemanticSegmentationTask(BaseTask):
         self.on_logging_end(phase="test")
 
 
-@TASK_REGISTRY.register_element(name="ImageSemanticSegmentation")
-def ImageSemanticSegmentationBuilder(**kwargs) -> ImageSemanticSegmentationTask:
-    return ImageSemanticSegmentationTask(**kwargs)
+@TASK_REGISTRY.register_element()
+def image_semantic_segmentation(cfg: DeepLightningConfig) -> ImageSemanticSegmentationTask:
+    return ImageSemanticSegmentationTask(cfg)
