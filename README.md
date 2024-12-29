@@ -14,27 +14,13 @@ After defining modules and configuration, training deep learning models is simpl
   <img src="media/code.gif" alt=""  width="600" />
 </p>
 
-### Contents
-* [Overview](#overview)
-* [Installation](#installation)
-* [Usage](#usage)
-  * [Run](#run)
-    * [Train](#train)
-    * [Test](#test)
-    * [Monitor](#monitor)
-    * [Deploy](#deploy)
-  * [Configure](#configure)
-    * [Logic](#logic)
-    * [Customize](#customize)
-
 # Overview
 
 ### Features
 - Simplified trainer with **PyTorch-Lightning**
 - Experiment tracking and logging with **Weights and Biases**
 - Deployment (prediction API) with **FastAPI**
-- Memory-efficinet parallel training with **DeepSpeed**
-- Implementations of popular tasks/models with [**Examples**](https://github.com/pme0/DeepLightning/tree/master/examples)
+- Memory-efficient parallel training with **DeepSpeed**
 
 # Installation
 
