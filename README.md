@@ -83,10 +83,10 @@ Monitor training run and evaluation metrics on W&B web interface:
 
 Deploy the model with
 ```bash
-python -m api.<app-name> <run-dir>
+python -m api.serve <run-dir>
 ```
-where `app-name` is the application script filename and `run-dir` is the wandb run directory containing training artifacts inside folder `files` (run config and model weights). 
-For example, `python -m api.image_classification_app wandb/run-20230224_215446-6raddysk`.
+where `run-dir` is the wandb run directory containing training artifacts inside folder `files`. The artifacts required to launch the API are the config (`cfg.yaml`) and the model weights (`*.ckpt`). If there are more than one `.ckpt` file inside the artifacts directory, the exact checkpoint file must be provided with the argument `--ckpt_name`.
+For example, `python -m api.serve wandb/run-20230224_215446-6raddysk`.
 
 Then use the API as follows
 ```bash

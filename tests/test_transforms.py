@@ -55,9 +55,8 @@ hashmap = {
 def test_centercrop_transform(
     size, EXPECTED
 ):
-    args = [size]
     hashmap[EXPECTED](
-        CenterCrop, EXPECTED, *args
+        CenterCrop, EXPECTED, *[size]
     )
 
 
@@ -89,9 +88,8 @@ def test_centercrop_transform(
 def test_colorjitter_transform(
     brightness, contrast, saturation, hue, EXPECTED
 ):
-    args = [brightness, contrast, saturation, hue]
     hashmap[EXPECTED](
-        ColorJitter, EXPECTED, *args
+        ColorJitter, EXPECTED, *[brightness, contrast, saturation, hue]
     )
 
 
@@ -114,7 +112,6 @@ def test_colorjitter_transform(
 def test_randomaffine_transform(
     degrees, translate, scale, shear, EXPECTED
 ):
-    args = [degrees, translate, scale, shear]
     hashmap[EXPECTED](
-        RandomAffine, EXPECTED, *args
+        RandomAffine, EXPECTED, *[degrees, translate, scale, shear]
     )
