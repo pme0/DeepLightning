@@ -1,34 +1,8 @@
 import pytest
 
-from deeplightning.transforms.helpers import (
-    none_or_zero, 
+from deeplightning.transforms.helpers import ( 
     all_none_or_zero,
 )
-
-
-@pytest.mark.parametrize(
-    "value", 
-    [
-        [], 
-        {},
-    ]
-)
-def test_none_or_zero_error(value):
-    with pytest.raises(ValueError) as e_info:
-        none_or_zero(value)
-
-
-@pytest.mark.parametrize(
-    ("value", "EXPECTED"), 
-    [
-        (None, True),
-        (0, True),
-        (0.0, True),
-        (1, False),
-    ]
-)
-def test_none_or_zero_value(value, EXPECTED):
-    assert none_or_zero(value) is EXPECTED
 
 
 @pytest.mark.parametrize(
