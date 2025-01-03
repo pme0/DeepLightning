@@ -1,15 +1,8 @@
 import argparse
-import io
 
-from fastapi import FastAPI, UploadFile
-from fastapi.responses import JSONResponse
-from PIL import Image
-import torch
-import torchvision.transforms as T
 import uvicorn
 
-from api.helpers import get_config, get_checkpoint, get_model
-from deeplightning.datasets.info import DATASET_INFO
+from api.helpers import get_config
 
 
 parser = argparse.ArgumentParser()
